@@ -1,10 +1,27 @@
-/-!
-# Bedrock — Baseline Environment Integrity Check
+import Mathlib.Tactic.Ext
 
-This file serves as the project's zero-axiom anchor point.
-The `#print axioms` command below must return an empty dependency set,
-proving the environment is completely unpolluted at initialization.
--/
+/-- A lattice point in Z[ζ12] represented by four exact integer coordinates. -/
+@[ext]
+structure LatticePoint where
+  a : Int
+  b : Int
+  c : Int
+  d : Int
+deriving DecidableEq, Repr
 
-def project_baseline_marker : Nat := 0
-#print axioms project_baseline_marker
+/-- Rotates a lattice point by 30 degrees counterclockwise.
+    Maps (a, b, c, d) to (-d, a, b + d, c). -/
+def rot30 (pt : LatticePoint) : LatticePoint :=
+  ⟨-pt.d, pt.a, pt.b + pt.d, pt.c⟩
+
+/-- Composition of rot30 exactly 12 times to represent a full 360-degree rotation. -/
+def rot12_30 (pt : LatticePoint) : LatticePoint :=
+  rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 (rot30 pt)))))))))))
+
+/-- Theorem verifying that rotating 12 times yields the exact identity point. -/
+theorem rot12_identity (pt : LatticePoint) : rot12_30 pt = pt := by
+  cases pt
+  simp [rot12_30, rot30, LatticePoint.mk.injEq]
+  omega
+
+#print axioms rot12_identity
