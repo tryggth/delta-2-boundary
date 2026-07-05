@@ -77,3 +77,17 @@ def crossProduct2D (p1 p2 p3 : Point2D) : Z3 :=
 
 #print axioms Z3.isNonNeg
 #print axioms crossProduct2D
+
+/-- Determines if line segment AB exactly intersects
+    line segment CD on the Diophantine grid.
+    Returns true if and only if the open segments cross
+    each other. Perfectly mirrors Phase 2 of the
+    paths.py segments_intersect framework. -/
+def segmentsIntersect (a b c d : Point2D) : Bool :=
+  let s1 := (crossProduct2D a b c).sign
+  let s2 := (crossProduct2D a b d).sign
+  let s3 := (crossProduct2D c d a).sign
+  let s4 := (crossProduct2D c d b).sign
+  (s1 * s2 < 0) && (s3 * s4 < 0)
+
+#print axioms segmentsIntersect
