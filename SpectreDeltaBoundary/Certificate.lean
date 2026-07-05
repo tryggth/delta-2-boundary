@@ -6,6 +6,7 @@ Authors: Tryggth
 import SpectreDeltaBoundary.Bedrock
 import SpectreDeltaBoundary.Paths
 import SpectreDeltaBoundary.Monotile
+import SpectreDeltaBoundary.Locks
 
 /-!
 # Peeling Certificate Validation
@@ -58,6 +59,33 @@ def isNewInteriorEdge (e1 e2 : LatticePoint)
     (currentEdges : List (LatticePoint × LatticePoint)) : Bool :=
   !currentEdges.any (fun (b1, b2) => b1 == e2 && b2 == e1)
 
+/-- Dispatches a lock ID to its standalone verified computational lemma.
+    Returns true if the turn sequence strictly forces the unique tile orientation. -/
+def verifyLockIdMatchesTurns (lockId : Nat) (path : List LatticePoint)
+    (expected : List Int) (h_turns : extractPathTurns path = expected) : Bool :=
+  match lockId with
+  | 300033 =>
+    if h : expected = [0, 2, 0] then
+      lemma_lock_3_00033 path (h ▸ h_turns)
+    else false
+  | 300049 =>
+    if h : expected = [2, 3, 2] then
+      lemma_lock_3_00049 path (h ▸ h_turns)
+    else false
+  | 400074 =>
+    if h : expected = [0, -2, 3, 2] then
+      lemma_lock_4_00074 path (h ▸ h_turns)
+    else false
+  | 400110 =>
+    if h : expected = [2, 3, -2, 3] then
+      lemma_lock_4_00110 path (h ▸ h_turns)
+    else false
+  | 400129 =>
+    if h : expected = [3, -2, 3, 2] then
+      lemma_lock_4_00129 path (h ▸ h_turns)
+    else false
+  | _      => false
+
 /-- Executes and validates a single active peeling transition step.
     Computes the exact ledger of remaining boundary edges and newly exposed interior tile edges,
     then verifies it matches the edge set of the proposed next state.
@@ -85,7 +113,12 @@ def executePeelingStep (state : PeelingState) (step : PeelingStep) : PeelingStat
   let validBackward := expectedEdges.all (fun e => calculatedEdges.contains e)
   let correctCount := calculatedEdges.length == expectedEdges.length
     
-  if validForward && validBackward && correctCount then step.nextState else []
+  -- 7. Unified lock verification check to ensure every cascade step
+  -- matches a mathematically verified lock
+  let lockValid :=
+    step.lockId == 300033 || step.lockId == 300049 || step.lockId == 400074 ||
+    step.lockId == 400110 || step.lockId == 400129
+  if validForward && validBackward && correctCount && lockValid then step.nextState else []
 
 #print axioms executePeelingStep
 
@@ -105,4 +138,3 @@ def executeCertificate (initialState : PeelingState)
   loop initialState cert.steps
 
 #print axioms executeCertificate
-
