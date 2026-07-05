@@ -88,3 +88,21 @@ def executePeelingStep (state : PeelingState) (step : PeelingStep) : PeelingStat
   if validForward && validBackward && correctCount then step.nextState else []
 
 #print axioms executePeelingStep
+
+/-- Recursively executes an entire chain of peeling steps starting from an initial PeelingState.
+    If any intermediate step fails validation (evaluates to an empty list of boundaries),
+    the execution instantly short-circuits and returns an empty state (failure). -/
+def executeCertificate (initialState : PeelingState)
+    (cert : PeelingCertificate) : PeelingState :=
+  let rec loop (state : PeelingState) (steps : List PeelingStep) : PeelingState :=
+    match steps with
+    | [] => state
+    | s :: ss =>
+      let next := executePeelingStep state s
+      match next with
+      | [] => [] -- Structural failure shortcut
+      | validState => loop validState ss
+  loop initialState cert.steps
+
+#print axioms executeCertificate
+
