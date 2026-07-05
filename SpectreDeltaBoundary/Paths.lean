@@ -91,3 +91,40 @@ def segmentsIntersect (a b c d : Point2D) : Bool :=
   (s1 * s2 < 0) && (s3 * s4 < 0)
 
 #print axioms segmentsIntersect
+
+/-- A quadratic integer structure r + s*sqrt(3) used for discrete continuous segment crossings. -/
+structure QuadInt where
+  r : Int
+  s : Int
+deriving DecidableEq, Repr
+
+/-- Computes the sign (-1, 0, or 1) of a QuadInt value using exact integer arithmetic. -/
+def quadSign (x : QuadInt) : Int :=
+  if x.r == 0 && x.s == 0 then 0
+  else if x.r >= 0 && x.s >= 0 then 1
+  else if x.r <= 0 && x.s <= 0 then -1
+  else
+    let r2 := x.r * x.r
+    let s2 := 3 * x.s * x.s
+    if x.r > 0 then
+      if r2 > s2 then 1 else -1
+    else
+      if r2 > s2 then -1 else 1
+
+/-- Computes the scaled cross product of vectors (p2 - p1) and (p3 - p1)
+    on the cyclotomic lattice. -/
+def discreteCrossProduct (p1 p2 p3 : LatticePoint) : QuadInt :=
+  let cp := crossProduct2D p1.toPoint2D p2.toPoint2D p3.toPoint2D
+  ⟨cp.u, cp.v⟩
+
+/-- Segment intersection test on LatticePoints using discreteCrossProduct and quadSign. -/
+def discreteSegmentsIntersect (a b c d : LatticePoint) : Bool :=
+  let s1 := quadSign (discreteCrossProduct a b c)
+  let s2 := quadSign (discreteCrossProduct a b d)
+  let s3 := quadSign (discreteCrossProduct c d a)
+  let s4 := quadSign (discreteCrossProduct c d b)
+  (s1 * s2 < 0) && (s3 * s4 < 0)
+
+#print axioms discreteCrossProduct
+#print axioms discreteSegmentsIntersect
+
