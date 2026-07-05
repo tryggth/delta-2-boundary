@@ -88,3 +88,19 @@ def lemma_lock_4_00074 (path : List LatticePoint)
 
 #print axioms lemma_lock_3_00049
 #print axioms lemma_lock_4_00074
+
+/-- Standalone Lemma for Lock N8_4_00110 (Turn Sequence: [2, 3, -2, 3]).
+    Proves that encountering this sequence forces a unique tile orientation. -/
+def lemma_lock_4_00110 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, 3, -2, 3]) : Bool :=
+  proveLockUniqueness path 0
+
+/-- Standalone Lemma for Lock N8_4_00129 (Turn Sequence: [3, -2, 3, 2]).
+    Proves that encountering this sequence forces a unique tile orientation. -/
+def lemma_lock_4_00129 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [3, -2, 3, 2]) : Bool :=
+  proveLockUniqueness path 8
+
+#print axioms lemma_lock_4_00110
+#print axioms lemma_lock_4_00129
+
