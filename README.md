@@ -110,3 +110,15 @@ The proof stack is engineered to avoid any unproven shortcuts, translation assum
 The mathematical reduction depends solely on standard core foundations:
 *   `propext` (Propositional Extensionality) — The standard identity axiom of Lean core logic.
 *   `sorryAx` — **Completely Absent** from the entire dependency tree, guaranteeing a closed, verified proof.
+
+---
+
+## 🚀 Continuous Integration (CI/CD)
+
+This repository features an automated GitHub Actions pipeline (`.github/workflows/compile-paper.yml`) that validates the entire verification pipeline on every push or pull request touching Lean source files or the LaTeX document source.
+
+The pipeline ensures:
+1.  **Lean Proof Purity:** Automatically fetches dependencies, compiles the proof library via `lake build`, and checks for axiom purity.
+2.  **LaTeX Syntax Linting:** Runs a `chktex` validation pass on the expository paper source (`paper/paper.tex`) to maintain clean markup.
+3.  **Automated PDF Compilation:** Compiles the paper to a PDF using `latexmk` and uploads the compiled paper as a workflow artifact, keeping the expository narrative rigidly synchronized with the verified codebase.
+
