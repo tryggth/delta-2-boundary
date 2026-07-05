@@ -53,3 +53,56 @@ def tileVertices (tile : PlacedTile) :
 
 #print axioms spectreTurns
 #print axioms tileVertices
+
+/-- Represents a directed edge on the lattice grid
+    connecting two vertices with a heading direction. -/
+structure DirectedEdge where
+  v1 : LatticePoint
+  v2 : LatticePoint
+  dir : Nat
+deriving DecidableEq, Repr
+
+/-- Extracts the 14 directed edges forming the
+    perimeter of a PlacedTile. Perfectly mirrors
+    the self.edges accumulation loop from the
+    Python engine. -/
+def tileEdges (tile : PlacedTile) :
+    List DirectedEdge :=
+  let rec loop
+      (verts : List LatticePoint)
+      (dirs : List Nat) (acc : List DirectedEdge)
+      : List DirectedEdge :=
+    match verts, dirs with
+    | v1 :: v2 :: vs, d :: ds =>
+      loop (v2 :: vs) ds (⟨v1, v2, d⟩ :: acc)
+    | _, _ => acc.reverse
+  loop (tileVertices tile)
+    (tileDirections tile.orientation) []
+
+/-- Positionally aligns a tile such that its specified
+    edge index rests flush against a target path edge.
+    Verbatim translation of Python's
+    PlacedTile.align_to_path_edge arithmetic loop. -/
+def alignToPathEdge
+    (p_v1 _p_v2 : LatticePoint) (p_dir : Nat)
+    (tile_edge_idx : Nat) : PlacedTile :=
+  let ref_tile_0 := PlacedTile.mk LatticePoint.zero 0
+  let ref_edges_0 := tileEdges ref_tile_0
+  let dummy_edge :=
+    DirectedEdge.mk LatticePoint.zero
+      LatticePoint.zero 0
+  let ref_edge :=
+    ref_edges_0.getD tile_edge_idx dummy_edge
+  let ref_dir := ref_edge.dir
+  let orientation := (p_dir + 12 - ref_dir) % 12
+  let oriented_ref :=
+    PlacedTile.mk LatticePoint.zero orientation
+  let ref_edges_ori := tileEdges oriented_ref
+  let ref_edge_ori :=
+    ref_edges_ori.getD tile_edge_idx dummy_edge
+  let ref_v1 := ref_edge_ori.v1
+  let origin := p_v1.sub ref_v1
+  PlacedTile.mk origin orientation
+
+#print axioms tileEdges
+#print axioms alignToPathEdge
