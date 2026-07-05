@@ -14,10 +14,6 @@ Provides computable predicates to exhaustively prove that a given boundary turn
 sequence physically forces a unique tile orientation via local geometric exclusion.
 -/
 
-/-- Computes whether any vertex of a PlacedTile collides with an explicit list of path vertices. -/
-def tileCollidesWithPath (tile : PlacedTile) (path : List LatticePoint) : Bool :=
-  let tileVerts := tileVertices tile
-  tileVerts.any (fun tv => path.contains tv)
 
 /-- Helper to extract segment pairs from a list of vertices. -/
 def verticesToSegments (verts : List LatticePoint) : List (LatticePoint × LatticePoint) :=
@@ -56,7 +52,6 @@ def proveLockUniqueness (path : List LatticePoint) (forcedOri : Nat) : Bool :=
   -- Verify uniqueness and that it matches our expected certificate orientation
   validCount == 1 && testOrientationValid path forcedOri
 
-#print axioms tileCollidesWithPath
 #print axioms proveLockUniqueness
 
 /-- Maps a lattice vector back to its discrete direction identifier (0 to 11). -/

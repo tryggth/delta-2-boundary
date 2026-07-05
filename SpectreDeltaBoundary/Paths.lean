@@ -78,20 +78,6 @@ def crossProduct2D (p1 p2 p3 : Point2D) : Z3 :=
 #print axioms Z3.isNonNeg
 #print axioms crossProduct2D
 
-/-- Determines if line segment AB exactly intersects
-    line segment CD on the Diophantine grid.
-    Returns true if and only if the open segments cross
-    each other. Perfectly mirrors Phase 2 of the
-    paths.py segments_intersect framework. -/
-def segmentsIntersect (a b c d : Point2D) : Bool :=
-  let s1 := (crossProduct2D a b c).sign
-  let s2 := (crossProduct2D a b d).sign
-  let s3 := (crossProduct2D c d a).sign
-  let s4 := (crossProduct2D c d b).sign
-  (s1 * s2 < 0) && (s3 * s4 < 0)
-
-#print axioms segmentsIntersect
-
 /-- A quadratic integer structure r + s*sqrt(3) used for discrete continuous segment crossings. -/
 structure QuadInt where
   r : Int
@@ -117,16 +103,8 @@ def discreteCrossProduct (p1 p2 p3 : LatticePoint) : QuadInt :=
   let cp := crossProduct2D p1.toPoint2D p2.toPoint2D p3.toPoint2D
   ⟨cp.u, cp.v⟩
 
-/-- Segment intersection test on LatticePoints using discreteCrossProduct and quadSign. -/
-def discreteSegmentsIntersect (a b c d : LatticePoint) : Bool :=
-  let s1 := quadSign (discreteCrossProduct a b c)
-  let s2 := quadSign (discreteCrossProduct a b d)
-  let s3 := quadSign (discreteCrossProduct c d a)
-  let s4 := quadSign (discreteCrossProduct c d b)
-  (s1 * s2 < 0) && (s3 * s4 < 0)
-
 #print axioms discreteCrossProduct
-#print axioms discreteSegmentsIntersect
+
 
 /-- Ordering comparison for Z3 elements. -/
 def Z3.le (z1 z2 : Z3) : Bool :=

@@ -59,32 +59,26 @@ def isNewInteriorEdge (e1 e2 : LatticePoint)
     (currentEdges : List (LatticePoint × LatticePoint)) : Bool :=
   !currentEdges.any (fun (b1, b2) => b1 == e2 && b2 == e1)
 
-/-- Dispatches a lock ID to its standalone verified computational lemma.
-    Returns true if the turn sequence strictly forces the unique tile orientation. -/
-def verifyLockIdMatchesTurns (lockId : Nat) (path : List LatticePoint)
-    (expected : List Int) (h_turns : extractPathTurns path = expected) : Bool :=
+/-- Returns the expected turn sequence for each lock ID. -/
+def getExpectedTurns (lockId : Nat) : List Int :=
   match lockId with
-  | 300033 =>
-    if h : expected = [0, 2, 0] then
-      lemma_lock_3_00033 path (h ▸ h_turns)
-    else false
-  | 300049 =>
-    if h : expected = [2, 3, 2] then
-      lemma_lock_3_00049 path (h ▸ h_turns)
-    else false
-  | 400074 =>
-    if h : expected = [0, -2, 3, 2] then
-      lemma_lock_4_00074 path (h ▸ h_turns)
-    else false
-  | 400110 =>
-    if h : expected = [2, 3, -2, 3] then
-      lemma_lock_4_00110 path (h ▸ h_turns)
-    else false
-  | 400129 =>
-    if h : expected = [3, -2, 3, 2] then
-      lemma_lock_4_00129 path (h ▸ h_turns)
-    else false
-  | _      => false
+  | 300033 => [0, 2, 0]
+  | 300049 => [2, 3, 2]
+  | 400074 => [0, -2, 3, 2]
+  | 400110 => [2, 3, -2, 3]
+  | 400129 => [3, -2, 3, 2]
+  | _      => []
+
+/-- Helper to check if a list contains a contiguous sublist that matches our lock. -/
+def checkSubpathUniqueness
+    (expected : List Int) (forcedOri : Nat) : List LatticePoint → Bool
+  | [] => false
+  | v :: vs =>
+    let turns := extractPathTurns (v :: vs)
+    if turns.take expected.length == expected then
+      proveLockUniqueness (v :: vs) forcedOri
+    else
+      checkSubpathUniqueness expected forcedOri vs
 
 /-- Executes and validates a single active peeling transition step.
     Computes the exact ledger of remaining boundary edges and newly exposed interior tile edges,
@@ -114,10 +108,12 @@ def executePeelingStep (state : PeelingState) (step : PeelingStep) : PeelingStat
   let correctCount := calculatedEdges.length == expectedEdges.length
     
   -- 7. Unified lock verification check to ensure every cascade step
-  -- matches a mathematically verified lock
-  let lockValid :=
-    step.lockId == 300033 || step.lockId == 300049 || step.lockId == 400074 ||
-    step.lockId == 400110 || step.lockId == 400129
+  -- matches a mathematically verified lock and is unique
+  let expectedTurns := getExpectedTurns step.lockId
+  let lockValid := state.any (fun loop => 
+    -- Test the loop along with a padded cycle to capture wrap-around segments
+    checkSubpathUniqueness expectedTurns step.tile.orientation (loop ++ loop.take 5)
+  )
   if validForward && validBackward && correctCount && lockValid then step.nextState else []
 
 #print axioms executePeelingStep
