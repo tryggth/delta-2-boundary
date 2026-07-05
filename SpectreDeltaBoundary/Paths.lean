@@ -128,3 +128,33 @@ def discreteSegmentsIntersect (a b c d : LatticePoint) : Bool :=
 #print axioms discreteCrossProduct
 #print axioms discreteSegmentsIntersect
 
+/-- Ordering comparison for Z3 elements. -/
+def Z3.le (z1 z2 : Z3) : Bool :=
+  Z3.isNonNeg (Z3.sub z2 z1)
+
+/-- Bounding box check for collinear points on the cyclotomic lattice. -/
+def onSegment (p1 p2 p3 : LatticePoint) : Bool :=
+  let cp := discreteCrossProduct p1 p2 p3
+  if quadSign cp != 0 then false
+  else
+    let a := p1.toPoint2D
+    let b := p2.toPoint2D
+    let c := p3.toPoint2D
+    ((Z3.le a.x c.x && Z3.le c.x b.x) || (Z3.le b.x c.x && Z3.le c.x a.x)) &&
+    ((Z3.le a.y c.y && Z3.le c.y b.y) || (Z3.le b.y c.y && Z3.le c.y a.y))
+
+/-- Computes if segment AB intersects or touches segment CD on the Diophantine grid. -/
+def discreteSegmentsIntersectOrTouch (a b c d : LatticePoint) : Bool :=
+  let s1 := quadSign (discreteCrossProduct a b c)
+  let s2 := quadSign (discreteCrossProduct a b d)
+  let s3 := quadSign (discreteCrossProduct c d a)
+  let s4 := quadSign (discreteCrossProduct c d b)
+  ((s1 * s2 < 0) && (s3 * s4 < 0)) ||
+  (s1 == 0 && onSegment a b c) ||
+  (s2 == 0 && onSegment a b d) ||
+  (s3 == 0 && onSegment c d a) ||
+  (s4 == 0 && onSegment c d b)
+
+#print axioms discreteSegmentsIntersectOrTouch
+
+

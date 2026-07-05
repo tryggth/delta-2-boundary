@@ -32,7 +32,7 @@ def tileEdgesCrossPath (tile : PlacedTile) (path : List LatticePoint) : Bool :=
   let pathSegs := verticesToSegments path
   tileSegs.any (fun (a, b) =>
     pathSegs.any (fun (c, d) =>
-      discreteSegmentsIntersect a b c d
+      discreteSegmentsIntersectOrTouch a b c d
     )
   )
 
@@ -44,7 +44,7 @@ def testOrientationValid (path : List LatticePoint) (orientation : Nat) : Bool :
   | [] => false
   | origin :: _ =>
     let candidate := PlacedTile.mk origin orientation
-    !tileCollidesWithPath candidate path && !tileEdgesCrossPath candidate path
+    !tileEdgesCrossPath candidate path
 
 /-- Exhaustively evaluates all 12 rotational headings (0 to 11) for a tile placement.
     Returns true if and only if exactly one unique orientation passes the geometric filter. -/
