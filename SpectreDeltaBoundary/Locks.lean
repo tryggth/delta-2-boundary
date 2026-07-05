@@ -19,17 +19,32 @@ def tileCollidesWithPath (tile : PlacedTile) (path : List LatticePoint) : Bool :
   let tileVerts := tileVertices tile
   tileVerts.any (fun tv => path.contains tv)
 
+/-- Helper to extract segment pairs from a list of vertices. -/
+def verticesToSegments (verts : List LatticePoint) : List (LatticePoint × LatticePoint) :=
+  match verts with
+  | [] => []
+  | [_] => []
+  | v1 :: v2 :: vs => (v1, v2) :: verticesToSegments (v2 :: vs)
+
+/-- Checks if any segment of a proposed tile intersects/crosses any segment of the boundary path. -/
+def tileEdgesCrossPath (tile : PlacedTile) (path : List LatticePoint) : Bool :=
+  let tileSegs := verticesToSegments (tileVertices tile)
+  let pathSegs := verticesToSegments path
+  tileSegs.any (fun (a, b) =>
+    pathSegs.any (fun (c, d) =>
+      discreteSegmentsIntersect a b c d
+    )
+  )
+
 /-- Tests a specific tile orientation against a localized boundary path.
-    Returns true if the tile fits the path layout cleanly without collision. -/
+    Returns true if the tile fits the path layout cleanly without collision or crossing. -/
 def testOrientationValid (path : List LatticePoint) (orientation : Nat) : Bool :=
   -- Align a candidate tile rooted at the path's origin
   match path with
   | [] => false
   | origin :: _ =>
     let candidate := PlacedTile.mk origin orientation
-    -- In future phases, this will check explicit segment crossings via `segmentsIntersect`.
-    -- For this structural milestone, we evaluate direct vertex boundary exclusion.
-    !tileCollidesWithPath candidate path
+    !tileCollidesWithPath candidate path && !tileEdgesCrossPath candidate path
 
 /-- Exhaustively evaluates all 12 rotational headings (0 to 11) for a tile placement.
     Returns true if and only if exactly one unique orientation passes the geometric filter. -/
