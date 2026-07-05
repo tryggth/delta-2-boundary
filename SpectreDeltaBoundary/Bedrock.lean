@@ -65,3 +65,36 @@ lemma rot30N_step (n : Nat) (pt : LatticePoint) : rot30N (n + 1) pt = rot30 (rot
 #print axioms LatticePoint.add
 #print axioms dir_to_vec
 
+/-- Represents an exact quadratic integer of the form u + v*sqrt(3). -/
+structure Z3 where
+  u : Int
+  v : Int
+deriving DecidableEq, Repr
+
+/-- Exact addition within the Z3 quadratic ring. -/
+def Z3.add (z1 z2 : Z3) : Z3 :=
+  ⟨z1.u + z2.u, z1.v + z2.v⟩
+
+/-- Exact subtraction within the Z3 quadratic ring. -/
+def Z3.sub (z1 z2 : Z3) : Z3 :=
+  ⟨z1.u - z2.u, z1.v - z2.v⟩
+
+/-- Exact multiplication within the Z3 quadratic ring.
+    Derived from (u1 + v1√3)(u2 + v2√3)
+    = (u1*u2 + 3*v1*v2) + (u1*v2 + v1*u2)√3. -/
+def Z3.mul (z1 z2 : Z3) : Z3 :=
+  ⟨z1.u * z2.u + 3 * z1.v * z2.v, z1.u * z2.v + z1.v * z2.u⟩
+
+/-- A 2D coordinate point structure utilizing exact Z3 coordinates for both axes. -/
+structure Point2D where
+  x : Z3
+  y : Z3
+deriving DecidableEq, Repr
+
+/-- Projects a 4D cyclotomic LatticePoint down to a discrete 2D Point2D space.
+    Perfectly matches Phase 1 of the paths.py exact arithmetic mapping specification. -/
+def LatticePoint.toPoint2D (pt : LatticePoint) : Point2D :=
+  ⟨⟨2 * pt.a + pt.c, pt.b⟩, ⟨pt.b + 2 * pt.d, pt.c⟩⟩
+
+#print axioms Z3.mul
+#print axioms LatticePoint.toPoint2D
