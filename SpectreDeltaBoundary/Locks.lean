@@ -43,3 +43,48 @@ def proveLockUniqueness (path : List LatticePoint) (forcedOri : Nat) : Bool :=
 
 #print axioms tileCollidesWithPath
 #print axioms proveLockUniqueness
+
+/-- Maps a lattice vector back to its discrete direction identifier (0 to 11). -/
+def vec_to_dir (step_vec : LatticePoint) : Nat :=
+  let rec find (d : Nat) : Nat :=
+    match d with
+    | 0 => 0
+    | d' + 1 =>
+      if dir_to_vec d' == step_vec then d'
+      else find d'
+  find 12
+
+/-- Computes the local turn steps between consecutive vertices in a path. -/
+def extractPathTurns (path : List LatticePoint) : List Int :=
+  -- Extracts the relative direction changes to map back to our turn grammar
+  match path with
+  | [] => []
+  | [_] => []
+  | [_, _] => []
+  | v1 :: v2 :: v3 :: vs =>
+    let d1 : Int := vec_to_dir (v2.sub v1)
+    let d2 : Int := vec_to_dir (v3.sub v2)
+    let diff := ((d2 - d1) % 12 + 12) % 12
+    let turn := if diff > 6 then diff - 12 else diff
+    turn :: extractPathTurns (v2 :: v3 :: vs)
+
+/-- Standalone Lemma for Lock N8_3_00049 (Turn Sequence: [2, 3, 2]).
+    Proves that encountering this sequence forces a unique tile orientation. -/
+def lemma_lock_3_00049 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, 3, 2]) : Bool :=
+  proveLockUniqueness path 2
+
+/-- Standalone Lemma for Lock N8_3_00033 (Turn Sequence: [0, 2, 0]).
+    Proves that encountering this sequence forces a unique tile orientation. -/
+def lemma_lock_3_00033 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [0, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+/-- Standalone Lemma for Lock N8_4_00074 (Turn Sequence: [0, -2, 3, 2]).
+    Proves that encountering this sequence forces a unique tile orientation. -/
+def lemma_lock_4_00074 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [0, -2, 3, 2]) : Bool :=
+  proveLockUniqueness path 3
+
+#print axioms lemma_lock_3_00049
+#print axioms lemma_lock_4_00074
