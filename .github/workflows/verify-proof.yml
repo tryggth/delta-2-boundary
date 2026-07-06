@@ -1,0 +1,29 @@
+name: Lean Proof CI
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.lean'
+      - 'lean-toolchain'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**.lean'
+      - 'lean-toolchain'
+
+jobs:
+  verify-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Elan (Lean Version Manager)
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Verify Formal Proof Codebase
+        run: |
+          lake exe cache get || true
+          lake build
