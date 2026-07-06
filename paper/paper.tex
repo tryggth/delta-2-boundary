@@ -12,13 +12,13 @@
 \maketitle
 
 \begin{abstract}
-This paper documents a formal verification framework that verifies boundary-forced tiling uniqueness for the Spectre chiral aperiodic monotile. Rather than attempting an unconstrained global search over an exponential packing space, we employ the established mechanism of automated token-cascade verification. We demonstrate that a 70-step inductive peeling cascade natively executed via computational reflection completely reduces a 71-tile hierarchical patch cluster boundary with absolute axiom purity in the Lean 4 proof assistant.
+This paper documents a formal verification framework that verifies boundary-forced tiling uniqueness for the Spectre chiral aperiodic monotile. Rather than attempting an unconstrained global search over an exponential packing space, we employ a verified certificate-checking mechanism via computational reflection. We demonstrate that a 70-step inductive peeling cascade natively executed via computational reflection completely reduces a 71-tile hierarchical patch cluster boundary with absolute axiom purity in the Lean 4 proof assistant.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 % Section template: Framing the boundary value problem for aperiodic patches.
-Establishing boundary-forced tiling uniqueness is a historically difficult problem for aperiodic monotiles. Standard unconstrained backtracking search algorithms suffer from exponential state space explosion and geometric frustration. For the Spectre chiral monotile, these constraints are especially strict because the tile tiles the plane without requiring mirror reflections. Fusing physical grid embeddings with a topological state machine allows us to prove that boundary turn constraints uniquely force a deterministic tiling cascade.
+Establishing boundary-forced tiling uniqueness is a historically difficult problem for aperiodic monotiles. Standard unconstrained backtracking search algorithms suffer from exponential state space explosion and geometric frustration. For the Spectre chiral monotile~\cite{smith2024aperiodic}, these constraints are especially strict because the tile tiles the plane without requiring mirror reflections. Fusing physical grid embeddings with a topological state machine inside the Lean 4 proof assistant~\cite{moura2021lean4} allows us to prove that boundary turn constraints uniquely force a deterministic tiling cascade.
 
 \section{Algebraic Foundations: Exact Cyclotomic Lattice Embedding}
 \label{sec:algebra}
@@ -54,7 +54,10 @@ We frame the token-cascade verification as a formal combinatorial boundary reduc
 cascade utilizing reductive structural induction. The boundary consists of closed loops
 of directed edges. At each step, the state machine removes a tile associated with a
 localized boundary path called a lock. We define these locks as local turn sequences
-that geometrically force a unique tile orientation.
+that geometrically force a unique tile orientation. Analogous to Gonthier's landmark
+formal proof of the Four Color Theorem~\cite{gonthier2008four}, our approach relies on
+computational reflection to handle heavy combinatoric case-analysis directly within the
+logic of the helper kernel.
 
 The local frustration matrix is implemented not as a sprawling spatial grid, but
 as a bounded runtime loop executing over the 12 discrete cyclic rotations (corresponding
@@ -107,5 +110,8 @@ theorem verify_delta2_uniqueness :
 \section{Discussion}
 \label{sec:discussion}
 The verified combinatorial boundary reduction cascade demonstrates how holographic locks can drive lookahead optimization to solve exponentially frustrated packing problems. This architecture generalizes to other non-substitutional, highly frustrated aperiodic tilings, providing a framework for computer-assisted proofs of matching rules and tiling decidability in discrete geometry.
+
+\bibliographystyle{plain}
+\bibliography{refs}
 
 \end{document}

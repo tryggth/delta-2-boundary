@@ -4,10 +4,12 @@ on:
     branches: [ main ]
     paths:
       - 'paper/**.tex'
+      - 'paper/**.bib'
   pull_request:
     branches: [ main ]
     paths:
       - 'paper/**.tex'
+      - 'paper/**.bib'
 
 permissions:
   contents: write
