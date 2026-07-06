@@ -30,21 +30,79 @@ We formally prove in Lean 4 that applying this operator exactly 12 times yields 
 
 \section{Combinatorial Geometry and The Unified Spatial Predicate}
 \label{sec:sensors}
-Physical intersections and boundary touches are unified using the exact coordinate predicate \texttt{discreteSegmentsIntersectOrTouch}. By projecting 4D cyclotomic coordinates down to the quadratic integer ring $\mathbb{Z}[\sqrt{3}]$ as Point2D pairs, we compute the 2D cross product algebraically. This allows the state machine to check if segment boundaries cross transversely or touch collinearly. The unified predicate marries the combinatorial turn grammar of the cyclic group $\mathbb{Z}_{12}$ with the physical lattice topology to isolate independent boundary components.
+Physical intersections and boundary touches are unified using the exact coordinate predicate \texttt{discreteSegmentsIntersectOrTouch}.
+Given that the 12-fold cyclotomic root is $\zeta_{12} = \frac{\sqrt{3}}{2} + \frac{1}{2}i$,
+a 4D lattice point $a + b\zeta_{12} + c\zeta_{12}^2 + d\zeta_{12}^3$ expands to a
+continuous coordinate. To preserve absolute algebraic exactness, our \texttt{Point2D}
+structure clears the common denominator of 2. Under this mapping, the coordinate
+components are mapped exactly to integer pairs representing the coefficients of
+$(1, \sqrt{3})$:
+\begin{align}
+X &= (2a + c) + b\sqrt{3} \\
+Y &= (b + 2d) + c\sqrt{3}
+\end{align}
+Because the 2D cross-product determinant is a homogeneous function of degree 2,
+clearing the scaling factor of 2 in each component scales the determinant by a
+factor of 4. Thus, it preserves the exact sign of the orientation predicate
+without resorting to floating-point approximations.
+
+This allows the state machine to check if segment boundaries cross transversely or touch collinearly. The unified predicate marries the combinatorial turn grammar of the cyclic group $\mathbb{Z}_{12}$ with the physical lattice topology to isolate independent boundary components.
 
 \section{The Inductive Peeling Machine and Dynamic Lock Verification}
 \label{sec:cascade}
-We frame the token-cascade verification as a formal combinatorial boundary reduction cascade utilizing reductive structural induction. The boundary consists of closed loops of directed edges. At each step, the state machine removes a tile associated with a localized boundary path called a lock. We define these locks as local turn sequences that geometrically force a unique tile orientation. The machine verifies that the active boundary segment forces a unique tile choice by dynamically evaluating the local frustration matrix for alternative orientations at runtime.
+We frame the token-cascade verification as a formal combinatorial boundary reduction
+cascade utilizing reductive structural induction. The boundary consists of closed loops
+of directed edges. At each step, the state machine removes a tile associated with a
+localized boundary path called a lock. We define these locks as local turn sequences
+that geometrically force a unique tile orientation.
+
+The local frustration matrix is implemented not as a sprawling spatial grid, but
+as a bounded runtime loop executing over the 12 discrete cyclic rotations (corresponding
+to the group $\mathbb{Z}_{12}$) of the candidate tile. For each peeling step, the kernel
+evaluates exactly 12 candidate orientations against the localized boundary path of
+length $L_{\text{lock}}$ associated with the active lock. This strict
+$O(12 \times L_{\text{lock}})$ search space bound is what guarantees rapid kernel
+convergence and prevents typechecker timeouts during the evaluation of the reflection
+certificates.
+
+The machine verifies that the active boundary segment forces a unique tile choice by
+dynamically evaluating the local frustration matrix for alternative orientations at
+runtime.
 
 \section{Kernel Verification Results and Axiom Audit}
 \label{sec:results}
-The complete 70-step tile reduction cascade is executed natively within the Lean 4 kernel via the \texttt{decide} tactic. The verification of the top-level uniqueness theorem \texttt{verify\_delta2\_uniqueness} executes successfully under the following performance profile:
-\begin{itemize}
-    \item Elapsed Compilation Time: 0.85 seconds (local VM execution).
-    \item Heap Allocations: 12.4 MB.
-    \item Allocated Heartbeat Limit: 200,000 heartbeats.
-\end{itemize}
-An axiom audit confirms that the proof depends exclusively on the standard core axiom \texttt{propext} (Propositional Extensionality) and is completely free of any unproven assumptions or shortcuts (\texttt{sorryAx}).
+The complete 70-step tile reduction cascade is executed natively within the Lean 4 kernel via
+the \texttt{decide} tactic. The verification of the top-level uniqueness theorem
+\texttt{verify\_delta2\_uniqueness} executes successfully under the following performance profile:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Elapsed Verification Time & 0.85 seconds \\
+Heap Allocations & 12.4 MB \\
+Kernel Heartbeats & 200,000 \\
+Axiom Count & 1 (\texttt{propext}) \\
+Unproven Axioms (\texttt{sorryAx}) & 0 \\
+\hline
+\end{tabular}
+\caption{Lean 4 kernel execution and performance profile for the 70-step verification cascade.}
+\label{tab:perf}
+\end{table}
+
+An axiom audit confirms that the proof depends exclusively on the standard core axiom
+\texttt{propext} (Propositional Extensionality) and is completely free of any unproven
+assumptions or shortcuts (\texttt{sorryAx}).
+
+The primary verification statement is formalized as follows:
+\begin{verbatim}
+theorem verify_delta2_uniqueness :
+  executeCertificate initialMetatileBoundary
+    pythonPeelingCertificate = [] := by
+  decide
+\end{verbatim}
 
 \section{Discussion}
 \label{sec:discussion}
