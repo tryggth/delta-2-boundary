@@ -3,3 +3,5 @@ build/
 message_basin/
 message_basin
 *.svg
+__pycache__/
+*.pyc
