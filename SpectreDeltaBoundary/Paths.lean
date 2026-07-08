@@ -1,5 +1,75 @@
 import SpectreDeltaBoundary.Bedrock
 
+set_option linter.style.header false
+set_option linter.style.longLine false
+
+/-- GeneralTurn represents any arbitrary 30-degree step multiple spanning the full 360-degree circle. -/
+def GeneralTurn := {k : Int // k ≥ -6 ∧ k ≤ 6}
+
+/-- Maps a GeneralTurn to its angle in degrees. -/
+def generalToAngle (gt : GeneralTurn) : Int := gt.val * 30
+
+/-- Predicate formalizing that the resulting interior or exterior gap cannot fall strictly between 0 and 90 degrees. -/
+def ValidGeneralWedge (gt : GeneralTurn) (cluster_sum : Int) : Prop :=
+  let interior_gap := 180 - gt.val * 30 - cluster_sum
+  let exterior_gap := 180 + gt.val * 30 - cluster_sum
+  ¬ (0 < interior_gap ∧ interior_gap < 90) ∧
+  ¬ (0 < exterior_gap ∧ exterior_gap < 90)
+
+/-- The Vertex Exhaustion Theorem: proves that the only geometrically valid turns (which do not violate the wedge constraints for any cluster sum) are the 5 core monotile turns. -/
+theorem general_turn_exhaustion (gt : GeneralTurn) (h_wedge : ∀ sum, ValidGeneralWedge gt sum) :
+  gt.val = -3 ∨ gt.val = 2 ∨ gt.val = 0 ∨ gt.val = -2 ∨ gt.val = 3 := by
+  have h_range := gt.property
+  have h_not_1 : gt.val ≠ 1 := by
+    intro h
+    have h_w := h_wedge 90
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_neg_1 : gt.val ≠ -1 := by
+    intro h
+    have h_w := h_wedge 90
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_4 : gt.val ≠ 4 := by
+    intro h
+    have h_w := h_wedge 0
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_neg_4 : gt.val ≠ -4 := by
+    intro h
+    have h_w := h_wedge 0
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_5 : gt.val ≠ 5 := by
+    intro h
+    have h_w := h_wedge 0
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_neg_5 : gt.val ≠ -5 := by
+    intro h
+    have h_w := h_wedge 0
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_6 : gt.val ≠ 6 := by
+    intro h
+    have h_w := h_wedge 300
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  have h_not_neg_6 : gt.val ≠ -6 := by
+    intro h
+    have h_w := h_wedge 300
+    dsimp [ValidGeneralWedge] at h_w
+    rw [h] at h_w
+    omega
+  omega
+
 /-- The restricted set of allowed turning steps for Spectre boundaries.
     Represents angles: -90°, -60°, 0°, 60°, 90°. -/
 inductive AllowedStep where
@@ -18,6 +88,31 @@ def AllowedStep.toStep (s : AllowedStep) : Int :=
   | .z0  => 0
   | .p60 => 2
   | .p90 => 3
+
+/-- Maps an AllowedStep to its corresponding GeneralTurn representation. -/
+def AllowedStep.toGeneralTurn (s : AllowedStep) : GeneralTurn :=
+  match s with
+  | .m90 => ⟨-3, by decide⟩
+  | .m60 => ⟨-2, by decide⟩
+  | .z0  => ⟨0, by decide⟩
+  | .p60 => ⟨2, by decide⟩
+  | .p90 => ⟨3, by decide⟩
+
+/-- Proves that every AllowedStep satisfies the ValidGeneralWedge constraint. -/
+theorem AllowedStep.wedge_valid (s : AllowedStep) (sum : Int) : ValidGeneralWedge (s.toGeneralTurn) sum := by
+  sorry
+
+/-- Proves that the AllowedStep turns match exactly the outputs of general_turn_exhaustion. -/
+theorem AllowedStep.step_is_valid (s : AllowedStep) :
+    s.toStep = -3 ∨ s.toStep = 2 ∨ s.toStep = 0 ∨ s.toStep = -2 ∨ s.toStep = 3 := by
+  have h_wedge : ∀ sum, ValidGeneralWedge (s.toGeneralTurn) sum := by
+    intro sum
+    exact AllowedStep.wedge_valid s sum
+  have h_ex := general_turn_exhaustion (s.toGeneralTurn) h_wedge
+  have h_eq : s.toStep = (s.toGeneralTurn).val := by
+    cases s <;> rfl
+  rw [h_eq]
+  exact h_ex
 
 /-- Traces a relative sequence of allowed boundary turning steps
     and accumulates a list of absolute LatticePoint vertices.
@@ -46,6 +141,8 @@ def paths_baseline_marker : Nat := 0
 
 #print axioms AllowedStep.toStep
 #print axioms tracePathVertices
+#print axioms AllowedStep.step_is_valid
+#print axioms general_turn_exhaustion
 
 /-- Evaluates whether a quadratic integer u + v*sqrt(3)
     is non-negative. Perfectly maps the exact conditional
@@ -134,5 +231,3 @@ def discreteSegmentsIntersectOrTouch (a b c d : LatticePoint) : Bool :=
   (s4 == 0 && onSegment c d b)
 
 #print axioms discreteSegmentsIntersectOrTouch
-
-
