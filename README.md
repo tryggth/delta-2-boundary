@@ -2,6 +2,8 @@
 
 This repository contains the formal mathematical verification of the boundary uniqueness and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. 
 
+For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf).
+
 By unifying an optimized discrete combinatorial search pipeline written in Python with a rigorous, axiom-pure type-theoretic state machine written in **Lean 4**, this framework independently proves that local boundary turn constraints uniquely force a deterministic tiling cascade.
 
 ![Spectre Delta-2 Metatile Patch Boundary](./delta.svg)
