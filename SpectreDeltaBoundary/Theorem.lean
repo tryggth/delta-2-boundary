@@ -9,14 +9,14 @@ import SpectreDeltaBoundary.Monotile
 import SpectreDeltaBoundary.Certificate
 import SpectreDeltaBoundary.CertificateData
 
-set_option maxRecDepth 200000
-
 /-!
 # Main Boundary Uniqueness Theorem
 
 Ties the 70-step computational peeling certificate directly to the
 computable state machine validator to prove boundary reduction completeness.
 -/
+
+set_option maxRecDepth 200000
 
 /-- Theorem establishing that the automated 70-step geometric peeling certificate
     successfully and uniquely reduces the complete initial delta-2 metatile patch boundary

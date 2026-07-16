@@ -45,7 +45,11 @@ The verification framework is engineered as a multi-stage verification pipeline:
     ├── Locks.lean                # 5 standalone computational holographic lock lemmas
     ├── Certificate.lean          # Topological edge-annihilation state machine validator
     ├── CertificateData.lean      # Auto-generated 70-step explicit coordinate data payload
-    └── Theorem.lean              # Main boundary uniqueness theorem and kernel entry point
+    ├── Theorem.lean              # Main boundary uniqueness theorem and kernel entry point
+    ├── Tier1Certificates.lean    # Auto-generated certificates for Tier 1 metatiles
+    ├── Tier1Theorems.lean        # Formal uniqueness verification for Tier 1 metatiles
+    └── Geometry
+        └── TransferMatrixBatches.lean # Geometric transfer matrix computation batches
 ```
 
 ---

@@ -1,5 +1,16 @@
+/-
+Copyright (c) 2026 tryggth. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: tryggth
+-/
 import SpectreDeltaBoundary.Bedrock
 import SpectreDeltaBoundary.Paths
+
+/-!
+# Geometry Monotile definitions
+-/
+
+set_option linter.style.header false
 
 /-- The rigid, immutable 14-turn cyclic path sequence
     that defines the Spectre monotile.

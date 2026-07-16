@@ -1,4 +1,15 @@
+/-
+Copyright (c) 2026 tryggth. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: tryggth
+-/
 import Mathlib.Tactic.Ext
+
+/-!
+# Bedrock Lattice definitions
+-/
+
+set_option linter.style.header false
 
 /-- A lattice point in Z[ζ12] represented by four exact integer coordinates. -/
 @[ext]

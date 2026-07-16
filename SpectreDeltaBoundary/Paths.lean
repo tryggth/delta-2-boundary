@@ -98,21 +98,10 @@ def AllowedStep.toGeneralTurn (s : AllowedStep) : GeneralTurn :=
   | .p60 => ⟨2, by decide⟩
   | .p90 => ⟨3, by decide⟩
 
-/-- Proves that every AllowedStep satisfies the ValidGeneralWedge constraint. -/
-theorem AllowedStep.wedge_valid (s : AllowedStep) (sum : Int) : ValidGeneralWedge (s.toGeneralTurn) sum := by
-  sorry
-
 /-- Proves that the AllowedStep turns match exactly the outputs of general_turn_exhaustion. -/
 theorem AllowedStep.step_is_valid (s : AllowedStep) :
     s.toStep = -3 ∨ s.toStep = 2 ∨ s.toStep = 0 ∨ s.toStep = -2 ∨ s.toStep = 3 := by
-  have h_wedge : ∀ sum, ValidGeneralWedge (s.toGeneralTurn) sum := by
-    intro sum
-    exact AllowedStep.wedge_valid s sum
-  have h_ex := general_turn_exhaustion (s.toGeneralTurn) h_wedge
-  have h_eq : s.toStep = (s.toGeneralTurn).val := by
-    cases s <;> rfl
-  rw [h_eq]
-  exact h_ex
+  cases s <;> decide
 
 /-- Traces a relative sequence of allowed boundary turning steps
     and accumulates a list of absolute LatticePoint vertices.
