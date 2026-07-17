@@ -5,6 +5,7 @@ message_basin
 *.svg
 __pycache__/
 *.pyc
+.venv/
 
 # Isolate local GitHub Wiki repository
 /wiki/
