@@ -18,7 +18,7 @@ This paper documents a formal verification framework that verifies boundary-forc
 \section{Introduction}
 \label{sec:intro}
 % Section template: Framing the boundary value problem for aperiodic patches.
-Establishing boundary-forced tiling uniqueness is a historically difficult problem for aperiodic monotiles. Standard unconstrained backtracking search algorithms suffer from exponential state space explosion and geometric frustration. For the Spectre chiral monotile~\cite{smith2024aperiodic}, these constraints are especially strict because the tile tiles the plane without requiring mirror reflections. Fusing physical grid embeddings with a topological state machine inside the Lean 4 proof assistant~\cite{moura2021lean4} allows us to prove that boundary turn constraints uniquely force a deterministic tiling cascade.
+Establishing boundary-forced tiling uniqueness is a historically difficult problem for aperiodic monotiles. Standard unconstrained backtracking search algorithms suffer from exponential state space explosion and geometric frustration. For the Spectre chiral monotile~\cite{smith2023chiral}, these constraints are especially strict because the tile tiles the plane without requiring mirror reflections. Fusing physical grid embeddings with a topological state machine inside the Lean 4 proof assistant~\cite{moura2021lean4} allows us to prove that boundary turn constraints uniquely force a deterministic tiling cascade.
 
 \section{Algebraic Foundations: Exact Cyclotomic Lattice Embedding}
 \label{sec:algebra}
@@ -52,7 +52,7 @@ This allows the state machine to check if segment boundaries cross transversely 
 \label{sec:cascade}
 We frame the token-cascade verification as a formal combinatorial boundary reduction
 cascade utilizing reductive structural induction. The boundary consists of closed loops
-of directed edges. At each step, the state machine removes a tile associated with a
+of directed edges. The hierarchical metatiles and patches verified in this work (specifically the 9 Tier-1 metatiles and the Generation-2 Delta-2 metatile patch) are defined by Smith et al. in their discovery of the chiral aperiodic monotile~\cite{smith2023chiral}. At each step, the state machine removes a tile associated with a
 localized boundary path called a lock. We define these locks as local turn sequences
 that geometrically force a unique tile orientation. Analogous to Gonthier's landmark
 formal proof of the Four Color Theorem~\cite{gonthier2008four}, our approach relies on

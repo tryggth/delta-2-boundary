@@ -1,6 +1,6 @@
 # Spectre Delta Boundary Verification
 
-This repository contains the formal mathematical verification of the boundary uniqueness and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. 
+This repository contains the formal mathematical verification of the boundary uniqueness and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. The hierarchical metatiles (including the 9 Tier-1 metatiles Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi, and the Generation-2 Delta-2 metatile patch) verified in this project are defined in the landmark paper: **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)). 
 
 For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf).
 
