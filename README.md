@@ -10,6 +10,17 @@ By unifying an optimized discrete combinatorial search pipeline written in Pytho
 
 ---
 
+## 🎬 Peeling Cascade Animation
+
+Watch the complete 70-step tile reduction and boundary peeling cascade animation:
+
+[![Spectre Delta-2 Peeling Cascade Animation](https://img.shields.io/badge/Watch-Peeling%20Animation-ff007f?style=for-the-badge&logo=play)](./media/peeling_animation.mp4)
+
+*(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
+
+---
+
+
 ## 📐 Project Architecture & Pipeline
 
 The verification framework is engineered as a multi-stage verification pipeline:
