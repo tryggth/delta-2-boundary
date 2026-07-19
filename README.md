@@ -18,8 +18,29 @@ Watch the complete 70-step tile reduction and boundary peeling cascade animation
 
 *(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
 
----
+## 🛠️ Spectre Tiling & Peeling Solver CLI
 
+The project includes an optimized modular Python solver suite located under [spectre_solver/](file:///home/tryggth2009/spectre-delta-boundary/spectre_solver) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](file:///home/tryggth2009/spectre-delta-boundary/spectre_patch_solver.py).
+
+### Core Features:
+1. **Dynamic Inflation Generator:** Generates correct, arbitrary-depth hierarchical metatile patches dynamically (Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi).
+2. **Inward Backtracking Solver:** Reconstructs the internal tiling configuration from a given boundary loop. Supports fast centroid-distance bounding box optimization (`--optimize`) and guided search prioritization (`--guide`).
+3. **External Peeling Cascade:** Implements a state-machine that progressively peels away boundary tiles. It uses:
+   - *Topological Preservation:* Prioritizes lock sequences whose removal preserves the single-loop connectivity of the remaining patch boundary.
+   - *Compactness & Roundness:* Maximizes shared boundary edges to peel from deep corners/pocket indentations first, naturally keeping the remaining patch compact.
+4. **Lean Certificate Serialization:** Directly outputs compiling Lean 4 data structures for formal kernel verification (`--cert`).
+
+### Quick CLI Reference:
+* **Solve a Gen-2 Delta patch layout:**
+  ```bash
+  python3 spectre_patch_solver.py -t Delta -g 2 --solve --optimize --guide
+  ```
+* **Run peeling cascade and generate Lean certificate:**
+  ```bash
+  python3 spectre_patch_solver.py -t Delta -g 2 --cert --locks-csv ./spectre_optimized_sieve_N8.csv --lean-out ./SpectreDeltaBoundary/CertificateData.lean
+  ```
+
+---
 
 ## 📐 Project Architecture & Pipeline
 
@@ -98,13 +119,25 @@ python3 generate-n8-sieve.py
 
 ### 4. Run the Cascading Simulation & Serialize Coordinates
 
-Execute the geometric peeling script. This engine runs the 70-step tile removal sequence, tracks the shifting boundaries, and exports the explicit coordinate arrays into a compile-ready Lean 4 anonymous constructor payload module.
+Execute the modular tiling solver and peeling certificate generator. This engine runs the 84-step tile removal sequence using connected/topological preservation and compactness heuristics, tracks the shifting boundaries, and exports the explicit coordinate arrays into a compile-ready Lean 4 anonymous constructor payload module.
 
 ```bash
-python3 generate-lean-data.py
+# Run the peeling cascade solver to regenerate the Lean 4 certificate
+python3 spectre_patch_solver.py -t Delta -g 2 --cert
+
+# (Optional) Verify the complete 71-tile patch is internally tileable via backtracking
+python3 spectre_patch_solver.py -t Delta -g 2 --solve --optimize --guide
 ```
 
-### 5. Execute the Formal Lean 4 Kernel Verification
+### 5. Generate Premium Metatile Vector SVGs
+
+You can regenerate the entire high-resolution premium vector SVG suite (9 metatiles x 2 generations) into the `assets/` directory:
+
+```bash
+python3 build_assets.py
+```
+
+### 6. Execute the Formal Lean 4 Kernel Verification
 
 Trigger the Lean 4 build engine. This step compiles the whole library and invokes the `decide` tactic on the top-level uniqueness theorem, forcing Lean's virtual machine to compute the entire reduction chain and verify its total logical purity.
 

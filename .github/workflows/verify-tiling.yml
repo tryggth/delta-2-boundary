@@ -1,0 +1,37 @@
+name: Verify Spectre Delta Boundary Proof
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Run Python Integration Tests
+      run: |
+        python3 test_solver_integration.py
+
+    - name: Generate Lean Peeling Certificate
+      run: |
+        python3 spectre_patch_solver.py -t Delta -g 2 --cert --locks-csv ./spectre_optimized_sieve_N8.csv --lean-out ./SpectreDeltaBoundary/CertificateData.lean
+
+    - name: Install Elan & Lean 4
+      run: |
+        curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+        echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+    - name: Build and Verify Lean Uniqueness Proof
+      run: |
+        lake build
