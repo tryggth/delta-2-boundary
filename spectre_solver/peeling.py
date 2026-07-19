@@ -1,10 +1,156 @@
 import csv
 import sys
 import os
+import json
+from datetime import datetime
 from spectre_solver.geometry import LatticePoint, PlacedTile, vec_to_dir
 from spectre_solver.tiling import extract_boundary_loop, extract_boundary_loops_multi
 
 DEG_TO_STEPS = {-90: -3, -60: -2, 0: 0, 60: 2, 90: 3}
+STEPS_TO_DEG = {-3: -90, -2: -60, 0: 0, 2: 60, 3: 90}
+
+# Known anchor lock types with human-readable labels
+LOCK_LABELS = {
+    300033: "L3-033 [0°,60°,0°]",
+    300049: "L3-049 [60°,90°,60°]",
+    400074: "L4-074 [0°,-60°,90°,60°]",
+    400110: "L4-110 [60°,90°,-60°,90°]",
+    400129: "L4-129 [90°,-60°,90°,60°]",
+    600094: "L6-094 [-90°,60°,-90°,60°,90°,60°]",
+    700175: "L7-175 [-90°,60°,-90°,60°,90°,-60°,90°]",
+}
+
+def analyze_boundary(b_edges, all_locks):
+    """Compute boundary analytics: length, turn histogram, lock counts, cycle count."""
+    n_edges = len(b_edges)
+    # Compute turns
+    turns = get_turns(b_edges)
+    # Convert step-units to degrees
+    turn_degs = [STEPS_TO_DEG.get(t, t * 30) for t in turns]
+    # Turn histogram
+    turn_hist = {-90: 0, -60: 0, 0: 0, 60: 0, 90: 0}
+    for d in turn_degs:
+        if d in turn_hist:
+            turn_hist[d] += 1
+        else:
+            turn_hist[d] = turn_hist.get(d, 0) + 1
+
+    # Lock counts: scan for each known lock on this boundary
+    extended_turns = turns + turns
+    lock_counts = {}
+    for length in range(3, 9):
+        for i in range(n_edges):
+            subpath = tuple(extended_turns[i : i + length])
+            if subpath in all_locks:
+                lock_id_str = all_locks[subpath]
+                nat_id = parse_lock_id_to_nat(lock_id_str)
+                lock_counts[nat_id] = lock_counts.get(nat_id, 0) + 1
+
+    return {
+        "length": n_edges,
+        "turn_histogram": turn_hist,
+        "lock_counts": lock_counts,
+    }
+
+def count_boundary_cycles(patch):
+    """Count the number of distinct boundary loops in a patch."""
+    loops = extract_boundary_loops_multi(patch)
+    return len(loops)
+
+def generate_boundary_report(report_data, supertile_type, generation, report_path=None):
+    """Write or print a CSV boundary report with one row per boundary step."""
+    import io
+
+    # Collect all distinct lock IDs that appear in any boundary's lock_counts
+    all_lock_ids = set()
+    for entry in report_data:
+        all_lock_ids.update(entry["boundary_info"]["lock_counts"].keys())
+    all_lock_ids = sorted(all_lock_ids)
+
+    # Build header
+    header = [
+        "step",
+        "tiles_remaining",
+        "boundary_length",
+        "boundary_cycles",
+        "turns_-90",
+        "turns_-60",
+        "turns_0",
+        "turns_+60",
+        "turns_+90",
+        "locks_total",
+        "locks_distinct",
+    ]
+    # Add a column for each lock type found on any boundary
+    for lid in all_lock_ids:
+        label = LOCK_LABELS.get(lid, f"L?-{lid}")
+        header.append(f"present_{label}")
+
+    header.extend([
+        "lock_used_id",
+        "lock_used_label",
+        "peeled_origin",
+        "peeled_ori",
+    ])
+
+    # Build rows
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(header)
+
+    for entry in report_data:
+        step = entry["step"]
+        tiles_remaining = entry["tiles_remaining"]
+        info = entry["boundary_info"]
+        cycles = entry["cycles"]
+        lock_used = entry.get("lock_used", None)
+        tile_peeled = entry.get("tile_peeled", None)
+
+        th = info["turn_histogram"]
+        lc = info["lock_counts"]
+
+        row = [
+            step,
+            tiles_remaining,
+            info["length"],
+            cycles,
+            th.get(-90, 0),
+            th.get(-60, 0),
+            th.get(0, 0),
+            th.get(60, 0),
+            th.get(90, 0),
+            sum(lc.values()) if lc else 0,
+            len(lc),
+        ]
+
+        # Per-lock-type columns
+        for lid in all_lock_ids:
+            row.append(lc.get(lid, 0))
+
+        # Lock used and tile peeled
+        if lock_used is not None:
+            row.append(lock_used)
+            row.append(LOCK_LABELS.get(lock_used, f"L?-{lock_used}"))
+        else:
+            row.extend(["", ""])
+
+        if tile_peeled is not None:
+            row.append(f"({tile_peeled['origin'][0]},{tile_peeled['origin'][1]},{tile_peeled['origin'][2]},{tile_peeled['origin'][3]})")
+            row.append(tile_peeled["ori"])
+        else:
+            row.extend(["", ""])
+
+        writer.writerow(row)
+
+    csv_text = output.getvalue()
+
+    if report_path:
+        os.makedirs(os.path.dirname(report_path) if os.path.dirname(report_path) else ".", exist_ok=True)
+        with open(report_path, "w", newline="") as f:
+            f.write(csv_text)
+        print(f"Boundary report written to {report_path}")
+    else:
+        print(csv_text)
 
 def align_lattice_point(pt, start_v, start_d):
     shifted = pt.sub(start_v)
@@ -82,7 +228,7 @@ def load_locks_database(csv_path: str) -> dict:
                 locks[steps] = path_id
     return locks
 
-def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_type: str, generation: int, lean_output_path: str):
+def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_type: str, generation: int, lean_output_path: str, report_path: str = None):
     print("Loading locks database...")
     all_locks = load_locks_database(locks_csv_path)
     print(f"Loaded {len(all_locks)} absolute holographic locks.")
@@ -119,13 +265,26 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
     print("Running connected locked cascade peeling solver with roundness and topological heuristics...")
     current_patch = list(aligned_patch)
     peel_steps = []
+    report_data = []
 
-    step_num = 1
+    step_num = 0
     while len(current_patch) > 1:
         b_poly, b_edges = extract_boundary_loop(current_patch)
         n_loop = len(b_edges)
         turns_curr = get_turns(b_edges)
         extended_turns = turns_curr + turns_curr
+
+        # Collect boundary analytics for the report
+        boundary_info = analyze_boundary(b_edges, all_locks)
+        cycles = count_boundary_cycles(current_patch)
+        report_entry = {
+            "step": step_num,
+            "tiles_remaining": len(current_patch),
+            "boundary_info": boundary_info,
+            "cycles": cycles,
+            "lock_used": None,
+            "tile_peeled": None,
+        }
         
         # 1. Gather all candidate locks
         candidates = []
@@ -196,6 +355,11 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
         # Track tile data before removal
         a, b, c, d_coord = target.origin.to_tuple()
         ori = target.orientation
+
+        # Update report entry with lock and tile info
+        report_entry["lock_used"] = nat_lock_id
+        report_entry["tile_peeled"] = {"origin": (a, b, c, d_coord), "ori": ori}
+        report_data.append(report_entry)
         
         current_patch.remove(target)
         next_b_poly, next_b_edges = extract_boundary_loop(current_patch)
@@ -211,6 +375,22 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
 
     last_tile = current_patch[0]
     print(f"Cascade complete. Final remaining tile is at {last_tile.origin.to_tuple()}")
+
+    # Record final single-tile boundary for the report
+    final_b_poly, final_b_edges = extract_boundary_loop(current_patch)
+    final_info = analyze_boundary(final_b_edges, all_locks)
+    final_cycles = count_boundary_cycles(current_patch)
+    report_data.append({
+        "step": step_num,
+        "tiles_remaining": 1,
+        "boundary_info": final_info,
+        "cycles": final_cycles,
+        "lock_used": None,
+        "tile_peeled": None,
+    })
+
+    # Generate boundary report
+    generate_boundary_report(report_data, supertile_type, generation, report_path)
 
     # Write the CertificateData.lean file
     print(f"Writing Lean 4 certificate to {lean_output_path}...")

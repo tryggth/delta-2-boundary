@@ -22,8 +22,11 @@ Watch the complete 70-step tile reduction and boundary peeling cascade animation
 
 The project includes an optimized modular Python solver suite located under [spectre_solver/](file:///home/tryggth2009/spectre-delta-boundary/spectre_solver) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](file:///home/tryggth2009/spectre-delta-boundary/spectre_patch_solver.py).
 
+> [!IMPORTANT]
+> **Generation Limitation:** The solver suite only supports **Generation 1 and Generation 2** metatiles. Generations 3 and above are currently unsupported due to the alternating reflection parities and shifting boundary offsets of asymmetric metatiles. The CLI will validate the generation input and reject values greater than 2.
+
 ### Core Features:
-1. **Dynamic Inflation Generator:** Generates correct, arbitrary-depth hierarchical metatile patches dynamically (Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi).
+1. **Dynamic Inflation Generator:** Generates correct hierarchical metatile patches dynamically (Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi) up to Generation 2.
 2. **Inward Backtracking Solver:** Reconstructs the internal tiling configuration from a given boundary loop. Supports fast centroid-distance bounding box optimization (`--optimize`) and guided search prioritization (`--guide`).
 3. **External Peeling Cascade:** Implements a state-machine that progressively peels away boundary tiles. It uses:
    - *Topological Preservation:* Prioritizes lock sequences whose removal preserves the single-loop connectivity of the remaining patch boundary.

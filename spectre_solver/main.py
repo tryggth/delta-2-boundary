@@ -337,8 +337,12 @@ def main():
     parser.add_argument("--cert", action="store_true", help="Run external boundary peeling cascade solver and generate Lean certificate")
     parser.add_argument("--locks-csv", type=str, default="/home/tryggth2009/boundary/spectre_optimized_sieve_N8.csv", help="Path to lock database N8 CSV file")
     parser.add_argument("--lean-out", type=str, default="./SpectreDeltaBoundary/CertificateData.lean", help="Path to write Lean 4 certificate file")
+    parser.add_argument("--report", nargs="?", const="auto", default=None, help="Generate boundary report. Optionally specify output path; if omitted prints to stdout; if 'auto' generates versioned filename.")
     
     args = parser.parse_args()
+    if args.generation > 2:
+        print(f"Unsupported for generation {args.generation}")
+        sys.exit(1)
     use_optimization = args.optimize
     
     print(f"Generating inflated patch of type '{args.type}' at depth {args.generation}...")
@@ -406,7 +410,20 @@ def main():
 
     if args.cert:
         print("\nInitializing peeling cascade solver to generate Lean certificate...")
-        run_peeling_cascade(patch, args.locks_csv, args.type, args.generation, args.lean_out)
+        # Determine report path
+        report_path = None
+        if args.report is not None:
+            if args.report == "auto":
+                # Auto-generate versioned filename
+                import glob
+                base = f"{args.type.lower()}_{args.generation}_boundary_report"
+                existing = glob.glob(f"{base}_v*.csv")
+                version = len(existing) + 1
+                report_path = f"{base}_v{version}.csv"
+            elif args.report:
+                report_path = args.report
+            # else: report_path stays None => prints to stdout
+        run_peeling_cascade(patch, args.locks_csv, args.type, args.generation, args.lean_out, report_path=report_path)
 
 if __name__ == "__main__":
     main()
