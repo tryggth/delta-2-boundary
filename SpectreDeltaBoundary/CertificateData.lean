@@ -1,7 +1,16 @@
+/-
+Copyright (c) 2026 tryggth. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: tryggth
+-/
 import SpectreDeltaBoundary.Bedrock
 import SpectreDeltaBoundary.Paths
 import SpectreDeltaBoundary.Monotile
 import SpectreDeltaBoundary.Certificate
+
+/-!
+# Peeling cascade certificate data for Lambda_2
+-/
 
 set_option linter.style.longLine false
 set_option linter.style.header false

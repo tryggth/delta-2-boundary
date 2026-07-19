@@ -406,10 +406,19 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
     os.makedirs(os.path.dirname(lean_output_path), exist_ok=True)
     
     lean_lines = [
+        "/-",
+        "Copyright (c) 2026 tryggth. All rights reserved.",
+        "Released under Apache 2.0 license as described in the file LICENSE.",
+        "Authors: tryggth",
+        "-/",
         "import SpectreDeltaBoundary.Bedrock",
         "import SpectreDeltaBoundary.Paths",
         "import SpectreDeltaBoundary.Monotile",
         "import SpectreDeltaBoundary.Certificate",
+        "",
+        "/-!",
+        f"# Peeling cascade certificate data for {supertile_type}_{generation}",
+        "-/",
         "",
         "set_option linter.style.longLine false",
         "set_option linter.style.header false",
