@@ -335,7 +335,7 @@ def main():
     parser.add_argument("-b", "--boundary-only", action="store_true", help="Only place tiles that share at least one edge with the original boundary")
     parser.add_argument("--guide", action="store_true", help="Guide the solver using the generated patch solution for fast verification")
     parser.add_argument("--cert", action="store_true", help="Run external boundary peeling cascade solver and generate Lean certificate")
-    parser.add_argument("--locks-csv", type=str, default="/home/tryggth2009/boundary/spectre_optimized_sieve_N8.csv", help="Path to lock database N8 CSV file")
+    parser.add_argument("--locks-csv", type=str, default=None, help="Path to lock database N8 CSV file (optional, defaults to built-in database)")
     parser.add_argument("--lean-out", type=str, default="./SpectreDeltaBoundary/CertificateData.lean", help="Path to write Lean 4 certificate file")
     parser.add_argument("--report", nargs="?", const="auto", default=None, help="Generate boundary report. Optionally specify output path; if omitted prints to stdout; if 'auto' generates versioned filename.")
     

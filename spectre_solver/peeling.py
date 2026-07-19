@@ -228,9 +228,18 @@ def load_locks_database(csv_path: str) -> dict:
                 locks[steps] = path_id
     return locks
 
+from spectre_solver.locks_data import LOCKS
+
 def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_type: str, generation: int, lean_output_path: str, report_path: str = None):
-    print("Loading locks database...")
-    all_locks = load_locks_database(locks_csv_path)
+    if locks_csv_path:
+        print(f"Loading locks database from {locks_csv_path}...")
+        all_locks = load_locks_database(locks_csv_path)
+        if not all_locks:
+            print("Falling back to built-in locks database.")
+            all_locks = LOCKS
+    else:
+        print("Using built-in locks database.")
+        all_locks = LOCKS
     print(f"Loaded {len(all_locks)} absolute holographic locks.")
 
     # Extract boundary loop
