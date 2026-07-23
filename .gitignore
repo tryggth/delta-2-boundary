@@ -9,3 +9,4 @@ __pycache__/
 
 # Isolate local GitHub Wiki repository
 /wiki/
+geometry_checks_ref/

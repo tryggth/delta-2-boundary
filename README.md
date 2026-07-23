@@ -1,6 +1,6 @@
 # Spectre Delta Boundary Verification
 
-This repository contains the formal mathematical verification of the boundary uniqueness and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. The hierarchical metatiles (including the 9 Tier-1 metatiles Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi, and the Generation-2 Delta-2 metatile patch) verified in this project are defined in the landmark paper: **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)). 
+This repository contains the formal mathematical verification of the tiling uniqueness within the boundary and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. The hierarchical metatiles (including the 9 Tier-1 metatiles Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi, and the Generation-2 Delta-2 metatile patch) verified in this project are defined in the landmark paper: **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)). 
 
 For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf).
 
@@ -80,9 +80,9 @@ The verification framework is engineered as a multi-stage verification pipeline:
     ├── Locks.lean                # 5 standalone computational holographic lock lemmas
     ├── Certificate.lean          # Topological edge-annihilation state machine validator
     ├── CertificateData.lean      # Auto-generated 70-step explicit coordinate data payload
-    ├── Theorem.lean              # Main boundary uniqueness theorem and kernel entry point
+    ├── Theorem.lean              # Main tiling uniqueness theorem and kernel entry point
     ├── Tier1Certificates.lean    # Auto-generated certificates for Tier 1 metatiles
-    ├── Tier1Theorems.lean        # Formal uniqueness verification for Tier 1 metatiles
+    ├── Tier1Theorems.lean        # Formal tiling uniqueness verification for Tier 1 metatiles
     └── Geometry
         └── TransferMatrixBatches.lean # Geometric transfer matrix computation batches
 ```

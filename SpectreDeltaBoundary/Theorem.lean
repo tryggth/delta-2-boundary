@@ -10,7 +10,7 @@ import SpectreDeltaBoundary.Certificate
 import SpectreDeltaBoundary.CertificateData
 
 /-!
-# Main Boundary Uniqueness Theorem
+# Main Tiling Uniqueness Theorem
 
 Ties the 70-step computational peeling certificate directly to the
 computable state machine validator to prove boundary reduction completeness.
