@@ -2,7 +2,7 @@
 
 This repository contains the formal mathematical verification of the tiling uniqueness within the boundary and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. The hierarchical metatiles (including the 9 Tier-1 metatiles Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi, and the Generation-2 Delta-2 metatile patch) verified in this project are defined in the landmark paper: **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)). 
 
-For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf).
+For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf). For exhaustive documentation on the algebraic foundations, cyclotomic ring math, holographic lock registry, and type-theoretic state machines, visit the [Project Wiki](https://github.com/tryggth/delta-2-boundary/wiki).
 
 By unifying an optimized discrete combinatorial search pipeline written in Python with a rigorous, axiom-pure type-theoretic state machine written in **Lean 4**, this framework independently proves that local boundary turn constraints uniquely force a deterministic tiling cascade.
 
