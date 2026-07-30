@@ -136,15 +136,9 @@ def boundaryToWalk : BoundaryWord → Walk
 def isLockFreePunctured (w : BoundaryWord) : Bool :=
   (boundaryToWalk w).all isPuncturedState
 
-/-- **Bridge axiom 1 (semantic alignment).**
-    Absence of `ContainsLock` patterns implies every 3-gram is a punctured
-    state.  This connects the subsequence-based lock definition to the
-    state-based filter used by the transfer matrix DFS engine.
-
-    Justification: the 3-step lock patterns `[z0, p60, z0]` and
-    `[p60, p90, p60]` generate exactly the states `(z0, p60, z0)` and
-    `(p60, p90, p60)` for which `isPuncturedState` returns `false`.
-    The 4-step patterns correspond to `completesLongLock` sequences. -/
+/-- **Bridge axiom 1 (Lock-free punctured states).**
+    If a boundary word contains no locks, then every 3-gram in its boundary walk
+    is a punctured state. -/
 axiom lock_free_implies_punctured
     (w : BoundaryWord) (h : ¬ ContainsLock w) :
     isLockFreePunctured w = true
