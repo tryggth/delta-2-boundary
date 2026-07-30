@@ -1,0 +1,96 @@
+================================================================================
+  agy_results.txt — AlgebraicBoundary Module Build Report
+  Generated: 2026-07-30
+================================================================================
+
+## Summary
+
+Successfully created SpectreDeltaBoundary/AlgebraicBoundary.lean and added it
+to the project's central import file (SpectreDeltaBoundary.lean).
+
+## Files Modified
+
+1. SpectreDeltaBoundary/AlgebraicBoundary.lean  (NEW — 148 lines)
+2. SpectreDeltaBoundary.lean                     (added import line)
+
+## Compilation Result
+
+BUILD: SUCCESS (70 jobs, 0 errors, 0 warnings)
+
+Axiom report from `#print axioms no_minimal_phason`:
+
+  'no_minimal_phason' depends on axioms:
+    [gauss_bonnet_patch,
+     lock_forces_shared_tile,
+     lock_free_curvature_bound,
+     propext,
+     Classical.choice,
+     Quot.sound]
+
+The first three are our custom axioms forming the logical skeleton.
+The latter three (propext, Classical.choice, Quot.sound) are standard Lean 4
+foundational axioms used by classical case analysis (Classical.em).
+
+No `sorry` or `sorryAx` appears — the proof is complete modulo axioms.
+
+## Definitions Introduced
+
+  - `Patch`            : opaque Type (finite, simply-connected tile set)
+  - `BoundaryWord`     : abbrev for List AllowedStep
+  - `patchBoundary`    : opaque Patch → BoundaryWord
+  - `patchIntersect`   : opaque Patch → Patch → Prop
+  - `wordCurvature`    : BoundaryWord → Int  (sum of AllowedStep.toStep)
+  - `ContainsLock`     : BoundaryWord → Prop (∃ sub-window matching a lock pattern)
+  - `IsMinimalPhason`  : Patch → Patch → Prop (same boundary ∧ disjoint)
+
+## Axioms Introduced
+
+  - `gauss_bonnet_patch`       : wordCurvature (patchBoundary p) = 12
+  - `lock_free_curvature_bound`: ¬ ContainsLock w → wordCurvature w ≤ 2
+  - `lock_forces_shared_tile`  : ContainsLock w → shared tile forced
+
+## Theorem Proved
+
+  `no_minimal_phason (p1 p2 : Patch) : ¬ IsMinimalPhason p1 p2`
+
+  Proof strategy:
+    1. Assume IsMinimalPhason p1 p2 (same boundary, no shared tile).
+    2. Gauss-Bonnet gives wordCurvature (patchBoundary p1) = 12.
+    3. Classical case split on ContainsLock (patchBoundary p1):
+       - Lock present → lock_forces_shared_tile → patchIntersect p1 p2
+         → contradicts ¬ patchIntersect p1 p2.
+       - No lock → lock_free_curvature_bound → wordCurvature ≤ 2
+         → contradicts 12 = wordCurvature (omega).
+
+## Design Notes
+
+  - `Patch` is `opaque` rather than a concrete structure because the
+    uniqueness argument only needs the boundary-word and intersection API.
+    Concrete geometry lives in Monotile.lean / Locks.lean.
+
+  - `ContainsLock` enumerates 5 lock patterns drawn directly from
+    `isLockedState` (2 short locks) and `completesLongLock` (3 long locks)
+    in TransferMatrixBatches.lean.
+
+  - The curvature units are 30°-steps (AllowedStep.toStep values).
+    12 step-units = 360°.  The transfer matrix batches prove cycle
+    curvature ≤ 60° = 2 step-units for punctured (lock-free) walks.
+
+  - `by_cases` was replaced with `rcases Classical.em ...` because
+    `ContainsLock` involves existential quantifiers (∃ i, ...) and
+    thus is not computationally decidable.
+
+## Git Diff
+
+--- a/SpectreDeltaBoundary.lean
++++ b/SpectreDeltaBoundary.lean
+@@ -14,6 +14,7 @@ import SpectreDeltaBoundary.Theorem
+ import SpectreDeltaBoundary.Tier1Certificates
+ import SpectreDeltaBoundary.Tier1Theorems
+ import SpectreDeltaBoundary.Geometry.TransferMatrixBatches
++import SpectreDeltaBoundary.AlgebraicBoundary
+
+New file: SpectreDeltaBoundary/AlgebraicBoundary.lean (148 lines)
+  — Full contents committed; see git log for details.
+
+================================================================================

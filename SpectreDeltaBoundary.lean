@@ -14,6 +14,7 @@ import SpectreDeltaBoundary.Theorem
 import SpectreDeltaBoundary.Tier1Certificates
 import SpectreDeltaBoundary.Tier1Theorems
 import SpectreDeltaBoundary.Geometry.TransferMatrixBatches
+import SpectreDeltaBoundary.AlgebraicBoundary
 
 /-!
 # SpectreDeltaBoundary library entry point
