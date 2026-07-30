@@ -261,7 +261,6 @@ lemma extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4
 lemma extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
     extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2] := sorry
 
-lemma lock_bool_true (b : Bool) (h : b = true) : b = true := h
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
     proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
