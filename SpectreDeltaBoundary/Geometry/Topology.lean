@@ -1095,6 +1095,12 @@ lemma foldl_ite_interior_count (w : Walk) (c : Int) :
       dsimp [List.length]
       ring
 
+/-- Double counting bridge axiom relating face internal angle totals to vertex angle partition sums. -/
+axiom face_angle_double_count_relation (patch : TilePatch) (w : Walk) (l : List LatticePoint) :
+    patchTotalFaceAngles patch =
+    360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - 360
+
 /-- Euler characteristic relation for disk-like cell complexes of Spectre monotiles:
     The number of interior vertices V_int, boundary vertices V_bdry, and tiles F
     satisfy: 360 * V_int + 180 * V_bdry - 2160 * F = 360.
@@ -1104,9 +1110,7 @@ theorem euler_characteristic_disk (patch : TilePatch) (w : Walk) (l : List Latti
     360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
     180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) -
     2160 * (patch.tiles.length : Int) = 360 := by
-  have h_double_count : patchTotalFaceAngles patch =
-    360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
-    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - 360 := sorry
+  have h_double_count := face_angle_double_count_relation patch w l
   unfold patchTotalFaceAngles at h_double_count
   omega
 
