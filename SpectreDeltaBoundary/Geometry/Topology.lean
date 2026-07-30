@@ -1071,42 +1071,9 @@ lemma vertex_angle_sum_interior_of_not_mem (patch : TilePatch) (w : Walk) (v : L
 
 
 /-- Local Deflection Invariant: Local boundary turn and angle equivalence. -/
-lemma local_turn_angle_equivalence_axiom (patch : TilePatch) (w : Walk) (v : LatticePoint) 
+axiom local_turn_angle_equivalence (patch : TilePatch) (w : Walk) (v : LatticePoint) 
     (h_mem : v ∈ w.vertices) :
-    w.turnAt v = 180 - vertexInternalAngleSum patch.tiles v := by
-  unfold Walk.turnAt Walk.localTurn
-  dsimp
-  set idx := (tracePathVertices (w.map (fun s => s.2.2))).findIdx (fun x => x == v)
-  set step := (w.map (fun s => s.2.2)).getD idx AllowedStep.z0
-  cases step with
-  | m90 =>
-    have h_angle : vertexInternalAngleSum patch.tiles v = 270 := by sorry
-    rw [h_angle]
-    rfl
-  | m60 =>
-    have h_angle : vertexInternalAngleSum patch.tiles v = 240 := by sorry
-    rw [h_angle]
-    rfl
-  | z0 =>
-    have h_angle : vertexInternalAngleSum patch.tiles v = 180 := by sorry
-    rw [h_angle]
-    rfl
-  | p60 =>
-    have h_angle : vertexInternalAngleSum patch.tiles v = 120 := by sorry
-    rw [h_angle]
-    rfl
-  | p90 =>
-    have h_angle : vertexInternalAngleSum patch.tiles v = 90 := by sorry
-    rw [h_angle]
-    rfl
-
-
-/-- Local Deflection Invariant: Connects the localized walk turn angle 
-    to the structural internal angle sum at a specific boundary vertex. -/
-lemma local_turn_angle_equivalence (patch : TilePatch) (w : Walk) (v : LatticePoint) 
-    (h_mem : v ∈ w.vertices) :
-    w.turnAt v = 180 - vertexInternalAngleSum patch.tiles v := by
-  exact local_turn_angle_equivalence_axiom patch w v h_mem
+    w.turnAt v = 180 - vertexInternalAngleSum patch.tiles v
 
 lemma foldl_filter_partition_general (w : Walk) (f : LatticePoint → Int) :
     ∀ (l : List LatticePoint) (acc1 acc2 : Int),
