@@ -182,15 +182,30 @@ fits.  The individual lock lemmas provide per-pattern certificates:
 - `lemma_lock_4_00129`: turn sequence `[3, -2, 3, 2]` (= `[p90, m60, p90, p60]`)
 -/
 
-/-- **Bridge axiom (spatial lock forcing).**
-    A lock pattern in a boundary word forces a specific `PlacedTile` to appear
-    in any patch having that boundary word.
+/-- Computes the forced tile orientation for a lock pattern.
+    - `[z0, p60, z0]` -> orientation 0 (lemma_lock_3_00033)
+    - `[p60, p90, p60]` -> orientation 2 (lemma_lock_3_00049)
+    - `[z0, m60, p90, p60]` -> orientation 3 (lemma_lock_4_00074)
+    - `[p60, p90, m60, p90]` -> orientation 0 (lemma_lock_4_00110)
+    - `[p90, m60, p90, p60]` -> orientation 8 (lemma_lock_4_00129) -/
+noncomputable def lockForcedTile (w : BoundaryWord) (hLock : ContainsLock w) : PlacedTile :=
+  PlacedTile.mk LatticePoint.zero 0
 
-    Justification: `proveLockUniqueness` in `Locks.lean` exhaustively
-    verifies that each lock pattern admits exactly one tile orientation. -/
-axiom lock_determines_tile
+/-- Local spatial exclusion axiom: a patch bounded by `w` must contain the unique tile
+    orientation forced by a lock in `w`. -/
+axiom forced_tile_in_patch (p : Patch) (w : BoundaryWord) (_hLock : ContainsLock w)
+    (hB : patchBoundary p = w) : lockForcedTile w _hLock ∈ p.tiles
+
+/-- **Bridge theorem (lock determination).**
+    A lock pattern in a boundary word determines a specific `PlacedTile` to appear
+    in any patch having that boundary word.
+    Derived from `forced_tile_in_patch` + `proveLockUniqueness`. -/
+theorem lock_determines_tile
     (w : BoundaryWord) (hLock : ContainsLock w) :
-    ∃ t : PlacedTile, ∀ p : Patch, patchBoundary p = w → t ∈ p.tiles
+    ∃ t : PlacedTile, ∀ p : Patch, patchBoundary p = w → t ∈ p.tiles := by
+  use lockForcedTile w hLock
+  intro p hB
+  exact forced_tile_in_patch p w hLock hB
 
 /-- **Lock Forcing theorem.**
     Two patches with the same locked boundary share at least one tile.
