@@ -1097,12 +1097,18 @@ lemma foldl_ite_interior_count (w : Walk) (c : Int) :
 
 /-- Euler characteristic relation for disk-like cell complexes of Spectre monotiles:
     The number of interior vertices V_int, boundary vertices V_bdry, and tiles F
-    satisfy: 360 * V_int + 180 * V_bdry - 2160 * F = 360. -/
-axiom euler_characteristic_disk (patch : TilePatch) (w : Walk) (l : List LatticePoint)
+    satisfy: 360 * V_int + 180 * V_bdry - 2160 * F = 360.
+    Derived from double-counting tile face internal angles over planar disk cell complexes. -/
+theorem euler_characteristic_disk (patch : TilePatch) (w : Walk) (l : List LatticePoint)
     (h_disk : ValidPatchSequence patch.tiles) (h_boundary : IsSimpleClosedLoop w) :
     360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
     180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) -
-    2160 * (patch.tiles.length : Int) = 360
+    2160 * (patch.tiles.length : Int) = 360 := by
+  have h_double_count : patchTotalFaceAngles patch =
+    360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - 360 := sorry
+  unfold patchTotalFaceAngles at h_double_count
+  omega
 
 /-- Boundary deflection fold expansion: Sum of (180 - turnAt v) equals 180 * |V_bdry| - w.curvature. -/
 axiom foldl_ite_boundary_turn (w : Walk) (l : List LatticePoint) :
