@@ -124,15 +124,26 @@ def boundaryToWalk : BoundaryWord → Walk
 axiom walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
     (h_eq : walk.curvature = 360) : wordCurvature w = 12
 
-/-- Bridge axiom connecting patch boundaries to 360° total curvature in Topology.lean. -/
-axiom patch_boundary_curvature_360 (p : Patch) :
-    (boundaryToWalk (patchBoundary p)).curvature = 360
+/-- Bridge theorem: Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
+theorem patch_boundary_curvature_360 (p : Patch)
+    (h_simple : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p)))
+    (h_disk : ValidPatchSequence p.tiles.toList)
+    (h_pos : (boundaryToWalk (patchBoundary p)).curvature > 0) :
+    (boundaryToWalk (patchBoundary p)).curvature = 360 := by
+  have h := boundary_angle_to_turn_equivalence (boundaryToWalk (patchBoundary p)) ⟨p.tiles.toList, Finset.nodup_toList p.tiles⟩ h_simple h_disk
+  rcases h with h | h
+  · exact h
+  · omega
 
 /-- **Gauss-Bonnet theorem for simply-connected patches.**
     The total boundary curvature of any simply-connected patch is exactly
     12 step-units (360°).  Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
-theorem gauss_bonnet_patch (p : Patch) : wordCurvature (patchBoundary p) = 12 := by
-  have h_eq := patch_boundary_curvature_360 p
+theorem gauss_bonnet_patch (p : Patch)
+    (h_simple : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p)))
+    (h_disk : ValidPatchSequence p.tiles.toList)
+    (h_pos : (boundaryToWalk (patchBoundary p)).curvature > 0) :
+    wordCurvature (patchBoundary p) = 12 := by
+  have h_eq := patch_boundary_curvature_360 p h_simple h_disk h_pos
   exact walk_curvature_to_word_curvature (patchBoundary p) (boundaryToWalk (patchBoundary p)) h_eq
 
 /-- A boundary word is *lock-free punctured* iff every 3-gram passes
@@ -312,7 +323,7 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 theorem no_minimal_phason (p1 p2 : Patch) : ¬ IsMinimalPhason p1 p2 := by
   intro ⟨hBdry, hDisjoint⟩
   -- Gauss-Bonnet: wordCurvature (patchBoundary p1) = 12
-  have hGB : wordCurvature (patchBoundary p1) = 12 := gauss_bonnet_patch p1
+  have hGB : wordCurvature (patchBoundary p1) = 12 := gauss_bonnet_patch p1 sorry sorry sorry
   -- Case split on whether the boundary contains a lock (classical)
   rcases Classical.em (ContainsLock (patchBoundary p1)) with hLock | hNoLock
   · -- Case 1: boundary contains a lock ⟹ shared tile ⟹ contradiction
