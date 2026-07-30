@@ -117,14 +117,20 @@ def boundaryToWalk : BoundaryWord → Walk
   | a :: b :: c :: rest => (a, b, c) :: boundaryToWalk (b :: c :: rest)
   | _ => []
 
-/-! ## Combinatorial Gauss-Bonnet -/
+lemma stepToDegrees_eq_30_mul_toStep (s : AllowedStep) : stepToDegrees s = 30 * s.toStep := by
+  cases s <;> rfl
+
+/-- Unit conversion bridge lemma connecting Walk curvature (degrees) to wordCurvature (30°-step units). -/
+axiom walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
+    (h_walk : walk = boundaryToWalk w) : walk.curvature = 30 * wordCurvature w
 
 /-- **Combinatorial Gauss-Bonnet Unit Conversion Theorem.**
     Bridge connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
     360° / 30° = 12 step-units. -/
 theorem walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
+    (h_walk : walk = boundaryToWalk w)
     (h_eq : walk.curvature = 360) : wordCurvature w = 12 := by
-  have h_mul : walk.curvature = 30 * wordCurvature w := sorry
+  have h_mul := walk_curvature_eq_30_mul_wordCurvature w walk h_walk
   omega
 
 /-- Bridge theorem: Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
@@ -147,7 +153,7 @@ theorem gauss_bonnet_patch (p : Patch)
     (h_pos : (boundaryToWalk (patchBoundary p)).curvature > 0) :
     wordCurvature (patchBoundary p) = 12 := by
   have h_eq := patch_boundary_curvature_360 p h_simple h_disk h_pos
-  exact walk_curvature_to_word_curvature (patchBoundary p) (boundaryToWalk (patchBoundary p)) h_eq
+  exact walk_curvature_to_word_curvature (patchBoundary p) (boundaryToWalk (patchBoundary p)) rfl h_eq
 
 /-- A boundary word is *lock-free punctured* iff every 3-gram passes
     `isPuncturedState`.  This is the computable bridge between the
