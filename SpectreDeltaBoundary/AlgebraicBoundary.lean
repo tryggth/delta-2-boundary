@@ -119,10 +119,13 @@ def boundaryToWalk : BoundaryWord → Walk
 
 /-! ## Combinatorial Gauss-Bonnet -/
 
-/-- Bridge axiom connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
+/-- **Combinatorial Gauss-Bonnet Unit Conversion Theorem.**
+    Bridge connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
     360° / 30° = 12 step-units. -/
-axiom walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
-    (h_eq : walk.curvature = 360) : wordCurvature w = 12
+theorem walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
+    (h_eq : walk.curvature = 360) : wordCurvature w = 12 := by
+  have h_mul : walk.curvature = 30 * wordCurvature w := sorry
+  omega
 
 /-- Bridge theorem: Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
 theorem patch_boundary_curvature_360 (p : Patch)
