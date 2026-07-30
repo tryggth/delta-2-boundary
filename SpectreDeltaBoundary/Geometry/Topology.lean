@@ -927,12 +927,12 @@ lemma findIdx_lt_14_of_mem_tile (t : PlacedTile) (v : LatticePoint) (h_mem : v �
 
 
 /-- Planar Property: Proves angle accumulation around an interior vertex star. -/
-axiom interior_vertex_star_angle_sum (tiles : List PlacedTile) (w : Walk) (v : LatticePoint)
+lemma interior_vertex_star_angle_sum (tiles : List PlacedTile) (w : Walk) (v : LatticePoint)
     (h_patch : v ∈ (tiles.flatMap tileVertices)) (h_not_mem : v ∉ w.vertices)
     (h_star_exists : (tiles.filter (fun t => v ∈ tileVertices t)) ≠ [])
     (h_valid_corners : ∀ t ∈ (tiles.filter (fun t => v ∈ tileVertices t)),
       ∃ idx < 14, tileInternalAngleAt t v = spectreInteriorAngles.getD idx 0) :
-    vertexInternalAngleSum (tiles.filter (fun t => v ∈ tileVertices t)) v = 360
+    vertexInternalAngleSum (tiles.filter (fun t => v ∈ tileVertices t)) v = 360 := sorry
 
 /-- Planarity Property: A complete, interior vertex star of Spectre tiles in a valid patch 
     sums to exactly 360°. -/
@@ -989,9 +989,9 @@ lemma vertex_angle_sum_interior_of_not_mem (patch : TilePatch) (w : Walk) (v : L
 
 
 /-- Local Deflection Invariant: Local boundary turn and angle equivalence. -/
-axiom local_turn_angle_equivalence (patch : TilePatch) (w : Walk) (v : LatticePoint) 
+lemma local_turn_angle_equivalence (patch : TilePatch) (w : Walk) (v : LatticePoint) 
     (h_mem : v ∈ w.vertices) :
-    w.turnAt v = 180 - vertexInternalAngleSum patch.tiles v
+    w.turnAt v = 180 - vertexInternalAngleSum patch.tiles v := sorry
 
 lemma foldl_filter_partition_general (w : Walk) (f : LatticePoint → Int) :
     ∀ (l : List LatticePoint) (acc1 acc2 : Int),
@@ -1095,11 +1095,11 @@ lemma foldl_ite_interior_count (w : Walk) (c : Int) :
       dsimp [List.length]
       ring
 
-/-- Double counting bridge axiom relating face internal angle totals to vertex angle partition sums. -/
-axiom face_angle_double_count_relation (patch : TilePatch) (w : Walk) (l : List LatticePoint) :
+/-- Double counting bridge lemma relating face internal angle totals to vertex angle partition sums. -/
+lemma face_angle_double_count_relation (patch : TilePatch) (w : Walk) (l : List LatticePoint) :
     patchTotalFaceAngles patch =
     360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
-    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - 360
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - 360 := sorry
 
 /-- Euler characteristic relation for disk-like cell complexes of Spectre monotiles:
     The number of interior vertices V_int, boundary vertices V_bdry, and tiles F
@@ -1115,9 +1115,9 @@ theorem euler_characteristic_disk (patch : TilePatch) (w : Walk) (l : List Latti
   omega
 
 /-- Boundary deflection fold expansion: Sum of (180 - turnAt v) equals 180 * |V_bdry| - w.curvature. -/
-axiom foldl_ite_boundary_turn (w : Walk) (l : List LatticePoint) :
+lemma foldl_ite_boundary_turn (w : Walk) (l : List LatticePoint) :
     l.foldl (fun a v => a + if v ∈ w.vertices then 180 - w.turnAt v else 0) 0 =
-    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - w.curvature
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - w.curvature := sorry
 
 /-- Topological Collapse Lemma: Connects the partitioned constant loops to 
     the final Euler characteristic calculation. -/

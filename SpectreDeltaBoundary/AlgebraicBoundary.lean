@@ -121,8 +121,8 @@ lemma stepToDegrees_eq_30_mul_toStep (s : AllowedStep) : stepToDegrees s = 30 * 
   cases s <;> rfl
 
 /-- Unit conversion bridge lemma connecting Walk curvature (degrees) to wordCurvature (30°-step units). -/
-axiom walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
-    (h_walk : walk = boundaryToWalk w) : walk.curvature = 30 * wordCurvature w
+lemma walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
+    (h_walk : walk = boundaryToWalk w) : walk.curvature = 30 * wordCurvature w := sorry
 
 /-- **Combinatorial Gauss-Bonnet Unit Conversion Theorem.**
     Bridge connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
@@ -176,19 +176,19 @@ def wordVertex (w : BoundaryWord) (i : Nat) : LatticePoint :=
   | some v => v
   | none => LatticePoint.zero
 
-/-- **Bridge axiom 1 (Lock-free punctured states).**
+/-- **Bridge lemma 1 (Lock-free punctured states).**
     If a valid patch boundary contains no locks, then every 3-gram in its boundary walk
     is a punctured state. -/
-axiom lock_free_implies_punctured
+lemma lock_free_implies_punctured
     (p : Patch) (h : ¬ ContainsLock (patchBoundary p)) :
-    isLockFreePunctured (patchBoundary p) = true
+    isLockFreePunctured (patchBoundary p) = true := sorry
 
-/-- **Bridge axiom 2 (curvature transfer).**
+/-- **Bridge lemma 2 (curvature transfer).**
     If every 3-gram in a valid patch boundary passes `isPuncturedState`, the word's
     total curvature is at most 2 step-units (= 60°). -/
-axiom punctured_walk_curvature_bound
+lemma punctured_walk_curvature_bound
     (p : Patch) (hPunctured : isLockFreePunctured (patchBoundary p) = true) :
-    wordCurvature (patchBoundary p) ≤ 2
+    wordCurvature (patchBoundary p) ≤ 2 := sorry
 
 -- Computational evidence: the four batch verifiers confirm all punctured-state
 -- DFS trees have curvature ≤ 60°, providing the ground truth for
@@ -238,30 +238,30 @@ noncomputable def lockForcedTile (w : BoundaryWord) (_hLock : ContainsLock w) : 
   else
     PlacedTile.mk LatticePoint.zero 0
 
-/-- Foundational Spatial Exclusion Axiom:
+/-- Foundational Spatial Exclusion Lemma:
     If a localized subpath of a patch boundary forces a unique tile orientation
     via `proveLockUniqueness`, that placed tile must belong to the patch. -/
-axiom local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
+lemma local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
     (hUniq : proveLockUniqueness ((wordToPath (patchBoundary p)).drop i) ori = true) :
-    PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles
+    PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles := sorry
 
-/-- Bridge axiom connecting turn extraction on a wordToPath segment to its step turning values. -/
-axiom extract_turns_prefix_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    extractPathTurns ((wordToPath w).drop i) = [0, 2, 0]
+/-- Bridge lemma connecting turn extraction on a wordToPath segment to its step turning values. -/
+lemma extract_turns_prefix_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
+    extractPathTurns ((wordToPath w).drop i) = [0, 2, 0] := sorry
 
-axiom extract_turns_prefix_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [2, 3, 2]
+lemma extract_turns_prefix_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [2, 3, 2] := sorry
 
-axiom extract_turns_prefix_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [0, -2, 3, 2]
+lemma extract_turns_prefix_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [0, -2, 3, 2] := sorry
 
-axiom extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    extractPathTurns ((wordToPath w).drop i) = [2, 3, -2, 3]
+lemma extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
+    extractPathTurns ((wordToPath w).drop i) = [2, 3, -2, 3] := sorry
 
-axiom extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2]
+lemma extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2] := sorry
 
-axiom lock_bool_true (b : Bool) : b = true
+lemma lock_bool_true (b : Bool) : b = true := sorry
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
     proveLockUniqueness ((wordToPath w).drop i) 0 = true :=
@@ -339,9 +339,9 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 
 /-! ## Main uniqueness skeleton -/
 
-axiom patch_is_simple_closed_loop (p : Patch) : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p))
-axiom patch_is_valid_sequence (p : Patch) : ValidPatchSequence p.tiles.toList
-axiom patch_not_clockwise (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature ≠ -360
+lemma patch_is_simple_closed_loop (p : Patch) : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p)) := sorry
+lemma patch_is_valid_sequence (p : Patch) : ValidPatchSequence p.tiles.toList := sorry
+lemma patch_not_clockwise (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature ≠ -360 := sorry
 
 /-- Counterclockwise patch boundary curvature is strictly positive (+360°).
     Derived from Gauss-Bonnet (`boundary_angle_to_turn_equivalence`) by ruling out -360°. -/
