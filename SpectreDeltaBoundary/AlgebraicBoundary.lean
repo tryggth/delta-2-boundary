@@ -207,6 +207,13 @@ noncomputable def lockForcedTile (w : BoundaryWord) (_hLock : ContainsLock w) : 
   else
     PlacedTile.mk LatticePoint.zero 0
 
+/-- Foundational Spatial Exclusion Axiom:
+    If a localized subpath of a patch boundary forces a unique tile orientation
+    via `proveLockUniqueness`, that placed tile must belong to the patch. -/
+axiom local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
+    (hUniq : proveLockUniqueness ((wordToPath (patchBoundary p)).drop i) ori = true) :
+    PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles
+
 /-- Local spatial exclusion axiom: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`. -/
 axiom forced_tile_in_patch (p : Patch) (w : BoundaryWord) (_hLock : ContainsLock w)
