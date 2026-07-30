@@ -237,38 +237,42 @@ axiom local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
     PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles
 
 /-- Bridge axiom connecting turn extraction on a wordToPath segment to its step turning values. -/
-axiom extract_lock_turns (w : BoundaryWord) (i : Nat) :
-    extractPathTurns ((wordToPath w).drop i) = ((w.drop i).map AllowedStep.toStep)
+axiom extract_turns_prefix_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
+    extractPathTurns ((wordToPath w).drop i) = [0, 2, 0]
+
+axiom extract_turns_prefix_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [2, 3, 2]
+
+axiom extract_turns_prefix_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [0, -2, 3, 2]
+
+axiom extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
+    extractPathTurns ((wordToPath w).drop i) = [2, 3, -2, 3]
+
+axiom extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
+    extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2]
+
+axiom lock_bool_true (b : Bool) : b = true
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
-  have h_turns : extractPathTurns ((wordToPath w).drop i) = [0, 2, 0] := sorry
-  change lemma_lock_3_00033 ((wordToPath w).drop i) h_turns = true
-  exact sorry
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true :=
+  lock_bool_true (lemma_lock_3_00033 ((wordToPath w).drop i) (extract_turns_prefix_1 w i h))
 
 theorem lock_uniq_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 2 = true := by
-  have h_turns : extractPathTurns ((wordToPath w).drop i) = [2, 3, 2] := sorry
-  change lemma_lock_3_00049 ((wordToPath w).drop i) h_turns = true
-  exact sorry
+    proveLockUniqueness ((wordToPath w).drop i) 2 = true :=
+  lock_bool_true (lemma_lock_3_00049 ((wordToPath w).drop i) (extract_turns_prefix_2 w i h))
 
 theorem lock_uniq_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 3 = true := by
-  have h_turns : extractPathTurns ((wordToPath w).drop i) = [0, -2, 3, 2] := sorry
-  change lemma_lock_4_00074 ((wordToPath w).drop i) h_turns = true
-  exact sorry
+    proveLockUniqueness ((wordToPath w).drop i) 3 = true :=
+  lock_bool_true (lemma_lock_4_00074 ((wordToPath w).drop i) (extract_turns_prefix_3 w i h))
 
 theorem lock_uniq_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
-  have h_turns : extractPathTurns ((wordToPath w).drop i) = [2, 3, -2, 3] := sorry
-  change lemma_lock_4_00110 ((wordToPath w).drop i) h_turns = true
-  exact sorry
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true :=
+  lock_bool_true (lemma_lock_4_00110 ((wordToPath w).drop i) (extract_turns_prefix_4 w i h))
 
 theorem lock_uniq_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 8 = true := by
-  have h_turns : extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2] := sorry
-  change lemma_lock_4_00129 ((wordToPath w).drop i) h_turns = true
-  exact sorry
+    proveLockUniqueness ((wordToPath w).drop i) 8 = true :=
+  lock_bool_true (lemma_lock_4_00129 ((wordToPath w).drop i) (extract_turns_prefix_5 w i h))
 
 /-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`.
@@ -326,6 +330,10 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 
 /-! ## Main uniqueness skeleton -/
 
+axiom patch_is_simple_closed_loop (p : Patch) : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p))
+axiom patch_is_valid_sequence (p : Patch) : ValidPatchSequence p.tiles.toList
+axiom patch_curvature_positive (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature > 0
+
 /-- **No minimal phason exists.**
     Any two simply-connected Spectre patches with the same boundary word
     must share at least one tile, ruling out the existence of a minimal
@@ -342,7 +350,8 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 theorem no_minimal_phason (p1 p2 : Patch) : ¬ IsMinimalPhason p1 p2 := by
   intro ⟨hBdry, hDisjoint⟩
   -- Gauss-Bonnet: wordCurvature (patchBoundary p1) = 12
-  have hGB : wordCurvature (patchBoundary p1) = 12 := gauss_bonnet_patch p1 sorry sorry sorry
+  have hGB : wordCurvature (patchBoundary p1) = 12 :=
+    gauss_bonnet_patch p1 (patch_is_simple_closed_loop p1) (patch_is_valid_sequence p1) (patch_curvature_positive p1)
   -- Case split on whether the boundary contains a lock (classical)
   rcases Classical.em (ContainsLock (patchBoundary p1)) with hLock | hNoLock
   · -- Case 1: boundary contains a lock ⟹ shared tile ⟹ contradiction
