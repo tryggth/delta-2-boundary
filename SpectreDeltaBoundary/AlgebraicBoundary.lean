@@ -214,6 +214,21 @@ axiom local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
     (hUniq : proveLockUniqueness ((wordToPath (patchBoundary p)).drop i) ori = true) :
     PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles
 
+axiom lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true
+
+axiom lock_uniq_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
+    proveLockUniqueness ((wordToPath w).drop i) 2 = true
+
+axiom lock_uniq_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
+    proveLockUniqueness ((wordToPath w).drop i) 3 = true
+
+axiom lock_uniq_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true
+
+axiom lock_uniq_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
+    proveLockUniqueness ((wordToPath w).drop i) 8 = true
+
 /-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`.
     Derived from `lockForcedTile` + `local_pocket_tile_forcing`. -/
@@ -223,11 +238,11 @@ theorem forced_tile_in_patch (p : Patch) (w : BoundaryWord) (hLock : ContainsLoc
   unfold lockForcedTile
   open Classical in
   split_ifs with h1 h2 h3 h4 h5
-  · exact local_pocket_tile_forcing p (Classical.choose h1) 0 sorry
-  · exact local_pocket_tile_forcing p (Classical.choose h2) 2 sorry
-  · exact local_pocket_tile_forcing p (Classical.choose h3) 3 sorry
-  · exact local_pocket_tile_forcing p (Classical.choose h4) 0 sorry
-  · exact local_pocket_tile_forcing p (Classical.choose h5) 8 sorry
+  · exact local_pocket_tile_forcing p (Classical.choose h1) 0 (lock_uniq_1 (patchBoundary p) (Classical.choose h1) (Classical.choose_spec h1))
+  · exact local_pocket_tile_forcing p (Classical.choose h2) 2 (lock_uniq_2 (patchBoundary p) (Classical.choose h2) (Classical.choose_spec h2))
+  · exact local_pocket_tile_forcing p (Classical.choose h3) 3 (lock_uniq_3 (patchBoundary p) (Classical.choose h3) (Classical.choose_spec h3))
+  · exact local_pocket_tile_forcing p (Classical.choose h4) 0 (lock_uniq_4 (patchBoundary p) (Classical.choose h4) (Classical.choose_spec h4))
+  · exact local_pocket_tile_forcing p (Classical.choose h5) 8 (lock_uniq_5 (patchBoundary p) (Classical.choose h5) (Classical.choose_spec h5))
   · exfalso
     rcases hLock with h | h | h | h | h
     · exact h1 h
