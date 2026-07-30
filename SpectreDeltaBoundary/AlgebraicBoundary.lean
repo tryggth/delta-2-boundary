@@ -341,7 +341,17 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 
 axiom patch_is_simple_closed_loop (p : Patch) : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p))
 axiom patch_is_valid_sequence (p : Patch) : ValidPatchSequence p.tiles.toList
-axiom patch_curvature_positive (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature > 0
+axiom patch_not_clockwise (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature ≠ -360
+
+/-- Counterclockwise patch boundary curvature is strictly positive (+360°).
+    Derived from Gauss-Bonnet (`boundary_angle_to_turn_equivalence`) by ruling out -360°. -/
+theorem patch_curvature_positive (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature > 0 := by
+  have h := boundary_angle_to_turn_equivalence (boundaryToWalk (patchBoundary p))
+    ⟨p.tiles.toList, Finset.nodup_toList p.tiles⟩ (patch_is_simple_closed_loop p) (patch_is_valid_sequence p)
+  have h_not := patch_not_clockwise p
+  rcases h with h360 | hm360
+  · omega
+  · contradiction
 
 /-- **No minimal phason exists.**
     Any two simply-connected Spectre patches with the same boundary word
