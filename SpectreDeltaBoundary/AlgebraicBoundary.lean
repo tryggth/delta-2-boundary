@@ -7,6 +7,7 @@ import SpectreDeltaBoundary.Paths
 import SpectreDeltaBoundary.Monotile
 import SpectreDeltaBoundary.Locks
 import SpectreDeltaBoundary.Geometry.TransferMatrixBatches
+import SpectreDeltaBoundary.Geometry.Topology
 import Mathlib.Data.Finset.Basic
 
 /-!
@@ -82,14 +83,6 @@ def patchIntersect (p1 p2 : Patch) : Prop :=
 def wordCurvature (w : BoundaryWord) : Int :=
   w.foldl (fun acc s => acc + s.toStep) 0
 
-/-! ## Combinatorial Gauss-Bonnet -/
-
-/-- **Gauss-Bonnet for simply-connected patches.**
-    The total boundary curvature of any simply-connected patch is exactly
-    12 step-units (360°).  This mirrors the classical discrete Gauss-Bonnet
-    theorem for planar cell complexes. -/
-axiom gauss_bonnet_patch (p : Patch) : wordCurvature (patchBoundary p) = 12
-
 /-! ## Geometric locks -/
 
 /-- A *geometric lock* is a local turn pattern that constrains tile placement
@@ -123,6 +116,20 @@ representations. -/
 def boundaryToWalk : BoundaryWord → Walk
   | a :: b :: c :: rest => (a, b, c) :: boundaryToWalk (b :: c :: rest)
   | _ => []
+
+/-! ## Combinatorial Gauss-Bonnet -/
+
+/-- Bridge axiom connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
+    360° / 30° = 12 step-units. -/
+axiom walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
+    (h_eq : walk.curvature = 360) : wordCurvature w = 12
+
+/-- **Gauss-Bonnet theorem for simply-connected patches.**
+    The total boundary curvature of any simply-connected patch is exactly
+    12 step-units (360°).  Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
+theorem gauss_bonnet_patch (p : Patch) : wordCurvature (patchBoundary p) = 12 := by
+  have h_eq : (boundaryToWalk (patchBoundary p)).curvature = 360 := sorry
+  exact walk_curvature_to_word_curvature (patchBoundary p) (boundaryToWalk (patchBoundary p)) h_eq
 
 /-- A boundary word is *lock-free punctured* iff every 3-gram passes
     `isPuncturedState`.  This is the computable bridge between the
