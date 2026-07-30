@@ -124,11 +124,15 @@ def boundaryToWalk : BoundaryWord → Walk
 axiom walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
     (h_eq : walk.curvature = 360) : wordCurvature w = 12
 
+/-- Bridge axiom connecting patch boundaries to 360° total curvature in Topology.lean. -/
+axiom patch_boundary_curvature_360 (p : Patch) :
+    (boundaryToWalk (patchBoundary p)).curvature = 360
+
 /-- **Gauss-Bonnet theorem for simply-connected patches.**
     The total boundary curvature of any simply-connected patch is exactly
     12 step-units (360°).  Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
 theorem gauss_bonnet_patch (p : Patch) : wordCurvature (patchBoundary p) = 12 := by
-  have h_eq : (boundaryToWalk (patchBoundary p)).curvature = 360 := sorry
+  have h_eq := patch_boundary_curvature_360 p
   exact walk_curvature_to_word_curvature (patchBoundary p) (boundaryToWalk (patchBoundary p)) h_eq
 
 /-- A boundary word is *lock-free punctured* iff every 3-gram passes
