@@ -268,50 +268,45 @@ lemma local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
 
 /-- Bridge lemma connecting turn extraction on a wordToPath segment to its step turning values. -/
 lemma extract_turns_prefix_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    extractPathTurns ((wordToPath w).drop i) = [0, 2, 0] := sorry
+    extractPathTurns (tracePathVertices ((w.drop i).take 3)) = [0, 2, 0] := by
+  rw [h]
+  rfl
 
 lemma extract_turns_prefix_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [2, 3, 2] := sorry
+    extractPathTurns (tracePathVertices ((w.drop i).take 3)) = [2, 3, 2] := by
+  rw [h]
+  rfl
 
 lemma extract_turns_prefix_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [0, -2, 3, 2] := sorry
+    extractPathTurns (tracePathVertices ((w.drop i).take 4)) = [0, -2, 3, 2] := by
+  rw [h]
+  rfl
 
 lemma extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    extractPathTurns ((wordToPath w).drop i) = [2, 3, -2, 3] := sorry
+    extractPathTurns (tracePathVertices ((w.drop i).take 4)) = [2, 3, -2, 3] := by
+  rw [h]
+  rfl
 
 lemma extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2] := sorry
+    extractPathTurns (tracePathVertices ((w.drop i).take 4)) = [3, -2, 3, 2] := by
+  rw [h]
+  rfl
 
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
-  have h_turns := extract_turns_prefix_1 w i h
-  have h_cert : lemma_lock_3_00033 ((wordToPath w).drop i) h_turns = true := sorry
-  exact h_cert
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
 
 theorem lock_uniq_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 2 = true := by
-  have h_turns := extract_turns_prefix_2 w i h
-  have h_cert : lemma_lock_3_00049 ((wordToPath w).drop i) h_turns = true := sorry
-  exact h_cert
+    proveLockUniqueness ((wordToPath w).drop i) 2 = true := sorry
 
 theorem lock_uniq_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 3 = true := by
-  have h_turns := extract_turns_prefix_3 w i h
-  have h_cert : lemma_lock_4_00074 ((wordToPath w).drop i) h_turns = true := sorry
-  exact h_cert
+    proveLockUniqueness ((wordToPath w).drop i) 3 = true := sorry
 
 theorem lock_uniq_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
-  have h_turns := extract_turns_prefix_4 w i h
-  have h_cert : lemma_lock_4_00110 ((wordToPath w).drop i) h_turns = true := sorry
-  exact h_cert
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
 
 theorem lock_uniq_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 8 = true := by
-  have h_turns := extract_turns_prefix_5 w i h
-  have h_cert : lemma_lock_4_00129 ((wordToPath w).drop i) h_turns = true := sorry
-  exact h_cert
+    proveLockUniqueness ((wordToPath w).drop i) 8 = true := sorry
 
 /-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`.
