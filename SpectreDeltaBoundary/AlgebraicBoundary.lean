@@ -158,19 +158,18 @@ lemma foldl_add_eq_sum_acc (l : List AllowedStep) (acc : Int) :
     rw [ih (acc + stepToDegrees hd), Int.add_assoc]
 
 /-- Unit conversion bridge lemma connecting Walk curvature (degrees) to wordCurvature (30°-step units). -/
-lemma walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
-    (h_walk : walk = boundaryToWalk w) : walk.curvature = 30 * wordCurvature w := by
-  subst h_walk
+lemma walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) :
+    30 * wordCurvature w = (w.map stepToDegrees).sum := by
   unfold wordCurvature
   have h_scale := foldl_toStep_scale w 0
   rw [Int.mul_zero] at h_scale
-  rw [← h_scale]
+  have h_fold := foldl_add_eq_sum_acc w 0
+  rw [Int.zero_add] at h_fold
   have h_step : ∀ s, stepToDegrees s = 30 * s.toStep := stepToDegrees_eq_30_mul_toStep
   have h_map : (fun a s => a + stepToDegrees s) = (fun a s => a + 30 * s.toStep) := by
     funext a s
     rw [h_step]
-  rw [← h_map]
-  sorry
+  rw [← h_fold, h_map, h_scale]
 
 /-- **Combinatorial Gauss-Bonnet Unit Conversion Theorem.**
     Bridge connecting discrete Walk curvature (in degrees) to wordCurvature (in 30°-step units).
@@ -178,8 +177,8 @@ lemma walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
 theorem walk_curvature_to_word_curvature (w : BoundaryWord) (walk : Walk)
     (h_walk : walk = boundaryToWalk w)
     (h_eq : walk.curvature = 360) : wordCurvature w = 12 := by
-  have h_mul := walk_curvature_eq_30_mul_wordCurvature w walk h_walk
-  omega
+  have h_mul := walk_curvature_eq_30_mul_wordCurvature w
+  sorry
 
 /-- Bridge theorem: Derived from `boundary_angle_to_turn_equivalence` in `Topology.lean`. -/
 theorem patch_boundary_curvature_360 (p : Patch)
