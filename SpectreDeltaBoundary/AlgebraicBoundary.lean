@@ -136,24 +136,22 @@ def boundaryToWalk : BoundaryWord → Walk
 def isLockFreePunctured (w : BoundaryWord) : Bool :=
   (boundaryToWalk w).all isPuncturedState
 
+/-- Maps an algebraic boundary word to a geometric path on the lattice -/
+def wordToPath (w : BoundaryWord) : List LatticePoint := tracePathVertices w
+
 /-- **Bridge axiom 1 (Lock-free punctured states).**
-    If a boundary word contains no locks, then every 3-gram in its boundary walk
+    If a valid patch boundary contains no locks, then every 3-gram in its boundary walk
     is a punctured state. -/
 axiom lock_free_implies_punctured
-    (w : BoundaryWord) (h : ¬ ContainsLock w) :
-    isLockFreePunctured w = true
+    (p : Patch) (h : ¬ ContainsLock (patchBoundary p)) :
+    isLockFreePunctured (patchBoundary p) = true
 
 /-- **Bridge axiom 2 (curvature transfer).**
-    If every 3-gram in a boundary word passes `isPuncturedState`, the word's
-    total curvature is at most 2 step-units (= 60°).
-
-    Justification: `verify_batch1`–`verify_batch4` exhaustively prove that
-    every DFS-reachable cycle through punctured states (with depth ≤ 26)
-    has curvature ≤ 60°.  This axiom lifts that walk-level bound to the
-    word-level `wordCurvature`. -/
+    If every 3-gram in a valid patch boundary passes `isPuncturedState`, the word's
+    total curvature is at most 2 step-units (= 60°). -/
 axiom punctured_walk_curvature_bound
-    (w : BoundaryWord) (hPunctured : isLockFreePunctured w = true) :
-    wordCurvature w ≤ 2
+    (p : Patch) (hPunctured : isLockFreePunctured (patchBoundary p) = true) :
+    wordCurvature (patchBoundary p) ≤ 2
 
 -- Computational evidence: the four batch verifiers confirm all punctured-state
 -- DFS trees have curvature ≤ 60°, providing the ground truth for
@@ -163,12 +161,12 @@ example : puncturedBatch2.all (fun s => checkFrom s [s] 26 s) = true := verify_b
 example : puncturedBatch3.all (fun s => checkFrom s [s] 26 s) = true := verify_batch3
 example : puncturedBatch4.all (fun s => checkFrom s [s] 26 s) = true := verify_batch4
 
-/-- **No-Go theorem (now a theorem, previously an axiom).**
-    Lock-free boundaries have curvature ≤ 2 step-units.
+/-- **No-Go theorem.**
+    Lock-free patch boundaries have curvature ≤ 2 step-units.
     Derived from `lock_free_implies_punctured` + `punctured_walk_curvature_bound`. -/
 theorem lock_free_curvature_bound
-    (w : BoundaryWord) (h : ¬ ContainsLock w) : wordCurvature w ≤ 2 :=
-  punctured_walk_curvature_bound w (lock_free_implies_punctured w h)
+    (p : Patch) (h : ¬ ContainsLock (patchBoundary p)) : wordCurvature (patchBoundary p) ≤ 2 :=
+  punctured_walk_curvature_bound p (lock_free_implies_punctured p h)
 
 /-! ## Bridge to lock verification engine (`Locks.lean`)
 
@@ -253,7 +251,7 @@ theorem no_minimal_phason (p1 p2 : Patch) : ¬ IsMinimalPhason p1 p2 := by
     exact hDisjoint (lock_forces_shared_tile hLock p1 p2 rfl hBdry.symm)
   · -- Case 2: no lock ⟹ curvature ≤ 2 ⟹ contradicts 12 = curvature
     have hBound : wordCurvature (patchBoundary p1) ≤ 2 :=
-      lock_free_curvature_bound (patchBoundary p1) hNoLock
+      lock_free_curvature_bound p1 hNoLock
     omega
 
 /-! ## Axiom audit -/
