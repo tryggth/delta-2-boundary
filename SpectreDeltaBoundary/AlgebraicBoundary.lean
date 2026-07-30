@@ -182,19 +182,17 @@ fits.  The individual lock lemmas provide per-pattern certificates:
 - `lemma_lock_4_00129`: turn sequence `[3, -2, 3, 2]` (= `[p90, m60, p90, p60]`)
 -/
 
-/-- **Bridge axiom 3 (lock forcing).**
-    A lock pattern in the boundary word forces a specific `PlacedTile` to
-    appear in any valid patch with that boundary.
+/-- **Bridge axiom (spatial lock forcing).**
+    A lock pattern in a boundary word forces a specific `PlacedTile` to appear
+    in any patch having that boundary word.
 
     Justification: `proveLockUniqueness` in `Locks.lean` exhaustively
-    verifies that each lock pattern admits exactly one tile orientation.
-    Since the tile at the lock site is uniquely determined by the local
-    geometry, it must be present in every valid filling. -/
+    verifies that each lock pattern admits exactly one tile orientation. -/
 axiom lock_determines_tile
     (w : BoundaryWord) (hLock : ContainsLock w) :
     ∃ t : PlacedTile, ∀ p : Patch, patchBoundary p = w → t ∈ p.tiles
 
-/-- **Lock Forcing theorem (now a theorem, previously an axiom).**
+/-- **Lock Forcing theorem.**
     Two patches with the same locked boundary share at least one tile.
     Derived from `lock_determines_tile`: the forced tile belongs to
     both patches, witnessing their intersection. -/
