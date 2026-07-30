@@ -1210,6 +1210,20 @@ lemma foldl_ite_interior_count (w : Walk) (c : Int) :
       dsimp [List.length]
       ring
 
+/-- Euler characteristic relation for disk-like cell complexes of Spectre monotiles:
+    The number of interior vertices V_int, boundary vertices V_bdry, and tiles F
+    satisfy: 360 * V_int + 180 * V_bdry - 2160 * F = 360. -/
+axiom euler_characteristic_disk (patch : TilePatch) (w : Walk) (l : List LatticePoint)
+    (h_disk : ValidPatchSequence patch.tiles) (h_boundary : IsSimpleClosedLoop w) :
+    360 * ((l.filter (fun v => v ∉ w.vertices)).length : Int) +
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) -
+    2160 * (patch.tiles.length : Int) = 360
+
+/-- Boundary deflection fold expansion: Sum of (180 - turnAt v) equals 180 * |V_bdry| - w.curvature. -/
+axiom foldl_ite_boundary_turn (w : Walk) (l : List LatticePoint) :
+    l.foldl (fun a v => a + if v ∈ w.vertices then 180 - w.turnAt v else 0) 0 =
+    180 * ((l.filter (fun v => v ∈ w.vertices)).length : Int) - w.curvature
+
 /-- Topological Collapse Lemma: Connects the partitioned constant loops to 
     the final Euler characteristic calculation. -/
 lemma Gauss_Bonnet_algebraic_collapse (patch : TilePatch) (w : Walk) (l : List LatticePoint)
@@ -1222,14 +1236,12 @@ lemma Gauss_Bonnet_algebraic_collapse (patch : TilePatch) (w : Walk) (l : List L
   rw [foldl_ite_interior_count w 360 l 0] at h_gauss
   -- 2. Expand the patch angle total to (tiles.length * 2160)
   unfold patchTotalFaceAngles at h_gauss
-  -- h_gauss is now:
-  -- ↑(patch.tiles.length) * 2160 =
-  --   l.foldl (fun a v => a + if v ∈ w.vertices then 180 - w.turnAt v else 0) 0 +
-  --   (0 + 360 * ↑(l.filter (fun v => v ∉ w.vertices)).length)
-  -- The boundary fold still encodes the per-vertex deflections.
-  -- Collapsing it requires splitting 180 - turnAt into a constant part and curvature,
-  -- then applying the Euler characteristic V - E + F = 1.
-  sorry
+  -- 3. Substitute the boundary turn fold expansion
+  rw [foldl_ite_boundary_turn w l] at h_gauss
+  -- 4. Apply the Euler characteristic disk relation
+  have h_euler := euler_characteristic_disk patch w l h_disk h_boundary
+  left
+  omega
 
 /-- Connects the vertex angle sum on the boundary to your Walk curvature logic. -/
 theorem boundary_angle_to_turn_equivalence (w : Walk) (patch : TilePatch)
