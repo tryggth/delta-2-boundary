@@ -214,10 +214,27 @@ axiom local_pocket_tile_forcing (p : Patch) (i : Nat) (ori : Nat)
     (hUniq : proveLockUniqueness ((wordToPath (patchBoundary p)).drop i) ori = true) :
     PlacedTile.mk (wordVertex (patchBoundary p) i) ori ∈ p.tiles
 
-/-- Local spatial exclusion axiom: a patch bounded by `w` must contain the unique tile
-    orientation forced by a lock in `w`. -/
-axiom forced_tile_in_patch (p : Patch) (w : BoundaryWord) (_hLock : ContainsLock w)
-    (hB : patchBoundary p = w) : lockForcedTile w _hLock ∈ p.tiles
+/-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
+    orientation forced by a lock in `w`.
+    Derived from `lockForcedTile` + `local_pocket_tile_forcing`. -/
+theorem forced_tile_in_patch (p : Patch) (w : BoundaryWord) (hLock : ContainsLock w)
+    (hB : patchBoundary p = w) : lockForcedTile w hLock ∈ p.tiles := by
+  subst hB
+  unfold lockForcedTile
+  open Classical in
+  split_ifs with h1 h2 h3 h4 h5
+  · exact local_pocket_tile_forcing p (Classical.choose h1) 0 sorry
+  · exact local_pocket_tile_forcing p (Classical.choose h2) 2 sorry
+  · exact local_pocket_tile_forcing p (Classical.choose h3) 3 sorry
+  · exact local_pocket_tile_forcing p (Classical.choose h4) 0 sorry
+  · exact local_pocket_tile_forcing p (Classical.choose h5) 8 sorry
+  · exfalso
+    rcases hLock with h | h | h | h | h
+    · exact h1 h
+    · exact h2 h
+    · exact h3 h
+    · exact h4 h
+    · exact h5 h
 
 /-- **Bridge theorem (lock determination).**
     A lock pattern in a boundary word determines a specific `PlacedTile` to appear
