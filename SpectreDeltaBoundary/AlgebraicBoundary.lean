@@ -261,27 +261,22 @@ lemma extract_turns_prefix_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4
 lemma extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
     extractPathTurns ((wordToPath w).drop i) = [3, -2, 3, 2] := sorry
 
-lemma lock_bool_true (b : Bool) : b = true := sorry
+lemma lock_bool_true (b : Bool) (h : b = true) : b = true := h
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true :=
-  lock_bool_true (lemma_lock_3_00033 ((wordToPath w).drop i) (extract_turns_prefix_1 w i h))
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
 
 theorem lock_uniq_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 2 = true :=
-  lock_bool_true (lemma_lock_3_00049 ((wordToPath w).drop i) (extract_turns_prefix_2 w i h))
+    proveLockUniqueness ((wordToPath w).drop i) 2 = true := sorry
 
 theorem lock_uniq_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 3 = true :=
-  lock_bool_true (lemma_lock_4_00074 ((wordToPath w).drop i) (extract_turns_prefix_3 w i h))
+    proveLockUniqueness ((wordToPath w).drop i) 3 = true := sorry
 
 theorem lock_uniq_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true :=
-  lock_bool_true (lemma_lock_4_00110 ((wordToPath w).drop i) (extract_turns_prefix_4 w i h))
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
 
 theorem lock_uniq_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 8 = true :=
-  lock_bool_true (lemma_lock_4_00129 ((wordToPath w).drop i) (extract_turns_prefix_5 w i h))
+    proveLockUniqueness ((wordToPath w).drop i) 8 = true := sorry
 
 /-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`.
