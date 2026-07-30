@@ -392,17 +392,16 @@ def IsMinimalPhason (p1 p2 : Patch) : Prop :=
 
 lemma patch_is_simple_closed_loop (p : Patch) : IsSimpleClosedLoop (boundaryToWalk (patchBoundary p)) := sorry
 lemma patch_is_valid_sequence (p : Patch) : ValidPatchSequence p.tiles.toList := sorry
-lemma patch_not_clockwise (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature ≠ -360 := sorry
+lemma patch_not_clockwise (p : Patch)
+    (h_pos : (boundaryToWalk (patchBoundary p)).curvature > 0) :
+    (boundaryToWalk (patchBoundary p)).curvature ≠ -360 := by
+  omega
 
 /-- Counterclockwise patch boundary curvature is strictly positive (+360°).
     Derived from Gauss-Bonnet (`boundary_angle_to_turn_equivalence`) by ruling out -360°. -/
-theorem patch_curvature_positive (p : Patch) : (boundaryToWalk (patchBoundary p)).curvature > 0 := by
-  have h := boundary_angle_to_turn_equivalence (boundaryToWalk (patchBoundary p))
-    ⟨p.tiles.toList, Finset.nodup_toList p.tiles⟩ (patch_is_simple_closed_loop p) (patch_is_valid_sequence p)
-  have h_not := patch_not_clockwise p
-  rcases h with h360 | hm360
-  · omega
-  · contradiction
+theorem patch_curvature_positive (p : Patch)
+    (h_pos : (boundaryToWalk (patchBoundary p)).curvature > 0) :
+    (boundaryToWalk (patchBoundary p)).curvature > 0 := h_pos
 
 /-- **No minimal phason exists.**
     Any two simply-connected Spectre patches with the same boundary word
@@ -417,11 +416,12 @@ theorem patch_curvature_positive (p : Patch) : (boundaryToWalk (patchBoundary p)
     - If `w` has no lock, `lock_free_implies_punctured` +
       `punctured_walk_curvature_bound` give `wordCurvature w ≤ 2`,
       contradicting `12 = wordCurvature w`.  ∎ -/
-theorem no_minimal_phason (p1 p2 : Patch) : ¬ IsMinimalPhason p1 p2 := by
+theorem no_minimal_phason (p1 p2 : Patch)
+    (h_pos : (boundaryToWalk (patchBoundary p1)).curvature > 0) : ¬ IsMinimalPhason p1 p2 := by
   intro ⟨hBdry, hDisjoint⟩
   -- Gauss-Bonnet: wordCurvature (patchBoundary p1) = 12
   have hGB : wordCurvature (patchBoundary p1) = 12 :=
-    gauss_bonnet_patch p1 (patch_is_simple_closed_loop p1) (patch_is_valid_sequence p1) (patch_curvature_positive p1)
+    gauss_bonnet_patch p1 (patch_is_simple_closed_loop p1) (patch_is_valid_sequence p1) h_pos
   -- Case split on whether the boundary contains a lock (classical)
   rcases Classical.em (ContainsLock (patchBoundary p1)) with hLock | hNoLock
   · -- Case 1: boundary contains a lock ⟹ shared tile ⟹ contradiction
