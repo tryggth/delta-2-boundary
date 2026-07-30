@@ -130,10 +130,28 @@ lemma foldl_toStep_scale (w : List AllowedStep) (acc : Int) :
     rw [h_eq]
     exact ih (acc + hd.toStep)
 
+lemma boundaryToWalk_curvature_eq_sum_drop3 (w : BoundaryWord) :
+    (boundaryToWalk w).curvature = ((w.drop 3).map stepToDegrees).sum := by
+  induction w with
+  | nil => rfl
+  | cons a rest ih =>
+    match rest with
+    | [] => rfl
+    | [b] => rfl
+    | b :: c :: rest' =>
+      match rest' with
+      | [] => rfl
+      | d :: rest'' =>
+        have h_eq : (boundaryToWalk (a :: b :: c :: d :: rest'')).curvature =
+                    stepToDegrees d + (boundaryToWalk (b :: c :: d :: rest'')).curvature := rfl
+        rw [h_eq, ih]
+        rfl
+
 /-- Unit conversion bridge lemma connecting Walk curvature (degrees) to wordCurvature (30°-step units). -/
 lemma walk_curvature_eq_30_mul_wordCurvature (w : BoundaryWord) (walk : Walk)
     (h_walk : walk = boundaryToWalk w) : walk.curvature = 30 * wordCurvature w := by
   subst h_walk
+  have h_drop3 := boundaryToWalk_curvature_eq_sum_drop3 w
   unfold wordCurvature
   have h_scale := foldl_toStep_scale w 0
   rw [Int.mul_zero] at h_scale
