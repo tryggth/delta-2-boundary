@@ -263,19 +263,34 @@ lemma extract_turns_prefix_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4
 
 
 theorem lock_uniq_1 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.z0, .p60, .z0]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
+  have h_turns := extract_turns_prefix_1 w i h
+  have h_cert : lemma_lock_3_00033 ((wordToPath w).drop i) h_turns = true := sorry
+  exact h_cert
 
 theorem lock_uniq_2 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 3 = [.p60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 2 = true := sorry
+    proveLockUniqueness ((wordToPath w).drop i) 2 = true := by
+  have h_turns := extract_turns_prefix_2 w i h
+  have h_cert : lemma_lock_3_00049 ((wordToPath w).drop i) h_turns = true := sorry
+  exact h_cert
 
 theorem lock_uniq_3 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.z0, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 3 = true := sorry
+    proveLockUniqueness ((wordToPath w).drop i) 3 = true := by
+  have h_turns := extract_turns_prefix_3 w i h
+  have h_cert : lemma_lock_4_00074 ((wordToPath w).drop i) h_turns = true := sorry
+  exact h_cert
 
 theorem lock_uniq_4 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p60, .p90, .m60, .p90]) :
-    proveLockUniqueness ((wordToPath w).drop i) 0 = true := sorry
+    proveLockUniqueness ((wordToPath w).drop i) 0 = true := by
+  have h_turns := extract_turns_prefix_4 w i h
+  have h_cert : lemma_lock_4_00110 ((wordToPath w).drop i) h_turns = true := sorry
+  exact h_cert
 
 theorem lock_uniq_5 (w : BoundaryWord) (i : Nat) (h : (w.drop i).take 4 = [.p90, .m60, .p90, .p60]) :
-    proveLockUniqueness ((wordToPath w).drop i) 8 = true := sorry
+    proveLockUniqueness ((wordToPath w).drop i) 8 = true := by
+  have h_turns := extract_turns_prefix_5 w i h
+  have h_cert : lemma_lock_4_00129 ((wordToPath w).drop i) h_turns = true := sorry
+  exact h_cert
 
 /-- Local spatial exclusion theorem: a patch bounded by `w` must contain the unique tile
     orientation forced by a lock in `w`.
