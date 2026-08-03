@@ -1,5 +1,5 @@
-// Spectre Monotile Δ₂ PWA Service Worker
-const CACHE_NAME = 'spectre-puzzle-v1';
+// Spectre Monotile Δ₂ PWA Service Worker (Auto-Updating)
+const CACHE_NAME = 'spectre-puzzle-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,16 +9,17 @@ const ASSETS_TO_CACHE = [
   './icon-maskable.png'
 ];
 
-// Install Event - Cache Core Assets
+// Install Event - Pre-cache assets and skip waiting immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean Old Caches
+// Activate Event - Claim clients and purge old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -33,23 +34,40 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Cache-First Strategy with Network Fallback
+// Fetch Event - Network-First for HTML (for instant web updates), Cache-First for static assets
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+  const request = event.request;
+  const isHTML = request.mode === 'navigate' || 
+                 (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
+
+  if (isHTML) {
+    // Network-First for HTML documents to catch web deployments immediately
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
           return networkResponse;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('./index.html')))
+    );
+  } else {
+    // Cache-First with Network Fallback for static assets (icons, manifest, etc.)
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return networkResponse;
         });
-        return networkResponse;
-      });
-    })
-  );
+      })
+    );
+  }
 });
