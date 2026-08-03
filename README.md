@@ -18,6 +18,17 @@ Watch the complete 70-step tile reduction and boundary peeling cascade animation
 
 *(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
 
+## 🧩 Interactive Spectre $\Delta_2$ Jigsaw Puzzle PWA
+
+An interactive Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spectre $\Delta_2$ patch is included in the project under [puzzle/](puzzle/) and hosted live on GitHub Pages:
+
+👉 **[Play the Live Spectre $\Delta_2$ Jigsaw Puzzle PWA](https://tryggth.github.io/delta-2-boundary/)**
+
+### Features:
+- **Interactive Drag & Snap Jigsaw:** Place Spectre monotile pieces into the $\Delta_2$ boundary frame.
+- **PWA Capabilities:** Fully offline capable with Service Worker caching and installable web app manifest.
+- **3D Render & Vector Assets:** Includes 3D GLB model and SVG cut sheet generators for physical fabrication.
+
 ## 🛠️ Spectre Tiling & Peeling Solver CLI
 
 The project includes an optimized modular Python solver suite located under [spectre_solver/](file:///home/tryggth2009/spectre-delta-boundary/spectre_solver) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](file:///home/tryggth2009/spectre-delta-boundary/spectre_patch_solver.py).
