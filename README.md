@@ -32,7 +32,6 @@ A full-featured Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spe
 - **Installable PWA Support:** One-click desktop and mobile installation via the native **Install App** button (`beforeinstallprompt`).
 - **Auto-Updating Service Worker:** Uses a Network-First strategy for HTML and background update checking (`controllerchange`) so web updates on GitHub Pages deploy instantly to users.
 - **Offline Capable:** Full offline support with Service Worker asset caching (`sw.js`).
-- **Fabrication & 3D Assets:** Includes 3D GLB models (`puzzle_model.glb`) and vector SVG cut-sheet generators for physical CNC/laser fabrication.
 
 ## 🛠️ Spectre Tiling & Peeling Solver CLI
 
