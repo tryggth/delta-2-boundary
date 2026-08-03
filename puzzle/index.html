@@ -4694,16 +4694,10 @@
           const tile = state.tiles.find(t => t.id === hoveredTileId);
           if (tile) {
             const step = e.deltaY < 0 ? 30 : -30;
-            const newRot = (tile.rotationDeg + step) % 360;
-            const testVerts = getTransformedVertices(tile.x, tile.y, newRot);
-            if (validateTilePlacement(testVerts, tile.id).valid) {
-              tile.rotationDeg = newRot;
-              state.dragRotationDeg = tile.rotationDeg;
-              renderPlacedTiles();
-              updateHUD();
-            } else {
-              showToast("⚠️ Rotation blocked: Would overlap or extend outside boundary!");
-            }
+            tile.rotationDeg = (tile.rotationDeg + step % 360 + 360) % 360;
+            state.dragRotationDeg = tile.rotationDeg;
+            renderPlacedTiles();
+            updateHUD();
           }
         } else {
           e.preventDefault();
@@ -4726,14 +4720,10 @@
           } else if (state.selectedTileId !== null) {
             const tile = state.tiles.find(t => t.id === state.selectedTileId);
             if (tile) {
-              const newRot = (tile.rotationDeg + 30) % 360;
-              const testVerts = getTransformedVertices(tile.x, tile.y, newRot);
-              if (validateTilePlacement(testVerts, tile.id).valid) {
-                tile.rotationDeg = newRot;
-                renderPlacedTiles();
-              } else {
-                showToast("⚠️ Rotation blocked: Would overlap or extend outside boundary!");
-              }
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
             }
           }
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
