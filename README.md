@@ -18,16 +18,21 @@ Watch the complete 70-step tile reduction and boundary peeling cascade animation
 
 *(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
 
-## 🧩 Interactive Spectre $\Delta_2$ Jigsaw Puzzle PWA
+## 🧩 Interactive Spectre Metatile Jigsaw Puzzle PWA
 
-An interactive Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spectre $\Delta_2$ patch is included in the project under [puzzle/](puzzle/) and hosted live on GitHub Pages:
+A full-featured Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spectre $\Delta_2$ patch and all 9 Tier-1 metatiles is included in this repository under [puzzle/](puzzle/) and hosted live on GitHub Pages:
 
-👉 **[Play the Live Spectre $\Delta_2$ Jigsaw Puzzle PWA](https://tryggth.github.io/delta-2-boundary/)**
+[![Play Live PWA](https://img.shields.io/badge/Play_Live-Spectre_Puzzle_PWA-6366f1?style=for-the-badge&logo=github&logoColor=white)](https://tryggth.github.io/delta-2-boundary/)
+👉 **[Launch Live Spectre Jigsaw Puzzle App](https://tryggth.github.io/delta-2-boundary/)**
 
-### Features:
-- **Interactive Drag & Snap Jigsaw:** Place Spectre monotile pieces into the $\Delta_2$ boundary frame.
-- **PWA Capabilities:** Fully offline capable with Service Worker caching and installable web app manifest.
-- **3D Render & Vector Assets:** Includes 3D GLB model and SVG cut sheet generators for physical fabrication.
+### Key Features:
+- **Interactive Drag & Snap Jigsaw Engine:** Drag, rotate, and snap Spectre monotile pieces onto the board with automatic geometric overlap and boundary validation.
+- **Dynamic Metatile Boundary Selector:** Switch seamlessly between the 70-tile Generation-2 $\Delta_2$ boundary frame and all 9 Tier-1 metatile boundary loops (**Gamma**, **Delta**, **Theta**, **Lambda**, **Xi**, **Pi**, **Sigma**, **Phi**, **Psi**).
+- **Interactive Solution & Play Modes:** Toggle between guided solution view and free-play puzzle mode for every metatile.
+- **Installable PWA Support:** One-click desktop and mobile installation via the native **Install App** button (`beforeinstallprompt`).
+- **Auto-Updating Service Worker:** Uses a Network-First strategy for HTML and background update checking (`controllerchange`) so web updates on GitHub Pages deploy instantly to users.
+- **Offline Capable:** Full offline support with Service Worker asset caching (`sw.js`).
+- **Fabrication & 3D Assets:** Includes 3D GLB models (`puzzle_model.glb`) and vector SVG cut-sheet generators for physical CNC/laser fabrication.
 
 ## 🛠️ Spectre Tiling & Peeling Solver CLI
 
