@@ -4283,20 +4283,22 @@
         return inside;
       }
 
-      function pointOnSegment(pt, a, b, tol = 1e-3) {
-        const cross = (pt.y - a.y) * (b.x - a.x) - (pt.x - a.x) * (b.y - a.y);
-        if (Math.abs(cross) > tol) return false;
-        const dot = (pt.x - a.x) * (b.x - a.x) + (pt.y - a.y) * (b.y - a.y);
-        if (dot < -tol) return false;
-        const lenSq = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
-        if (dot > lenSq + tol) return false;
-        return true;
+      function distanceToSegment(pt, a, b) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return Math.hypot(pt.x - a.x, pt.y - a.y);
+        let t = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        const projX = a.x + t * dx;
+        const projY = a.y + t * dy;
+        return Math.hypot(pt.x - projX, pt.y - projY);
       }
 
-      function pointInOrOnPolygon(pt, poly) {
+      function pointInOrOnPolygon(pt, poly, tol = 0.85) {
         const n = poly.length;
         for (let i = 0; i < n; i++) {
-          if (pointOnSegment(pt, poly[i], poly[(i + 1) % n])) return true;
+          if (distanceToSegment(pt, poly[i], poly[(i + 1) % n]) <= tol) return true;
         }
         return pointInPolygon(pt, poly);
       }
@@ -4322,8 +4324,8 @@
         const cp3 = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x);
         const cp4 = (d.x - c.x) * (b.y - c.y) - (d.y - c.y) * (b.x - c.x);
 
-        if (((cp1 > 1e-4 && cp2 < -1e-4) || (cp1 < -1e-4 && cp2 > 1e-4)) &&
-            ((cp3 > 1e-4 && cp4 < -1e-4) || (cp3 < -1e-4 && cp4 > 1e-4))) {
+        if (((cp1 > 0.1 && cp2 < -0.1) || (cp1 < -0.1 && cp2 > 0.1)) &&
+            ((cp3 > 0.1 && cp4 < -0.1) || (cp3 < -0.1 && cp4 > 0.1))) {
           return true;
         }
         return false;
