@@ -284,6 +284,12 @@
       filter: brightness(1.2) drop-shadow(0 0 6px rgba(255,255,255,0.4));
     }
 
+        .tile-polygon.staged-outside {
+      stroke: #f59e0b;
+      stroke-width: 2.5px;
+      stroke-dasharray: 5 3;
+    }
+
     .tile-polygon.selected {
       stroke: #ffffff;
       stroke-width: 2.5;
@@ -4545,7 +4551,9 @@
           const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
           polygon.setAttribute('points', verticesToSvgPoints(verts));
           polygon.setAttribute('fill', tile.color);
-          polygon.setAttribute('class', `tile-polygon ${tile.id === state.selectedTileId ? 'selected' : ''}`);
+          const isInside = isTileInsideBoundary(verts);
+          const isSelected = tile.id === state.selectedTileId;
+          polygon.setAttribute('class', `tile-polygon ${isSelected ? 'selected' : ''} ${!isInside ? 'staged-outside' : ''}`);
           polygon.dataset.id = tile.id;
 
           polygon.addEventListener('mousedown', (e) => {
@@ -4616,6 +4624,7 @@
           return;
         }
 
+        state.lastMouseScreenPos = { x: e.clientX, y: e.clientY };
         if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
           const worldPos = screenToWorldPos(e.clientX, e.clientY);
           const targetX = worldPos.x - state.dragOffset.x;
@@ -4629,6 +4638,7 @@
       }
 
       function handleMouseUp(e) {
+        state.lastMouseScreenPos = { x: e.clientX, y: e.clientY };
         if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
           const worldPos = screenToWorldPos(e.clientX, e.clientY);
           const rawX = worldPos.x - state.dragOffset.x;
@@ -4639,13 +4649,12 @@
 
           const valResult = validateTilePlacement(candidateVerts, state.draggedTileId);
 
-          if (!valResult.valid) {
-            if (valResult.reason === "OUTSIDE_BOUNDARY") {
-              showToast("⚠️ Invalid Placement: Tile must be strictly inside boundary!");
-            } else {
-              showToast("⚠️ Invalid Placement: Tile overlaps an existing placed tile!");
-            }
+          if (!valResult.valid && valResult.reason === "OVERLAP") {
+            showToast("⚠️ Invalid Placement: Tile overlaps an existing placed tile!");
           } else {
+            if (!valResult.valid && valResult.reason === "OUTSIDE_BOUNDARY") {
+              showToast("💡 Tile staged outside boundary frame. Rotate or drag inside when ready!");
+            }
             if (state.dragMode === 'PALETTE') {
               const newTile = {
                 id: state.nextTileId++,
@@ -4718,6 +4727,15 @@
         if (e.key === 'r' || e.key === 'R') {
           if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
             state.dragRotationDeg = (state.dragRotationDeg + 30) % 360;
+            if (state.lastMouseScreenPos) {
+              const worldPos = screenToWorldPos(state.lastMouseScreenPos.x, state.lastMouseScreenPos.y);
+              const targetX = worldPos.x - state.dragOffset.x;
+              const targetY = worldPos.y - state.dragOffset.y;
+              const color = state.dragMode === 'PALETTE' 
+                ? state.dragPaletteColor 
+                : state.tiles.find(t => t.id === state.draggedTileId)?.color;
+              updateGhostTile(targetX, targetY, state.dragRotationDeg, color);
+            }
             updateHUD();
           } else if (state.selectedTileId !== null) {
             const tile = state.tiles.find(t => t.id === state.selectedTileId);
