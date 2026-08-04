@@ -595,7 +595,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785884332909</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785885248821</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -712,7 +712,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785884332909";
+      const APP_VERSION = "v1.0.1785885248821";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4753,6 +4753,23 @@
           });
 
           placedTilesGroup.appendChild(polygon);
+
+          // Render tile coordinates inside tile when Hidden Mode is active
+          if (state.hiddenMode) {
+            const textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textElem.setAttribute('x', tile.x.toFixed(1));
+            textElem.setAttribute('y', tile.y.toFixed(1));
+            textElem.setAttribute('fill', '#ffffff');
+            textElem.setAttribute('font-size', '11');
+            textElem.setAttribute('font-family', 'monospace');
+            textElem.setAttribute('font-weight', 'bold');
+            textElem.setAttribute('text-anchor', 'middle');
+            textElem.setAttribute('dominant-baseline', 'central');
+            textElem.setAttribute('pointer-events', 'none');
+            textElem.setAttribute('filter', 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))');
+            textElem.textContent = `(${Math.round(tile.x)}, ${Math.round(tile.y)})`;
+            placedTilesGroup.appendChild(textElem);
+          }
         });
         renderLockHighlights();
 
@@ -4930,7 +4947,10 @@
           return;
         }
 
-        const worldPos = screenToWorldPos(clientX, clientY);
+        const rect = workspaceSvg ? workspaceSvg.getBoundingClientRect() : { left: 0, top: 0 };
+        const mouseSvgX = clientX - rect.left;
+        const mouseSvgY = clientY - rect.top;
+
         const poly = getActiveBoundaryLoop();
         if (!poly || poly.length === 0) {
           vertexDebugTooltip.style.display = 'none';
@@ -4939,20 +4959,23 @@
 
         const turns = calculateBoundaryTurns(poly);
         let nearestIdx = -1;
-        let minWorldDist = Infinity;
+        let minScreenDist = Infinity;
 
+        // Calculate screen-space distance to each vertex
         for (let i = 0; i < poly.length; i++) {
           const pt = poly[i];
-          const d = Math.hypot(worldPos.x - pt.x, worldPos.y - pt.y);
-          if (d < minWorldDist) {
-            minWorldDist = d;
+          const vScreenX = state.view.x + pt.x * state.view.zoom;
+          const vScreenY = state.view.y + pt.y * state.view.zoom;
+          const d = Math.hypot(mouseSvgX - vScreenX, mouseSvgY - vScreenY);
+
+          if (d < minScreenDist) {
+            minScreenDist = d;
             nearestIdx = i;
           }
         }
 
-        const MAX_HOVER_DIST = 35 / (state.view.zoom || 1.0);
-
-        if (nearestIdx !== -1 && minWorldDist <= Math.max(25, MAX_HOVER_DIST)) {
+        // Screen-space hover proximity threshold of 90px
+        if (nearestIdx !== -1 && minScreenDist <= 90) {
           const pt = poly[nearestIdx];
           const turnDeg = turns[nearestIdx] !== undefined ? turns[nearestIdx] : 0;
           const rx = Math.round(pt.x);
