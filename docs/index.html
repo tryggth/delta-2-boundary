@@ -573,7 +573,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785880478719</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785880791201</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -690,7 +690,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785880478719";
+      const APP_VERSION = "v1.0.1785880791201";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4881,47 +4881,28 @@
 
           const k = lock.seq.length;
           for (let i = 0; i < n; i++) {
-            // Forward check
-            let forwardMatch = true;
+            // Strict forward CCW boundary turn sequence match
+            let match = true;
             for (let j = 0; j < k; j++) {
               if (turns[(i + j) % n] !== lock.seq[j]) {
-                forwardMatch = false;
+                match = false;
                 break;
               }
             }
 
-            // Reverse check (opposite winding)
-            let reverseMatch = true;
-            for (let j = 0; j < k; j++) {
-              if (-turns[(i - j + n) % n] !== lock.seq[j]) {
-                reverseMatch = false;
-                break;
-              }
-            }
-
-            if (forwardMatch) {
-              drawLockHighlightPath(poly, i, k, lock.color, false);
-            }
-            if (reverseMatch) {
-              drawLockHighlightPath(poly, i, k, lock.color, true);
+            if (match) {
+              drawLockHighlightPath(poly, i, k, lock.color);
             }
           }
         });
       }
 
-      function drawLockHighlightPath(poly, startIndex, len, color, isReverse) {
+      function drawLockHighlightPath(poly, startIndex, len, color) {
         const n = poly.length;
         const pathPoints = [];
-        if (!isReverse) {
-          for (let j = -1; j <= len; j++) {
-            const idx = (startIndex + j + n) % n;
-            pathPoints.push(poly[idx]);
-          }
-        } else {
-          for (let j = -1; j <= len; j++) {
-            const idx = (startIndex - j + n) % n;
-            pathPoints.push(poly[idx]);
-          }
+        for (let j = -1; j <= len; j++) {
+          const idx = (startIndex + j + n) % n;
+          pathPoints.push(poly[idx]);
         }
 
         if (pathPoints.length < 2) return;
