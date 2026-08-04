@@ -573,7 +573,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785881093058</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785883695188</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -690,7 +690,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785881093058";
+      const APP_VERSION = "v1.0.1785883695188";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4850,104 +4850,52 @@
           return currentBoundaryVertices;
         }
 
-        // 1. Collect all directed boundary edges
-        const directedEdges = [];
-        const nB = currentBoundaryVertices.length;
-        for (let i = 0; i < nB; i++) {
-          const p1 = currentBoundaryVertices[i];
-          const p2 = currentBoundaryVertices[(i + 1) % nB];
-          directedEdges.push({
-            p1: { x: p1.x, y: p1.y },
-            p2: { x: p2.x, y: p2.y },
-            source: 'FRAME'
-          });
-        }
-
-        // 2. Collect directed edges for each placed tile inside boundary
-        for (const tile of state.tiles) {
-          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
-          if (!isTileInsideBoundary(verts)) continue;
-
-          const nT = verts.length;
-          for (let i = 0; i < nT; i++) {
-            const p1 = verts[i];
-            const p2 = verts[(i + 1) % nT];
-            // Empty region boundary walks along tile edge in REVERSE direction (p2 -> p1)
-            directedEdges.push({
-              p1: { x: p2.x, y: p2.y },
-              p2: { x: p1.x, y: p1.y },
-              source: 'TILE',
-              tileId: tile.id
-            });
-          }
-        }
-
-        // 3. Filter out shared/covered edges (where edge p1->p2 matches another edge p2->p1)
         const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-        const TOLERANCE = 1.2;
+        const TOLERANCE = 2.5;
 
-        const matched = new Set();
-        const activeEdges = [];
+        // Start with current boundary vertices
+        let activePoly = currentBoundaryVertices.map(v => ({ x: v.x, y: v.y }));
+        const initialFrameVerts = currentBoundaryVertices;
 
-        for (let i = 0; i < directedEdges.length; i++) {
-          if (matched.has(i)) continue;
-          let isShared = false;
+        for (const tile of state.tiles) {
+          const tVerts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (!isTileInsideBoundary(tVerts)) continue; // skip staged tiles outside boundary
 
-          for (let j = i + 1; j < directedEdges.length; j++) {
-            if (matched.has(j)) continue;
-            const e1 = directedEdges[i];
-            const e2 = directedEdges[j];
-
-            if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
-              isShared = true;
-              matched.add(i);
-              matched.add(j);
-              break;
+          // 1. Find matched activePoly vertex indices covered by this placed tile
+          const matchedIndices = [];
+          for (let i = 0; i < activePoly.length; i++) {
+            const pv = activePoly[i];
+            if (tVerts.some(tv => dist(pv, tv) < TOLERANCE)) {
+              matchedIndices.push(i);
             }
           }
 
-          if (!isShared) {
-            activeEdges.push(directedEdges[i]);
-          }
-        }
-
-        if (activeEdges.length < 3) return currentBoundaryVertices;
-
-        // 4. Chain active edges into continuous boundary loop
-        const chainedVertices = [];
-        let currEdge = activeEdges[0];
-        const visitedEdges = new Set([0]);
-
-        chainedVertices.push(currEdge.p1);
-
-        for (let step = 0; step < activeEdges.length; step++) {
-          chainedVertices.push(currEdge.p2);
-          const targetPt = currEdge.p2;
-
-          let nextIdx = -1;
-          let minDist = Infinity;
-
-          for (let j = 0; j < activeEdges.length; j++) {
-            if (visitedEdges.has(j)) continue;
-            const candidate = activeEdges[j];
-            const d = dist(targetPt, candidate.p1);
-            if (d < TOLERANCE && d < minDist) {
-              minDist = d;
-              nextIdx = j;
+          // 2. Find new inner tile vertices facing empty region (not on outer frame)
+          const newVerts = [];
+          for (const tv of tVerts) {
+            if (!initialFrameVerts.some(fv => dist(tv, fv) < TOLERANCE)) {
+              newVerts.push(tv);
             }
           }
 
-          if (nextIdx !== -1) {
-            visitedEdges.add(nextIdx);
-            currEdge = activeEdges[nextIdx];
-          } else {
-            break;
+          // 3. Replace covered activePoly vertices with new inner tile vertices
+          if (matchedIndices.length > 0 && newVerts.length > 0) {
+            const minI = Math.min(...matchedIndices);
+            const maxI = Math.max(...matchedIndices);
+
+            if (maxI - minI === matchedIndices.length - 1) {
+              activePoly.splice(minI, matchedIndices.length, ...newVerts);
+            } else {
+              const matchedSet = new Set(matchedIndices);
+              activePoly = activePoly.filter((_, idx) => !matchedSet.has(idx));
+              activePoly.push(...newVerts);
+            }
           }
         }
 
-        if (chainedVertices.length < 3) return currentBoundaryVertices;
+        if (activePoly.length < 3) return currentBoundaryVertices;
 
-        return ensureCCW(chainedVertices);
+        return ensureCCW(activePoly);
       }
 
       // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
