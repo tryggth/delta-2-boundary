@@ -595,7 +595,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785885248821</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785886561610</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -712,7 +712,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785885248821";
+      const APP_VERSION = "v1.0.1785886561610";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4890,51 +4890,91 @@
         }
 
         const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-        const TOLERANCE = 2.5;
+        const TOLERANCE = 3.0;
 
-        // Start with current boundary vertices
-        let activePoly = currentBoundaryVertices.map(v => ({ x: v.x, y: v.y }));
-        const initialFrameVerts = currentBoundaryVertices;
+        // Collect all directed boundary edges
+        const directedEdges = [];
+        const nB = currentBoundaryVertices.length;
+        for (let i = 0; i < nB; i++) {
+          const p1 = currentBoundaryVertices[i];
+          const p2 = currentBoundaryVertices[(i + 1) % nB];
+          directedEdges.push({
+            p1: { x: p1.x, y: p1.y },
+            p2: { x: p2.x, y: p2.y },
+            source: 'FRAME'
+          });
+        }
 
+        // Add tile edges in reversed direction (since empty space walks tile edge in reverse)
         for (const tile of state.tiles) {
-          const tVerts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
-          if (!isTileInsideBoundary(tVerts)) continue; // skip staged tiles outside boundary
+          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (!isTileInsideBoundary(verts)) continue;
 
-          // 1. Find matched activePoly vertex indices covered by this placed tile
-          const matchedIndices = [];
-          for (let i = 0; i < activePoly.length; i++) {
-            const pv = activePoly[i];
-            if (tVerts.some(tv => dist(pv, tv) < TOLERANCE)) {
-              matchedIndices.push(i);
-            }
+          const nT = verts.length;
+          for (let i = 0; i < nT; i++) {
+            const p1 = verts[i];
+            const p2 = verts[(i + 1) % nT];
+            directedEdges.push({
+              p1: { x: p2.x, y: p2.y },
+              p2: { x: p1.x, y: p1.y },
+              source: 'TILE'
+            });
           }
+        }
 
-          // 2. Find new inner tile vertices facing empty region (not on outer frame)
-          const newVerts = [];
-          for (const tv of tVerts) {
-            if (!initialFrameVerts.some(fv => dist(tv, fv) < TOLERANCE)) {
-              newVerts.push(tv);
-            }
-          }
+        // Cancel out matching internal edge pairs (e1.p1 == e2.p2 && e1.p2 == e2.p1)
+        const matched = new Set();
+        for (let i = 0; i < directedEdges.length; i++) {
+          if (matched.has(i)) continue;
+          for (let j = i + 1; j < directedEdges.length; j++) {
+            if (matched.has(j)) continue;
+            const e1 = directedEdges[i];
+            const e2 = directedEdges[j];
 
-          // 3. Replace covered activePoly vertices with new inner tile vertices
-          if (matchedIndices.length > 0 && newVerts.length > 0) {
-            const minI = Math.min(...matchedIndices);
-            const maxI = Math.max(...matchedIndices);
-
-            if (maxI - minI === matchedIndices.length - 1) {
-              activePoly.splice(minI, matchedIndices.length, ...newVerts);
-            } else {
-              const matchedSet = new Set(matchedIndices);
-              activePoly = activePoly.filter((_, idx) => !matchedSet.has(idx));
-              activePoly.push(...newVerts);
+            if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
+              matched.add(i);
+              matched.add(j);
+              break;
             }
           }
         }
 
-        if (activePoly.length < 3) return currentBoundaryVertices;
+        const activeEdges = directedEdges.filter((_, idx) => !matched.has(idx));
+        if (activeEdges.length < 3) return currentBoundaryVertices;
 
-        return ensureCCW(activePoly);
+        // Chain active edges into a continuous perimeter loop
+        const chained = [activeEdges[0].p1];
+        let currEdge = activeEdges[0];
+        const visited = new Set([0]);
+
+        for (let step = 0; step < activeEdges.length; step++) {
+          chained.push(currEdge.p2);
+          const targetPt = currEdge.p2;
+
+          let nextIdx = -1;
+          let minDist = Infinity;
+
+          for (let j = 0; j < activeEdges.length; j++) {
+            if (visited.has(j)) continue;
+            const candidate = activeEdges[j];
+            const d = dist(targetPt, candidate.p1);
+            if (d < TOLERANCE && d < minDist) {
+              minDist = d;
+              nextIdx = j;
+            }
+          }
+
+          if (nextIdx !== -1) {
+            visited.add(nextIdx);
+            currEdge = activeEdges[nextIdx];
+          } else {
+            break;
+          }
+        }
+
+        if (chained.length < 3) return currentBoundaryVertices;
+
+        return ensureCCW(chained);
       }
 
             // 10. HIDDEN MODE VERTEX DEBUG HOVER TOOLTIP
@@ -4947,10 +4987,7 @@
           return;
         }
 
-        const rect = workspaceSvg ? workspaceSvg.getBoundingClientRect() : { left: 0, top: 0 };
-        const mouseSvgX = clientX - rect.left;
-        const mouseSvgY = clientY - rect.top;
-
+        const worldPos = screenToWorldPos(clientX, clientY);
         const poly = getActiveBoundaryLoop();
         if (!poly || poly.length === 0) {
           vertexDebugTooltip.style.display = 'none';
@@ -4959,23 +4996,23 @@
 
         const turns = calculateBoundaryTurns(poly);
         let nearestIdx = -1;
-        let minScreenDist = Infinity;
+        let minWorldDist = Infinity;
 
-        // Calculate screen-space distance to each vertex
+        // Calculate world-space distance to each active boundary vertex
         for (let i = 0; i < poly.length; i++) {
           const pt = poly[i];
-          const vScreenX = state.view.x + pt.x * state.view.zoom;
-          const vScreenY = state.view.y + pt.y * state.view.zoom;
-          const d = Math.hypot(mouseSvgX - vScreenX, mouseSvgY - vScreenY);
+          const d = Math.hypot(worldPos.x - pt.x, worldPos.y - pt.y);
 
-          if (d < minScreenDist) {
-            minScreenDist = d;
+          if (d < minWorldDist) {
+            minWorldDist = d;
             nearestIdx = i;
           }
         }
 
-        // Screen-space hover proximity threshold of 90px
-        if (nearestIdx !== -1 && minScreenDist <= 90) {
+        // World-space hover proximity threshold of 60 units (approx 1.5 tile edges)
+        const threshold = 60.0 / Math.max(0.5, state.view.zoom || 1.0);
+
+        if (nearestIdx !== -1 && minWorldDist <= threshold) {
           const pt = poly[nearestIdx];
           const turnDeg = turns[nearestIdx] !== undefined ? turns[nearestIdx] : 0;
           const rx = Math.round(pt.x);
