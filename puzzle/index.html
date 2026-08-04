@@ -544,36 +544,33 @@
     (function() {
       "use strict";
 
-      // PWA Service Worker Registration & Auto-Update Detection
+      // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
         let refreshing = false;
-        // Automatically reload page when a new service worker takes over
+
+        // Auto-reload app when new Service Worker takes control
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
             refreshing = true;
+            console.log('[PWA Update] New version activated! Reloading app...');
             window.location.reload();
           }
         });
 
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => {
-              console.log('PWA ServiceWorker registered with scope:', reg.scope);
-              // Periodically check for web updates every 60 minutes
-              setInterval(() => reg.update(), 60 * 60 * 1000);
+          navigator.serviceWorker
+            .register('./sw.js')
+            .then((reg) => {
+              console.log('[PWA] Service Worker active with scope:', reg.scope);
+              // Force check for SW update on launch
+              reg.update();
 
-              reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('New update available. Updating PWA...');
-                    }
-                  });
-                }
+              // Check for SW update whenever user refocuses tab/app window
+              window.addEventListener('focus', () => {
+                reg.update();
               });
             })
-            .catch(err => console.error('PWA ServiceWorker registration failed:', err));
+            .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
         });
       }
 

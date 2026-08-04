@@ -1,5 +1,5 @@
 // Spectre Monotile Δ₂ PWA Service Worker (Auto-Updating)
-const CACHE_NAME = 'spectre-puzzle-v2';
+const CACHE_NAME = 'spectre-puzzle-pwa-v1.0.1785878213141';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,61 +9,69 @@ const ASSETS_TO_CACHE = [
   './icon-maskable.png'
 ];
 
-// Install Event - Pre-cache assets and skip waiting immediately
+// Service Worker Installation: Immediate takeover
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  console.log('[Service Worker] Installing new version:', CACHE_NAME);
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
-// Activate Event - Claim clients and purge old caches
+// Service Worker Activation: Delete ALL old caches immediately
 self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activating new version:', CACHE_NAME);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cache);
             return caches.delete(cache);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-// Fetch Event - Network-First for HTML (for instant web updates), Cache-First for static assets
+// Smart Fetch Strategy:
+// - Navigation / HTML: Network First (always load latest online, fall back to cache offline)
+// - Assets: Cache First (fast loading, fall back to network)
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  const isHTML = request.mode === 'navigate' || 
-                 (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
+  if (event.request.method !== 'GET') return;
+
+  const isHTML =
+    event.request.mode === 'navigate' ||
+    (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'));
 
   if (isHTML) {
-    // Network-First for HTML documents to catch web deployments immediately
     event.respondWith(
-      fetch(request)
+      fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
           return networkResponse;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('./index.html')))
+        .catch(() => {
+          return caches.match(event.request) || caches.match('./index.html');
+        })
     );
   } else {
-    // Cache-First with Network Fallback for static assets (icons, manifest, etc.)
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
+      caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        return fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
           return networkResponse;
         });
