@@ -253,6 +253,43 @@
       border-color: #ffffff;
       box-shadow: 0 0 0 2px var(--accent-color);
     }
+        /* Hidden Mode Lock Toggles */
+    .palette-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .hidden-lock-toggles {
+      display: none;
+      flex-direction: row;
+      gap: 0.3rem;
+      align-items: center;
+    }
+    .lock-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .lock-btn:hover {
+      transform: scale(1.08);
+    }
+    .lock-btn[data-lock="1"].active { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+    .lock-btn[data-lock="2"].active { background: rgba(6, 182, 212, 0.25); color: #06b6d4; border-color: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+    .lock-btn[data-lock="3"].active { background: rgba(244, 63, 94, 0.25); color: #f43f5e; border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+    .lock-btn[data-lock="4"].active { background: rgba(16, 185, 129, 0.25); color: #10b981; border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+    .lock-btn[data-lock="5"].active { background: rgba(168, 85, 247, 0.25); color: #a855f7; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+
     .btn-pwa-install:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(6, 182, 212, 0.5);
@@ -536,7 +573,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785878488110</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785880478719</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -557,7 +594,16 @@
     </select>
 
     <div class="section-label">Spectre Tile Palette</div>
-    <div id="tile-palette"></div>
+    <div class="palette-wrapper">
+      <div id="tile-palette" style="flex: 1;"></div>
+      <div id="hidden-lock-toggles" class="hidden-lock-toggles">
+        <button class="lock-btn" data-lock="1" title="Toggle Lock 1: Low Lock [0°, 60°, 0°]">L1</button>
+        <button class="lock-btn" data-lock="2" title="Toggle Lock 2: High Lock [60°, 90°, 60°]">L2</button>
+        <button class="lock-btn" data-lock="3" title="Toggle Lock 3: Long Lock 1 [0°, -60°, 90°, 60°]">L3</button>
+        <button class="lock-btn" data-lock="4" title="Toggle Lock 4: Long Lock 2 [60°, 90°, -60°, 90°]">L4</button>
+        <button class="lock-btn" data-lock="5" title="Toggle Lock 5: Long Lock 3 [90°, -60°, 90°, 60°]">L5</button>
+      </div>
+    </div>
 
     <div class="section-label">Board Controls</div>
     <div class="controls-grid">
@@ -603,6 +649,7 @@
       <!-- Main Transformed Layer for Pan & Zoom -->
       <g id="viewport-layer">
         <g id="boundary-layer"></g>
+        <g id="lock-highlight-layer"></g>
         <g id="placed-tiles-group"></g>
         <g id="ghost-tile-group"></g>
       </g>
@@ -643,7 +690,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785878488110";
+      const APP_VERSION = "v1.0.1785880478719";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4613,6 +4660,7 @@
         path.setAttribute('filter', 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.35))');
 
         boundaryLayer.appendChild(path);
+        renderLockHighlights();
       }
 
       function renderPalette() {
@@ -4778,7 +4826,135 @@
         }
       }
 
-            // 8. RIGHT-CLICK CONTEXT MENU CONTROLLER
+                  // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
+      const LOCK_DEFINITIONS = [
+        { id: 1, name: "Low Lock", seq: [0, 60, 0], color: "#f59e0b" },
+        { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
+        { id: 3, name: "Long Lock 1", seq: [0, -60, 90, 60], color: "#f43f5e" },
+        { id: 4, name: "Long Lock 2", seq: [60, 90, -60, 90], color: "#10b981" },
+        { id: 5, name: "Long Lock 3", seq: [90, -60, 90, 60], color: "#a855f7" }
+      ];
+
+      state.hiddenMode = false;
+      state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false };
+
+      const hiddenLockToggles = document.getElementById('hidden-lock-toggles');
+      const lockHighlightLayer = document.getElementById('lock-highlight-layer');
+
+      function calculateBoundaryTurns(poly) {
+        if (!poly || poly.length < 3) return [];
+        const n = poly.length;
+        const turns = [];
+        for (let i = 0; i < n; i++) {
+          const pPrev = poly[(i - 1 + n) % n];
+          const pCurr = poly[i];
+          const pNext = poly[(i + 1) % n];
+
+          const v1x = pCurr.x - pPrev.x;
+          const v1y = pCurr.y - pPrev.y;
+          const v2x = pNext.x - pCurr.x;
+          const v2y = pNext.y - pCurr.y;
+
+          const a1 = Math.atan2(v1y, v1x);
+          const a2 = Math.atan2(v2y, v2x);
+
+          let deg = Math.round((a2 - a1) * 180 / Math.PI / 30) * 30;
+          while (deg > 180) deg -= 360;
+          while (deg <= -180) deg += 360;
+          turns.push(deg);
+        }
+        return turns;
+      }
+
+      function renderLockHighlights() {
+        if (!lockHighlightLayer) return;
+        lockHighlightLayer.innerHTML = '';
+        if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length < 3) return;
+
+        const poly = currentBoundaryVertices;
+        const n = poly.length;
+        const turns = calculateBoundaryTurns(poly);
+        if (turns.length !== n) return;
+
+        LOCK_DEFINITIONS.forEach(lock => {
+          if (!state.activeLocks[lock.id]) return;
+
+          const k = lock.seq.length;
+          for (let i = 0; i < n; i++) {
+            // Forward check
+            let forwardMatch = true;
+            for (let j = 0; j < k; j++) {
+              if (turns[(i + j) % n] !== lock.seq[j]) {
+                forwardMatch = false;
+                break;
+              }
+            }
+
+            // Reverse check (opposite winding)
+            let reverseMatch = true;
+            for (let j = 0; j < k; j++) {
+              if (-turns[(i - j + n) % n] !== lock.seq[j]) {
+                reverseMatch = false;
+                break;
+              }
+            }
+
+            if (forwardMatch) {
+              drawLockHighlightPath(poly, i, k, lock.color, false);
+            }
+            if (reverseMatch) {
+              drawLockHighlightPath(poly, i, k, lock.color, true);
+            }
+          }
+        });
+      }
+
+      function drawLockHighlightPath(poly, startIndex, len, color, isReverse) {
+        const n = poly.length;
+        const pathPoints = [];
+        if (!isReverse) {
+          for (let j = -1; j <= len; j++) {
+            const idx = (startIndex + j + n) % n;
+            pathPoints.push(poly[idx]);
+          }
+        } else {
+          for (let j = -1; j <= len; j++) {
+            const idx = (startIndex - j + n) % n;
+            pathPoints.push(poly[idx]);
+          }
+        }
+
+        if (pathPoints.length < 2) return;
+        const pathD = "M " + pathPoints.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" L ");
+        const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathElem.setAttribute('d', pathD);
+        pathElem.setAttribute('fill', 'none');
+        pathElem.setAttribute('stroke', color);
+        pathElem.setAttribute('stroke-width', '5.5');
+        pathElem.setAttribute('stroke-linecap', 'round');
+        pathElem.setAttribute('stroke-linejoin', 'round');
+        pathElem.setAttribute('filter', `drop-shadow(0 0 8px ${color})`);
+        pathElem.setAttribute('class', 'lock-highlight');
+
+        lockHighlightLayer.appendChild(pathElem);
+      }
+
+      // Wire lock toggle buttons
+      document.querySelectorAll('.lock-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const lockId = parseInt(btn.dataset.lock, 10);
+          state.activeLocks[lockId] = !state.activeLocks[lockId];
+          btn.classList.toggle('active', state.activeLocks[lockId]);
+          renderLockHighlights();
+          const lockInfo = LOCK_DEFINITIONS.find(l => l.id === lockId);
+          if (lockInfo) {
+            showToast(`${state.activeLocks[lockId] ? '👁️ Highlighted' : '🙈 Hidden'} ${lockInfo.name} [${lockInfo.seq.join('°, ')}°]`);
+          }
+        });
+      });
+
+      // 8. RIGHT-CLICK CONTEXT MENU CONTROLLER
       const contextMenu = document.getElementById('context-menu');
       const ctxRotate = document.getElementById('ctx-rotate');
       const ctxDelete = document.getElementById('ctx-delete');
@@ -4989,6 +5165,22 @@
       }
 
       function handleKeyDown(e) {
+        if ((e.ctrlKey || e.altKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+          e.preventDefault();
+          state.hiddenMode = !state.hiddenMode;
+          if (!state.hiddenMode) {
+            state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false };
+            document.querySelectorAll('.lock-btn').forEach(btn => btn.classList.remove('active'));
+            if (hiddenLockToggles) hiddenLockToggles.style.display = 'none';
+            renderLockHighlights();
+            showToast("🔒 Hidden Mode Deactivated.");
+          } else {
+            if (hiddenLockToggles) hiddenLockToggles.style.display = 'flex';
+            renderLockHighlights();
+            showToast("🔓 Hidden Mode Activated! Anchor Lock Toggles Exposed.");
+          }
+          return;
+        }
         if (e.key === 'r' || e.key === 'R') {
           if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
             state.dragRotationDeg = (state.dragRotationDeg + 30) % 360;
