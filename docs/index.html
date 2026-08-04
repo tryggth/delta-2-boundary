@@ -464,6 +464,9 @@
       <button id="btn-boundary" class="btn active" title="Toggle 1D Delta_2 Boundary Frame">
         🖼️ Frame: ON
       </button>
+      <button id="btn-rotate" class="btn" title="Rotate selected or staged tile by 30° (or press R / Scroll Wheel)">
+        🔄 Rotate (R)
+      </button>
       <button id="btn-snap" class="btn active" title="Toggle automatic vertex & edge snapping">
         ⚡ Snap: ON
       </button>
@@ -527,7 +530,7 @@
       <ul>
         <li><strong>Metatile Boundary Selector:</strong> Use the dropdown control to switch between the 71-tile Generation-2 $\Delta_2$ boundary frame, the 9-tile Tier-1 metatile cluster, and the 8-tile Gamma metatile.</li>
         <li><strong>Real-Time Mid-Drag & Pre-Drag Rotation:</strong> Rotate tiles in 30° steps mid-drag by scrolling the mouse wheel or pressing <kbd>R</kbd>. You can also rotate selected tiles anytime on the board or staging area.</li>
-        <li><strong>Outside-Boundary Staging Area:</strong> When space inside the frame is tight, drop tiles anywhere outside the boundary frame to stage and pre-rotate them! Staged tiles feature a dashed amber outline.</li>
+        <li><strong>Outside-Boundary Staging Area & Rotation:</strong> When space inside the frame is tight, drop tiles anywhere outside the boundary to stage them! Rotate staged tiles anytime using the <strong>🔄 Rotate (R)</strong> button, the <kbd>R</kbd> key, or mouse wheel, then drag them into place.</li>
         <li><strong>Automatic Snapping & Overlap Validation:</strong> Tiles snap to boundary vertices and existing tile edges. Overlapping tiles are rejected.</li>
         <li><strong>Start Game / Solution Toggle:</strong> Click <strong>Start Game</strong> to solve, or <strong>Show Solution</strong> to view the full solved layout for the selected metatile frame—your in-progress board is automatically stashed and restored when resuming!</li>
         <li><strong>PWA Offline Install & Auto-Update:</strong> Install as a desktop or mobile PWA via the <strong>📲 Install App</strong> button for complete offline capability and instant web updates.</li>
@@ -4646,7 +4649,7 @@
             showToast("⚠️ Invalid Placement: Tile overlaps an existing placed tile!");
           } else {
             if (!valResult.valid && valResult.reason === "OUTSIDE_BOUNDARY") {
-              showToast("💡 Tile staged outside boundary frame. Rotate or drag inside when ready!");
+              showToast("💡 Tile staged outside boundary frame! Press R, Scroll Wheel, or click 🔄 Rotate to spin it.");
             }
             if (state.dragMode === 'PALETTE') {
               const newTile = {
@@ -4831,6 +4834,23 @@
         }
       });
 
+            const btnRotate = document.getElementById('btn-rotate');
+      if (btnRotate) {
+        btnRotate.addEventListener('click', () => {
+          if (state.selectedTileId !== null) {
+            const tile = state.tiles.find(t => t.id === state.selectedTileId);
+            if (tile) {
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
+              showToast(`Rotated tile to ${tile.rotationDeg}°`);
+            }
+          } else {
+            showToast("💡 Select a tile on the board or staging area to rotate it!");
+          }
+        });
+      }
       btnHelp.addEventListener('click', () => helpModal.classList.add('open'));
       btnCloseModal.addEventListener('click', () => helpModal.classList.remove('open'));
       helpModal.addEventListener('click', (e) => {
