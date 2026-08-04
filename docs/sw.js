@@ -1,5 +1,5 @@
 // Spectre Monotile Δ₂ PWA Service Worker (Auto-Updating)
-const CACHE_NAME = 'spectre-puzzle-pwa-v1.0.1785880791201';
+const CACHE_NAME = 'spectre-puzzle-pwa-v1.0.1785881093058';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -573,7 +573,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785880791201</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785881093058</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -690,7 +690,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785880791201";
+      const APP_VERSION = "v1.0.1785881093058";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4732,6 +4732,7 @@
 
           placedTilesGroup.appendChild(polygon);
         });
+        renderLockHighlights();
 
         // HUD tile count updated dynamically in updateHUD()
       }
@@ -4826,7 +4827,130 @@
         }
       }
 
-                  // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
+                        // Helper to compute CCW orientation and active remaining boundary loop
+      function ensureCCW(poly) {
+        if (!poly || poly.length < 3) return poly;
+        let area = 0;
+        const n = poly.length;
+        for (let i = 0; i < n; i++) {
+          const p1 = poly[i];
+          const p2 = poly[(i + 1) % n];
+          area += (p1.x * p2.y - p2.x * p1.y);
+        }
+        // In Cartesian coords, positive signed area is CCW. If CW, reverse.
+        if (area < 0) {
+          return poly.slice().reverse();
+        }
+        return poly;
+      }
+
+      function getActiveBoundaryLoop() {
+        if (!currentBoundaryVertices || currentBoundaryVertices.length < 3) return [];
+        if (!state.tiles || state.tiles.length === 0) {
+          return currentBoundaryVertices;
+        }
+
+        // 1. Collect all directed boundary edges
+        const directedEdges = [];
+        const nB = currentBoundaryVertices.length;
+        for (let i = 0; i < nB; i++) {
+          const p1 = currentBoundaryVertices[i];
+          const p2 = currentBoundaryVertices[(i + 1) % nB];
+          directedEdges.push({
+            p1: { x: p1.x, y: p1.y },
+            p2: { x: p2.x, y: p2.y },
+            source: 'FRAME'
+          });
+        }
+
+        // 2. Collect directed edges for each placed tile inside boundary
+        for (const tile of state.tiles) {
+          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (!isTileInsideBoundary(verts)) continue;
+
+          const nT = verts.length;
+          for (let i = 0; i < nT; i++) {
+            const p1 = verts[i];
+            const p2 = verts[(i + 1) % nT];
+            // Empty region boundary walks along tile edge in REVERSE direction (p2 -> p1)
+            directedEdges.push({
+              p1: { x: p2.x, y: p2.y },
+              p2: { x: p1.x, y: p1.y },
+              source: 'TILE',
+              tileId: tile.id
+            });
+          }
+        }
+
+        // 3. Filter out shared/covered edges (where edge p1->p2 matches another edge p2->p1)
+        const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+        const TOLERANCE = 1.2;
+
+        const matched = new Set();
+        const activeEdges = [];
+
+        for (let i = 0; i < directedEdges.length; i++) {
+          if (matched.has(i)) continue;
+          let isShared = false;
+
+          for (let j = i + 1; j < directedEdges.length; j++) {
+            if (matched.has(j)) continue;
+            const e1 = directedEdges[i];
+            const e2 = directedEdges[j];
+
+            if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
+              isShared = true;
+              matched.add(i);
+              matched.add(j);
+              break;
+            }
+          }
+
+          if (!isShared) {
+            activeEdges.push(directedEdges[i]);
+          }
+        }
+
+        if (activeEdges.length < 3) return currentBoundaryVertices;
+
+        // 4. Chain active edges into continuous boundary loop
+        const chainedVertices = [];
+        let currEdge = activeEdges[0];
+        const visitedEdges = new Set([0]);
+
+        chainedVertices.push(currEdge.p1);
+
+        for (let step = 0; step < activeEdges.length; step++) {
+          chainedVertices.push(currEdge.p2);
+          const targetPt = currEdge.p2;
+
+          let nextIdx = -1;
+          let minDist = Infinity;
+
+          for (let j = 0; j < activeEdges.length; j++) {
+            if (visitedEdges.has(j)) continue;
+            const candidate = activeEdges[j];
+            const d = dist(targetPt, candidate.p1);
+            if (d < TOLERANCE && d < minDist) {
+              minDist = d;
+              nextIdx = j;
+            }
+          }
+
+          if (nextIdx !== -1) {
+            visitedEdges.add(nextIdx);
+            currEdge = activeEdges[nextIdx];
+          } else {
+            break;
+          }
+        }
+
+        if (chainedVertices.length < 3) return currentBoundaryVertices;
+
+        return ensureCCW(chainedVertices);
+      }
+
+      // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
       const LOCK_DEFINITIONS = [
         { id: 1, name: "Low Lock", seq: [0, 60, 0], color: "#f59e0b" },
         { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
@@ -4871,7 +4995,7 @@
         lockHighlightLayer.innerHTML = '';
         if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length < 3) return;
 
-        const poly = currentBoundaryVertices;
+        const poly = getActiveBoundaryLoop();
         const n = poly.length;
         const turns = calculateBoundaryTurns(poly);
         if (turns.length !== n) return;
