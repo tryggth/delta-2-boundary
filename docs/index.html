@@ -165,6 +165,94 @@
       vertical-align: middle;
       display: inline-block;
     }
+        /* Right-Click Context Menu */
+    .context-menu {
+      position: fixed;
+      z-index: 2000;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.6rem;
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(16px);
+      min-width: 190px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      user-select: none;
+      display: none;
+      animation: menuFadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .menu-header {
+      font-size: 0.725rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem 0.35rem 0.5rem;
+    }
+    .menu-label {
+      font-size: 0.725rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.35rem 0.5rem 0.25rem 0.5rem;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.12s ease;
+    }
+    .menu-item:hover {
+      background-color: var(--card-hover);
+      color: var(--accent-color);
+    }
+    .menu-item.danger:hover {
+      background-color: rgba(244, 63, 94, 0.15);
+      color: #f43f5e;
+    }
+    .menu-shortcut {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: var(--bg-main);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+    .menu-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 0.4rem 0;
+    }
+    .color-swatch-grid {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0.35rem 0.4rem;
+      justify-content: space-between;
+    }
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .color-swatch:hover {
+      transform: scale(1.25);
+      border-color: #ffffff;
+    }
+    .color-swatch.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--accent-color);
+    }
     .btn-pwa-install:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(6, 182, 212, 0.5);
@@ -448,7 +536,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785878310699</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785878488110</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -468,7 +556,7 @@
       <option value="Gamma">Gamma Tier-1 Metatile (8 tiles)</option>
     </select>
 
-    <div class="section-label">4-Color Tile Palette</div>
+    <div class="section-label">Spectre Tile Palette</div>
     <div id="tile-palette"></div>
 
     <div class="section-label">Board Controls</div>
@@ -555,7 +643,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785878310699";
+      const APP_VERSION = "v1.0.1785878488110";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -624,11 +712,20 @@
       }));
 
       // 4-Color Distinct Harmonious Palette
+      // Single Default Teal Tile Palette
       const TILE_COLORS = [
-        { name: "Indigo", fill: "#6366f1", label: "01" },
-        { name: "Cyan", fill: "#06b6d4", label: "02" },
-        { name: "Amber", fill: "#f59e0b", label: "03" },
-        { name: "Rose", fill: "#f43f5e", label: "04" }
+        { name: "Teal Spectre", fill: "#0d9488" }
+      ];
+
+      // Available Color Palette Options for Context Menu & Customization
+      const TILE_COLOR_OPTIONS = [
+        { name: "Teal", fill: "#0d9488" },
+        { name: "Cyan", fill: "#06b6d4" },
+        { name: "Indigo", fill: "#6366f1" },
+        { name: "Amber", fill: "#f59e0b" },
+        { name: "Rose", fill: "#f43f5e" },
+        { name: "Emerald", fill: "#10b981" },
+        { name: "Purple", fill: "#a855f7" }
       ];
 
                   const METATILE_BOUNDARIES = {
@@ -4565,11 +4662,7 @@
           polygon.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            state.tiles = state.tiles.filter(t => t.id !== tile.id);
-            if (state.selectedTileId === tile.id) state.selectedTileId = null;
-            renderPlacedTiles();
-            updateHUD();
-            showToast("🗑️ Removed tile from board");
+            showContextMenu(e.clientX, e.clientY, tile);
           });
 
           polygon.addEventListener('mousedown', (e) => {
@@ -4684,6 +4777,104 @@
           }
         }
       }
+
+            // 8. RIGHT-CLICK CONTEXT MENU CONTROLLER
+      const contextMenu = document.getElementById('context-menu');
+      const ctxRotate = document.getElementById('ctx-rotate');
+      const ctxDelete = document.getElementById('ctx-delete');
+      const ctxColorPicker = document.getElementById('ctx-color-picker');
+      let activeContextMenuTileId = null;
+
+      function showContextMenu(clientX, clientY, tile) {
+        if (!contextMenu || !tile) return;
+        activeContextMenuTileId = tile.id;
+        state.selectedTileId = tile.id;
+
+        // Render Color Swatches
+        ctxColorPicker.innerHTML = '';
+        TILE_COLOR_OPTIONS.forEach(opt => {
+          const swatch = document.createElement('div');
+          swatch.className = `color-swatch ${tile.color === opt.fill ? 'active' : ''}`;
+          swatch.style.backgroundColor = opt.fill;
+          swatch.title = opt.name;
+
+          swatch.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tile.color = opt.fill;
+            renderPlacedTiles();
+            updateHUD();
+            showToast(`🎨 Tile color updated to ${opt.name}`);
+            hideContextMenu();
+          });
+
+          ctxColorPicker.appendChild(swatch);
+        });
+
+        // Position Context Menu within window bounds
+        contextMenu.style.display = 'block';
+        const menuRect = contextMenu.getBoundingClientRect();
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        let posX = clientX;
+        let posY = clientY;
+
+        if (posX + menuRect.width > winWidth - 10) {
+          posX = winWidth - menuRect.width - 10;
+        }
+        if (posY + menuRect.height > winHeight - 10) {
+          posY = winHeight - menuRect.height - 10;
+        }
+
+        contextMenu.style.left = `${posX}px`;
+        contextMenu.style.top = `${posY}px`;
+      }
+
+      function hideContextMenu() {
+        if (contextMenu) {
+          contextMenu.style.display = 'none';
+        }
+        activeContextMenuTileId = null;
+      }
+
+      if (ctxRotate) {
+        ctxRotate.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (activeContextMenuTileId !== null) {
+            const tile = state.tiles.find(t => t.id === activeContextMenuTileId);
+            if (tile) {
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
+            }
+          }
+          hideContextMenu();
+        });
+      }
+
+      if (ctxDelete) {
+        ctxDelete.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (activeContextMenuTileId !== null) {
+            state.tiles = state.tiles.filter(t => t.id !== activeContextMenuTileId);
+            if (state.selectedTileId === activeContextMenuTileId) state.selectedTileId = null;
+            renderPlacedTiles();
+            updateHUD();
+            showToast("🗑️ Removed tile from board");
+          }
+          hideContextMenu();
+        });
+      }
+
+      // Hide context menu on click or drag outside
+      window.addEventListener('click', hideContextMenu);
+      window.addEventListener('mousedown', (e) => {
+        if (contextMenu && !contextMenu.contains(e.target)) {
+          hideContextMenu();
+        }
+      });
+      window.addEventListener('wheel', hideContextMenu);
 
       // 7. EVENT HANDLERS & INTERACTIONS
       function handleMouseMove(e) {
@@ -4955,5 +5146,22 @@
       window.addEventListener('load', init);
     })();
   </script>
+  <!-- Custom Right-Click Context Menu -->
+  <div id="context-menu" class="context-menu">
+    <div class="menu-header">🧩 Spectre Monotile</div>
+    <div class="menu-item" id="ctx-rotate">
+      <span>🔄 Rotate 30°</span>
+      <span class="menu-shortcut">R</span>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-label">Change Color:</div>
+    <div id="ctx-color-picker" class="color-swatch-grid"></div>
+    <div class="menu-divider"></div>
+    <div class="menu-item danger" id="ctx-delete">
+      <span>🗑️ Remove Tile</span>
+      <span class="menu-shortcut">Del</span>
+    </div>
+  </div>
+
 </body>
 </html>
