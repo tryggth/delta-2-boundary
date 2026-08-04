@@ -4552,6 +4552,16 @@
           polygon.setAttribute('class', `tile-polygon ${isSelected ? 'selected' : ''} ${!isInside ? 'staged-outside' : ''}`);
           polygon.dataset.id = tile.id;
 
+          polygon.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            state.tiles = state.tiles.filter(t => t.id !== tile.id);
+            if (state.selectedTileId === tile.id) state.selectedTileId = null;
+            renderPlacedTiles();
+            updateHUD();
+            showToast("🗑️ Removed tile from board");
+          });
+
           polygon.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -4572,7 +4582,7 @@
           placedTilesGroup.appendChild(polygon);
         });
 
-        hudTileCount.textContent = state.tiles.length;
+        // HUD tile count updated dynamically in updateHUD()
       }
 
       function updateGhostTile(x, y, rotationDeg, color) {
@@ -4604,8 +4614,65 @@
 
       function updateHUD() {
         hudAngle.textContent = `${(state.dragRotationDeg % 360 + 360) % 360}°`;
-        hudSnapStatus.textContent = state.snappingEnabled ? 'Enabled' : 'Disabled';
-        hudSnapStatus.style.color = state.snappingEnabled ? '#10b981' : '#ef4444';
+        if (hudSnapStatus) {
+          hudSnapStatus.textContent = state.snappingEnabled ? 'Enabled' : 'Disabled';
+          hudSnapStatus.style.color = state.snappingEnabled ? '#10b981' : '#ef4444';
+        }
+
+        const metaData = typeof METATILE_BOUNDARIES !== 'undefined' ? METATILE_BOUNDARIES[activeBoundaryKey] : null;
+        const totalTarget = metaData ? metaData.tileCount : 71;
+
+        let insideCount = 0;
+        let stagedCount = 0;
+        let hasOverlap = false;
+
+        const tileVertsList = [];
+        state.tiles.forEach(t => {
+          const verts = getTransformedVertices(t.x, t.y, t.rotationDeg);
+          tileVertsList.push({ id: t.id, verts });
+          if (isTileInsideBoundary(verts)) {
+            insideCount++;
+          } else {
+            stagedCount++;
+          }
+        });
+
+        for (let i = 0; i < tileVertsList.length; i++) {
+          for (let j = i + 1; j < tileVertsList.length; j++) {
+            if (doTilesOverlap(tileVertsList[i].verts, tileVertsList[j].verts)) {
+              hasOverlap = true;
+              break;
+            }
+          }
+          if (hasOverlap) break;
+        }
+
+        if (hudTileCount) {
+          if (stagedCount > 0) {
+            hudTileCount.textContent = `${insideCount} / ${totalTarget} (${stagedCount} staged)`;
+          } else {
+            hudTileCount.textContent = `${insideCount} / ${totalTarget}`;
+          }
+        }
+
+        if (hudValidStatus && state.dragMode === null) {
+          if (state.tiles.length === 0) {
+            hudValidStatus.textContent = "Empty";
+            hudValidStatus.style.color = "#94a3b8";
+          } else if (hasOverlap) {
+            hudValidStatus.textContent = "Overlapping Tiles";
+            hudValidStatus.style.color = "#ef4444";
+          } else if (stagedCount > 0) {
+            hudValidStatus.textContent = "Tile Staged Outside";
+            hudValidStatus.style.color = "#f59e0b";
+          } else if (insideCount === totalTarget) {
+            hudValidStatus.textContent = "🎉 PUZZLE SOLVED!";
+            hudValidStatus.style.color = "#10b981";
+          } else {
+            hudValidStatus.textContent = "Valid Placement";
+            hudValidStatus.style.color = "#10b981";
+          }
+        }
       }
 
       // 7. EVENT HANDLERS & INTERACTIONS
@@ -4673,6 +4740,7 @@
 
           ghostTileGroup.innerHTML = '';
           renderPlacedTiles();
+          updateHUD();
         }
 
         state.dragMode = null;
@@ -4747,6 +4815,8 @@
             state.tiles = state.tiles.filter(t => t.id !== state.selectedTileId);
             state.selectedTileId = null;
             renderPlacedTiles();
+            updateHUD();
+            showToast("🗑️ Removed tile from board");
           }
         }
       }
