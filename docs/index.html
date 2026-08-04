@@ -595,7 +595,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785886561610</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785887589893</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -712,7 +712,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1785886561610";
+      const APP_VERSION = "v1.0.1785887589893";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4883,55 +4883,123 @@
         return poly;
       }
 
+      function splitEdgeSubSegments(p1, p2) {
+        const length = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const steps = Math.max(1, Math.round(length / 20.0));
+        const sub = [];
+        for (let i = 0; i < steps; i++) {
+          const t1 = i / steps;
+          const t2 = (i + 1) / steps;
+          const sub1 = { x: p1.x + t1 * (p2.x - p1.x), y: p1.y + t1 * (p2.y - p1.y) };
+          const sub2 = { x: p1.x + t2 * (p2.x - p1.x), y: p1.y + t2 * (p2.y - p1.y) };
+          sub.push({ p1: sub1, p2: sub2 });
+        }
+        return sub;
+      }
+
       function getActiveBoundaryLoop() {
         if (!currentBoundaryVertices || currentBoundaryVertices.length < 3) return [];
-        if (!state.tiles || state.tiles.length === 0) {
-          return currentBoundaryVertices;
-        }
 
+        const solvedTilesList = state.solvedTiles || [];
         const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-        const TOLERANCE = 3.0;
 
-        // Collect all directed boundary edges
-        const directedEdges = [];
-        const nB = currentBoundaryVertices.length;
-        for (let i = 0; i < nB; i++) {
-          const p1 = currentBoundaryVertices[i];
-          const p2 = currentBoundaryVertices[(i + 1) % nB];
-          directedEdges.push({
-            p1: { x: p1.x, y: p1.y },
-            p2: { x: p2.x, y: p2.y },
-            source: 'FRAME'
+        // If solvedTiles is available, extract boundary of remaining unplaced solved tiles!
+        if (solvedTilesList.length > 0) {
+          const unplacedTiles = solvedTilesList.filter(sTile => {
+            return !state.tiles.some(uTile => dist(sTile, uTile) < 8.0);
           });
-        }
 
-        // Add tile edges in reversed direction (since empty space walks tile edge in reverse)
-        for (const tile of state.tiles) {
-          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
-          if (!isTileInsideBoundary(verts)) continue;
+          if (unplacedTiles.length > 0 && unplacedTiles.length < solvedTilesList.length) {
+            const subEdges = [];
+            for (const tile of unplacedTiles) {
+              const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+              const nT = verts.length;
+              for (let i = 0; i < nT; i++) {
+                const p1 = verts[i];
+                const p2 = verts[(i + 1) % nT];
+                subEdges.push(...splitEdgeSubSegments(p1, p2));
+              }
+            }
 
-          const nT = verts.length;
-          for (let i = 0; i < nT; i++) {
-            const p1 = verts[i];
-            const p2 = verts[(i + 1) % nT];
-            directedEdges.push({
-              p1: { x: p2.x, y: p2.y },
-              p2: { x: p1.x, y: p1.y },
-              source: 'TILE'
-            });
+            const TOLERANCE = 1.5;
+            const matched = new Set();
+            for (let i = 0; i < subEdges.length; i++) {
+              if (matched.has(i)) continue;
+              for (let j = i + 1; j < subEdges.length; j++) {
+                if (matched.has(j)) continue;
+                const e1 = subEdges[i];
+                const e2 = subEdges[j];
+                if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
+                  matched.add(i);
+                  matched.add(j);
+                  break;
+                }
+              }
+            }
+
+            const activeSub = subEdges.filter((_, idx) => !matched.has(idx));
+            if (activeSub.length >= 3) {
+              const chained = [activeSub[0].p1];
+              let currEdge = activeSub[0];
+              const visited = new Set([0]);
+
+              for (let step = 0; step < activeSub.length; step++) {
+                chained.push(currEdge.p2);
+                const targetPt = currEdge.p2;
+
+                let nextIdx = -1;
+                let minDist = Infinity;
+
+                for (let j = 0; j < activeSub.length; j++) {
+                  if (visited.has(j)) continue;
+                  const candidate = activeSub[j];
+                  const d = dist(targetPt, candidate.p1);
+                  if (d < TOLERANCE && d < minDist) {
+                    minDist = d;
+                    nextIdx = j;
+                  }
+                }
+
+                if (nextIdx !== -1) {
+                  visited.add(nextIdx);
+                  currEdge = activeSub[nextIdx];
+                } else {
+                  break;
+                }
+              }
+
+              if (chained.length >= 3) {
+                return ensureCCW(chained);
+              }
+            }
           }
         }
 
-        // Cancel out matching internal edge pairs (e1.p1 == e2.p2 && e1.p2 == e2.p1)
-        const matched = new Set();
-        for (let i = 0; i < directedEdges.length; i++) {
-          if (matched.has(i)) continue;
-          for (let j = i + 1; j < directedEdges.length; j++) {
-            if (matched.has(j)) continue;
-            const e1 = directedEdges[i];
-            const e2 = directedEdges[j];
+        // Fallback: Frame edge cancellation
+        if (!state.tiles || state.tiles.length === 0) return currentBoundaryVertices;
 
-            if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
+        const subEdges = [];
+        const nB = currentBoundaryVertices.length;
+        for (let i = 0; i < nB; i++) {
+          subEdges.push(...splitEdgeSubSegments(currentBoundaryVertices[i], currentBoundaryVertices[(i + 1) % nB]));
+        }
+
+        for (const tile of state.tiles) {
+          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (!isTileInsideBoundary(verts)) continue;
+          const nT = verts.length;
+          for (let i = 0; i < nT; i++) {
+            subEdges.push(...splitEdgeSubSegments(verts[(i + 1) % nT], verts[i])); // reversed
+          }
+        }
+
+        const TOL = 2.0;
+        const matched = new Set();
+        for (let i = 0; i < subEdges.length; i++) {
+          if (matched.has(i)) continue;
+          for (let j = i + 1; j < subEdges.length; j++) {
+            if (matched.has(j)) continue;
+            if (dist(subEdges[i].p1, subEdges[j].p2) < TOL && dist(subEdges[i].p2, subEdges[j].p1) < TOL) {
               matched.add(i);
               matched.add(j);
               break;
@@ -4939,26 +5007,25 @@
           }
         }
 
-        const activeEdges = directedEdges.filter((_, idx) => !matched.has(idx));
-        if (activeEdges.length < 3) return currentBoundaryVertices;
+        const activeSub = subEdges.filter((_, idx) => !matched.has(idx));
+        if (activeSub.length < 3) return currentBoundaryVertices;
 
-        // Chain active edges into a continuous perimeter loop
-        const chained = [activeEdges[0].p1];
-        let currEdge = activeEdges[0];
+        const chained = [activeSub[0].p1];
+        let currEdge = activeSub[0];
         const visited = new Set([0]);
 
-        for (let step = 0; step < activeEdges.length; step++) {
+        for (let step = 0; step < activeSub.length; step++) {
           chained.push(currEdge.p2);
           const targetPt = currEdge.p2;
 
           let nextIdx = -1;
           let minDist = Infinity;
 
-          for (let j = 0; j < activeEdges.length; j++) {
+          for (let j = 0; j < activeSub.length; j++) {
             if (visited.has(j)) continue;
-            const candidate = activeEdges[j];
+            const candidate = activeSub[j];
             const d = dist(targetPt, candidate.p1);
-            if (d < TOLERANCE && d < minDist) {
+            if (d < TOL && d < minDist) {
               minDist = d;
               nextIdx = j;
             }
@@ -4966,7 +5033,7 @@
 
           if (nextIdx !== -1) {
             visited.add(nextIdx);
-            currEdge = activeEdges[nextIdx];
+            currEdge = activeSub[nextIdx];
           } else {
             break;
           }
@@ -5009,8 +5076,8 @@
           }
         }
 
-        // World-space hover proximity threshold of 60 units (approx 1.5 tile edges)
-        const threshold = 60.0 / Math.max(0.5, state.view.zoom || 1.0);
+        // Generous 120-unit world-space hover threshold (independent of SVG container bounds)
+        const threshold = 120.0 / Math.max(0.2, state.view.zoom || 1.0);
 
         if (nearestIdx !== -1 && minWorldDist <= threshold) {
           const pt = poly[nearestIdx];
