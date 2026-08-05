@@ -688,6 +688,7 @@
       <span>Angle: <strong id="hud-angle">0°</strong></span>
       <span>Snap: <strong id="hud-snap-status">Enabled</strong></span>
       <span>Status: <strong id="hud-valid-status" style="color: #10b981;">Valid</strong></span>
+      <span id="hud-coords-wrapper" style="display: none;">Pos: <strong id="hud-coords" style="color: #a5b4fc;">—</strong></span>
     </div>
 
     <!-- Error Toast Notification -->
@@ -5113,16 +5114,26 @@
             // 10. HIDDEN MODE VERTEX DEBUG HOVER TOOLTIP
       function updateVertexDebugTooltip(clientX, clientY) {
         const vertexDebugTooltip = document.getElementById('vertex-debug-tooltip');
+        const hudCoordsEl = document.getElementById('hud-coords');
+        const hudCoordsWrapper = document.getElementById('hud-coords-wrapper');
         if (!vertexDebugTooltip) return;
         if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length === 0) {
           vertexDebugTooltip.style.display = 'none';
+          if (hudCoordsWrapper) hudCoordsWrapper.style.display = 'none';
           return;
         }
+
+        // Always show HUD coords in hidden mode
+        if (hudCoordsWrapper) hudCoordsWrapper.style.display = '';
+
+        // Compute world-space mouse position
+        const worldPos = screenToWorldPos(clientX, clientY);
 
         const rect = workspaceSvg ? workspaceSvg.getBoundingClientRect() : { left: 0, top: 0 };
         const poly = getActiveBoundaryLoop();
         if (!poly || poly.length === 0) {
           vertexDebugTooltip.style.display = 'none';
+          if (hudCoordsEl) hudCoordsEl.textContent = `(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`;
           return;
         }
 
@@ -5152,6 +5163,12 @@
           const fx = pt.x.toFixed(1);
           const fy = pt.y.toFixed(1);
 
+          // Update HUD coords to snap to the boundary vertex
+          if (hudCoordsEl) {
+            hudCoordsEl.textContent = `(${rx}, ${ry})`;
+            hudCoordsEl.style.color = '#f0abfc';
+          }
+
           let turnColor = "#38bdf8";
           if (turnDeg === 60) turnColor = "#06b6d4";
           else if (turnDeg === 90) turnColor = "#a855f7";
@@ -5178,6 +5195,11 @@
           vertexDebugTooltip.style.top = `${posY}px`;
         } else {
           vertexDebugTooltip.style.display = 'none';
+          // Show raw world coordinates in HUD
+          if (hudCoordsEl) {
+            hudCoordsEl.textContent = `(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`;
+            hudCoordsEl.style.color = '#a5b4fc';
+          }
         }
       }
 
@@ -5509,11 +5531,13 @@
           e.preventDefault();
           state.hiddenMode = !state.hiddenMode;
           if (!state.hiddenMode) {
-            state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false };
+            state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
             document.querySelectorAll('.lock-btn').forEach(btn => btn.classList.remove('active'));
             if (hiddenLockToggles) hiddenLockToggles.style.display = 'none';
             renderLockHighlights();
             if (vertexDebugTooltip) vertexDebugTooltip.style.display = "none";
+            const hudCoordsWrapper = document.getElementById('hud-coords-wrapper');
+            if (hudCoordsWrapper) hudCoordsWrapper.style.display = 'none';
             showToast("🔒 Hidden Mode Deactivated.");
           } else {
             if (hiddenLockToggles) hiddenLockToggles.style.display = 'flex';
