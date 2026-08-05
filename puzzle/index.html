@@ -4892,7 +4892,7 @@
         if (!poly || poly.length < 3) return poly;
         const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-        // 1. Remove adjacent duplicate vertices
+        // Remove adjacent duplicate vertices
         const clean = [];
         const n = poly.length;
         for (let i = 0; i < n; i++) {
@@ -4904,34 +4904,7 @@
           clean.pop();
         }
 
-        if (clean.length < 3) return clean;
-
-        // 2. Remove collinear (0-degree turn) vertices
-        const res = [];
-        const nC = clean.length;
-        for (let i = 0; i < nC; i++) {
-          const pPrev = clean[(i - 1 + nC) % nC];
-          const pCurr = clean[i];
-          const pNext = clean[(i + 1) % nC];
-
-          const v1x = pCurr.x - pPrev.x;
-          const v1y = pCurr.y - pPrev.y;
-          const v2x = pNext.x - pCurr.x;
-          const v2y = pNext.y - pCurr.y;
-
-          const a1 = Math.atan2(v1y, v1x);
-          const a2 = Math.atan2(v2y, v2x);
-
-          let deg = Math.round((a2 - a1) * 180 / Math.PI / 30) * 30;
-          while (deg > 180) deg -= 360;
-          while (deg <= -180) deg += 360;
-
-          if (deg !== 0) {
-            res.push(pCurr);
-          }
-        }
-
-        return res.length >= 3 ? res : clean;
+        return clean;
       }
 
       function ensureCCW(poly) {
