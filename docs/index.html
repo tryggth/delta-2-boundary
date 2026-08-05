@@ -289,6 +289,8 @@
     .lock-btn[data-lock="3"].active { background: rgba(244, 63, 94, 0.25); color: #f43f5e; border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
     .lock-btn[data-lock="4"].active { background: rgba(16, 185, 129, 0.25); color: #10b981; border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
     .lock-btn[data-lock="5"].active { background: rgba(168, 85, 247, 0.25); color: #a855f7; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+    .lock-btn[data-lock="6"].active { background: rgba(59, 130, 246, 0.25); color: #3b82f6; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    .lock-btn[data-lock="7"].active { background: rgba(234, 179, 8, 0.25); color: #eab308; border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
 
         /* Hidden Mode Vertex Debug Tooltip */
     .vertex-debug-tooltip {
@@ -624,6 +626,8 @@
         <button class="lock-btn" data-lock="3" title="Toggle Lock 3: Long Lock 1 [0°, -60°, 90°, 60°]">L3</button>
         <button class="lock-btn" data-lock="4" title="Toggle Lock 4: Long Lock 2 [60°, 90°, -60°, 90°]">L4</button>
         <button class="lock-btn" data-lock="5" title="Toggle Lock 5: Long Lock 3 [90°, -60°, 90°, 60°]">L5</button>
+        <button class="lock-btn" data-lock="6" title="Toggle Lock 6: Delta Lock 1 [-90°, 60°, -90°, 60°, 90°, 60°]">L6</button>
+        <button class="lock-btn" data-lock="7" title="Toggle Lock 7: Delta Lock 2 [-90°, 60°, -90°, 60°, 90°, -60°, 90°]">L7</button>
       </div>
     </div>
 
@@ -5179,11 +5183,13 @@
         { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
         { id: 3, name: "Long Lock 1", seq: [0, -60, 90, 60], color: "#f43f5e" },
         { id: 4, name: "Long Lock 2", seq: [60, 90, -60, 90], color: "#10b981" },
-        { id: 5, name: "Long Lock 3", seq: [90, -60, 90, 60], color: "#a855f7" }
+        { id: 5, name: "Long Lock 3", seq: [90, -60, 90, 60], color: "#a855f7" },
+        { id: 6, name: "Delta Lock 1", seq: [-90, 60, -90, 60, 90, 60], color: "#3b82f6" },
+        { id: 7, name: "Delta Lock 2", seq: [-90, 60, -90, 60, 90, -60, 90], color: "#eab308" }
       ];
 
       state.hiddenMode = false;
-      state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false };
+      state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
 
       const hiddenLockToggles = document.getElementById('hidden-lock-toggles');
       const lockHighlightLayer = document.getElementById('lock-highlight-layer');
