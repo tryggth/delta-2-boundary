@@ -4925,7 +4925,7 @@
 
       function splitEdgeSubSegments(p1, p2) {
         const length = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        const steps = Math.max(1, Math.round(length / 20.0));
+        const steps = Math.max(1, Math.round(length / 40.0));
         const sub = [];
         for (let i = 0; i < steps; i++) {
           const t1 = i / steps;
@@ -5178,7 +5178,7 @@
 
       // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
       const LOCK_DEFINITIONS = [
-        { id: 1, name: "Low Lock", seq: [0, 60, 0], color: "#f59e0b" },
+        { id: 1, name: "Low Lock", seq: [-60, 0, 60], color: "#f59e0b" },
         { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
         { id: 3, name: "Long Lock 1", seq: [0, -60, 90, 60], color: "#f43f5e" },
         { id: 4, name: "Long Lock 2", seq: [60, 90, -60, 90], color: "#10b981" },
