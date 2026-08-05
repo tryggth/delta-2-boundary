@@ -261,18 +261,18 @@
     }
     .hidden-lock-toggles {
       display: none;
-      flex-direction: row;
-      gap: 0.3rem;
+      flex-direction: column;
+      gap: 0.2rem;
       align-items: center;
     }
     .lock-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 24px;
+      height: 18px;
+      border-radius: 4px;
       border: 1.5px solid var(--border-color);
       background: var(--card-bg);
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.6rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -280,6 +280,7 @@
       justify-content: center;
       transition: all 0.15s ease;
       user-select: none;
+      padding: 0;
     }
     .lock-btn:hover {
       transform: scale(1.08);
