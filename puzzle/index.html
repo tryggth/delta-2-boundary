@@ -629,6 +629,7 @@
         <button class="lock-btn" data-lock="5" title="Toggle Lock 5: Long Lock 3 [90°, -60°, 90°, 60°]">L5</button>
         <button class="lock-btn" data-lock="6" title="Toggle Lock 6: Delta Lock 1 [-90°, 60°, -90°, 60°, 90°, 60°]">L6</button>
         <button class="lock-btn" data-lock="7" title="Toggle Lock 7: Delta Lock 2 [-90°, 60°, -90°, 60°, 90°, -60°, 90°]">L7</button>
+        <button id="btn-export-log" class="lock-btn" style="width: 100%; height: 24px; font-size: 0.6rem; margin-top: 0.3rem; background: rgba(99, 102, 241, 0.25); color: #818cf8; border-color: #6366f1;" title="View & Export Peeling Session Log">📋 Log</button>
       </div>
     </div>
 
@@ -711,6 +712,22 @@
         <li><strong>PWA Offline Install & Auto-Update:</strong> Install as a desktop or mobile PWA via the <strong>📲 Install App</strong> button for complete offline capability and instant web updates.</li>
       </ul>
       <button id="btn-close-modal" class="btn active" style="width: 100%; margin-top: 1rem;">Got it!</button>
+    </div>
+  </div>
+
+  <!-- Export Log Modal -->
+  <div id="export-log-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px; width: 90%;">
+      <h2>📋 Peeling Session Log</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+        Append-only recorded sequence of tile placements, vertex/edge matches, and lock toggle events for LEAN certificate generation.
+      </p>
+      <textarea id="export-log-textarea" readonly style="width: 100%; height: 300px; background: rgba(15, 23, 42, 0.95); color: #a5b4fc; font-family: monospace; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; resize: vertical; margin-bottom: 1rem;"></textarea>
+      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button id="btn-copy-log" class="btn active" style="flex: 1; background: #6366f1;">📋 Copy to Clipboard</button>
+        <button id="btn-download-log" class="btn active" style="flex: 1; background: #10b981;">💾 Download JSON</button>
+        <button id="btn-close-export-modal" class="btn" style="width: 90px;">Close</button>
+      </div>
     </div>
   </div>
 
@@ -5189,6 +5206,7 @@
 
       state.hiddenMode = false;
       state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
+      state.peelingLog = [];
 
       const hiddenLockToggles = document.getElementById('hidden-lock-toggles');
       const lockHighlightLayer = document.getElementById('lock-highlight-layer');
@@ -5296,6 +5314,19 @@
           const lockInfo = LOCK_DEFINITIONS.find(l => l.id === lockId);
           if (lockInfo) {
             showToast(`${state.activeLocks[lockId] ? '👁️ Highlighted' : '🙈 Hidden'} ${lockInfo.name} [${lockInfo.seq.join('°, ')}°]`);
+          }
+
+          // Record Lock Toggle Event inline in Peeling Log
+          if (state.hiddenMode) {
+            if (!state.peelingLog) state.peelingLog = [];
+            state.peelingLog.push({
+              step: state.peelingLog.length + 1,
+              timestamp: Date.now(),
+              eventType: "LOCK_TOGGLE",
+              lockId: lockId,
+              activeState: state.activeLocks[lockId],
+              activeLocks: { ...state.activeLocks }
+            });
           }
         });
       });
@@ -5460,6 +5491,60 @@
                 tile.y = snapResult.y;
                 tile.rotationDeg = (state.dragRotationDeg % 360 + 360) % 360;
               }
+            }
+
+            // Record Tile Placement Event inline in Peeling Log
+            if (state.hiddenMode) {
+              if (!state.peelingLog) state.peelingLog = [];
+              const poly = getActiveBoundaryLoop();
+              const matchedVertices = [];
+              candidateVerts.forEach((cVert, cIdx) => {
+                poly.forEach((bVert, bIdx) => {
+                  if (Math.hypot(cVert.x - bVert.x, cVert.y - bVert.y) < 3.5) {
+                    matchedVertices.push({
+                      tileVertexIndex: cIdx,
+                      tileVertexCoords: { x: Math.round(cVert.x), y: Math.round(cVert.y) },
+                      boundaryVertexIndex: bIdx,
+                      boundaryVertexCoords: { x: Math.round(bVert.x), y: Math.round(bVert.y) }
+                    });
+                  }
+                });
+              });
+
+              const matchedEdges = [];
+              const nT = candidateVerts.length;
+              const nB = poly.length;
+              for (let i = 0; i < nT; i++) {
+                const tp1 = candidateVerts[i];
+                const tp2 = candidateVerts[(i + 1) % nT];
+                for (let j = 0; j < nB; j++) {
+                  const bp1 = poly[j];
+                  const bp2 = poly[(j + 1) % nB];
+                  if (Math.hypot(tp1.x - bp2.x, tp1.y - bp2.y) < 3.5 && Math.hypot(tp2.x - bp1.x, tp2.y - bp1.y) < 3.5) {
+                    matchedEdges.push({
+                      tileEdge: { p1: { x: Math.round(tp1.x), y: Math.round(tp1.y) }, p2: { x: Math.round(tp2.x), y: Math.round(tp2.y) } },
+                      boundaryEdge: { p1: { x: Math.round(bp1.x), y: Math.round(bp1.y) }, p2: { x: Math.round(bp2.x), y: Math.round(bp2.y) } }
+                    });
+                  }
+                }
+              }
+
+              const cw = (state.dragRotationDeg % 360 + 360) % 360;
+              const ccw = cw === 0 ? 0 : 360 - cw;
+              const rotDegCCW = ccw > 180 ? ccw - 360 : ccw;
+
+              const droppedTileId = state.draggedTileId || (state.nextTileId - 1);
+              state.peelingLog.push({
+                step: state.peelingLog.length + 1,
+                timestamp: Date.now(),
+                eventType: "TILE_PLACEMENT",
+                tileId: droppedTileId,
+                coords: { x: Math.round(snapResult.x), y: Math.round(snapResult.y) },
+                rotationDegCCW: rotDegCCW,
+                matchedVertices: matchedVertices,
+                matchedEdges: matchedEdges,
+                activeLocks: { ...state.activeLocks }
+              });
             }
           }
 
@@ -5639,12 +5724,14 @@
           state.tiles = [];
           state.savedUserTiles = [];
           state.selectedTileId = null;
+          state.peelingLog = []; // Reset peeling log when board is cleared
           if (!state.isGameActive) {
             state.isGameActive = true;
             btnGameToggle.textContent = '💡 Show Solution';
             btnGameToggle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
           }
           renderPlacedTiles();
+          showToast("🗑️ Board and Peeling Log cleared!");
         }
       });
 
@@ -5673,6 +5760,50 @@
       helpModal.addEventListener('click', (e) => {
         if (e.target === helpModal) helpModal.classList.remove('open');
       });
+
+      // Export Session Log Modal Controllers
+      const btnExportLog = document.getElementById('btn-export-log');
+      const exportLogModal = document.getElementById('export-log-modal');
+      const exportLogTextarea = document.getElementById('export-log-textarea');
+      const btnCopyLog = document.getElementById('btn-copy-log');
+      const btnDownloadLog = document.getElementById('btn-download-log');
+      const btnCloseExportModal = document.getElementById('btn-close-export-modal');
+
+      if (btnExportLog && exportLogModal && exportLogTextarea) {
+        btnExportLog.addEventListener('click', () => {
+          exportLogTextarea.value = JSON.stringify(state.peelingLog || [], null, 2);
+          exportLogModal.classList.add('open');
+        });
+      }
+
+      if (btnCloseExportModal && exportLogModal) {
+        btnCloseExportModal.addEventListener('click', () => exportLogModal.classList.remove('open'));
+        exportLogModal.addEventListener('click', (e) => {
+          if (e.target === exportLogModal) exportLogModal.classList.remove('open');
+        });
+      }
+
+      if (btnCopyLog && exportLogTextarea) {
+        btnCopyLog.addEventListener('click', () => {
+          navigator.clipboard.writeText(exportLogTextarea.value);
+          showToast("📋 Peeling Log copied to clipboard!");
+        });
+      }
+
+      if (btnDownloadLog && exportLogTextarea) {
+        btnDownloadLog.addEventListener('click', () => {
+          const blob = new Blob([exportLogTextarea.value], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `peeling_session_log_${Date.now()}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("💾 Peeling Log downloaded!");
+        });
+      }
 
       // INITIALIZATION
       function init() {
