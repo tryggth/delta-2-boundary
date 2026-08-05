@@ -676,8 +676,8 @@
       <!-- Main Transformed Layer for Pan & Zoom -->
       <g id="viewport-layer">
         <g id="boundary-layer"></g>
-        <g id="lock-highlight-layer"></g>
         <g id="placed-tiles-group"></g>
+        <g id="lock-highlight-layer"></g>
         <g id="ghost-tile-group"></g>
       </g>
     </svg>
@@ -5219,11 +5219,24 @@
       }
 
       function renderLockHighlights() {
+        const lockHighlightLayer = document.getElementById('lock-highlight-layer');
         if (!lockHighlightLayer) return;
+        
+        // Always force clear previous highlight paths
         lockHighlightLayer.innerHTML = '';
         if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length < 3) return;
 
+        // Synchronize active state directly from DOM buttons to prevent state drift
+        document.querySelectorAll('.lock-btn').forEach(btn => {
+          const lockId = parseInt(btn.dataset.lock, 10);
+          if (lockId) {
+            state.activeLocks[lockId] = btn.classList.contains('active');
+          }
+        });
+
         const poly = getActiveBoundaryLoop();
+        if (!poly || poly.length < 3) return;
+
         const n = poly.length;
         const turns = calculateBoundaryTurns(poly);
         if (turns.length !== n) return;
