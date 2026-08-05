@@ -4819,7 +4819,10 @@
       }
 
       function updateHUD() {
-        hudAngle.textContent = `${(state.dragRotationDeg % 360 + 360) % 360}°`;
+        const cwDeg = (state.dragRotationDeg % 360 + 360) % 360;
+        const ccwDeg = cwDeg === 0 ? 0 : 360 - cwDeg;
+        const displayDeg = ccwDeg > 180 ? ccwDeg - 360 : ccwDeg;
+        hudAngle.textContent = `${displayDeg}°`;
         if (hudSnapStatus) {
           hudSnapStatus.textContent = state.snappingEnabled ? 'Enabled' : 'Disabled';
           hudSnapStatus.style.color = state.snappingEnabled ? '#10b981' : '#ef4444';
@@ -5139,8 +5142,8 @@
           }
         }
 
-        // Screen-space proximity threshold of 60 pixels
-        if (nearestIdx !== -1 && minPixelDist <= 60.0) {
+        // Screen-space proximity threshold of 18 pixels (tight, boundary-vertex-only)
+        if (nearestIdx !== -1 && minPixelDist <= 18.0) {
           const pt = poly[nearestIdx];
           const turnDeg = turns[nearestIdx] !== undefined ? turns[nearestIdx] : 0;
           const rx = Math.round(pt.x);
@@ -5644,7 +5647,10 @@
               state.dragRotationDeg = tile.rotationDeg;
               renderPlacedTiles();
               updateHUD();
-              showToast(`Rotated tile to ${tile.rotationDeg}°`);
+              const cw = (tile.rotationDeg % 360 + 360) % 360;
+              const ccw = cw === 0 ? 0 : 360 - cw;
+              const disp = ccw > 180 ? ccw - 360 : ccw;
+              showToast(`Rotated tile to ${disp}°`);
             }
           } else {
             showToast("💡 Select a tile on the board or staging area to rotate it!");
