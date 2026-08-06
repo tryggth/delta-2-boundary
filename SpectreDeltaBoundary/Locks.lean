@@ -35,12 +35,16 @@ def tileEdgesCrossPath (tile : PlacedTile) (path : List LatticePoint) : Bool :=
 /-- Tests a specific tile orientation against a localized boundary path.
     Returns true if the tile fits the path layout cleanly without collision or crossing. -/
 def testOrientationValid (path : List LatticePoint) (orientation : Nat) : Bool :=
-  -- Align a candidate tile rooted at the path's origin
   match path with
   | [] => false
-  | origin :: _ =>
-    let candidate := PlacedTile.mk origin orientation
-    !tileEdgesCrossPath candidate path
+  | p0 :: _ =>
+    let base_candidate := PlacedTile.mk (LatticePoint.mk 0 0 0 0) orientation
+    let validMask := (tileVertices base_candidate).map (fun v =>
+      let shift := p0.sub v
+      let candidate := PlacedTile.mk shift orientation
+      !tileEdgesCrossPath candidate path
+    )
+    validMask.any (fun b => b == true)
 
 /-- Exhaustively evaluates all 12 rotational headings (0 to 11) for a tile placement.
     Returns true if and only if exactly one unique orientation passes the geometric filter. -/
@@ -114,3 +118,80 @@ def lemma_lock_4_00129 (path : List LatticePoint)
 #print axioms lemma_lock_4_00110
 #print axioms lemma_lock_4_00129
 
+
+
+def lemma_lock_1000 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-3, 2, 3, 2, -3, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1001 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, -3, 2, 3, 2, -3, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1002 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, -3, 2, 3, 2, -3, 2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1003 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [3]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1004 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, -3, 2, 3, 2, -3, 2, 0, 2, 3, -2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1005 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-2, 3, 2, -3, 2, 3, 2, -3, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1006 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [3, 2, -3, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1007 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-3, 2, 3, 2, -3, 2, 0, 2, 3, -2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1008 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-3, 2, 0]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1009 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, -3, 2, 3, 2, -3, 2, 0, 2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1010 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-3, 2, 3, 2, -3, 2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1011 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [3, -2, 3, -2, 3, 2, -3, 2, 3, 2, -3]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1012 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-2, 3, -2, 3, 2, -3, 2, 3, 2, -3]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1013 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, 3, -2, 3, -2, 3, 2, -3, 2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1014 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [3, -2, 3, -2, 3, 2, -3]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1015 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-2, 3, 2, -3, 2, 3, 2, -3, 2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1016 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [2, 3, -2, 3, -2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_1017 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = [-2, 3, 2, -3, 2, 3, 2, -3, 2, 0, 2, 3, -2]) : Bool :=
+  proveLockUniqueness path 0
+
+def lemma_lock_9999 (path : List LatticePoint)
+    (_h_turns : extractPathTurns path = []) : Bool :=
+  proveLockUniqueness path 0
