@@ -12,11 +12,11 @@ By unifying an optimized discrete combinatorial search pipeline written in Pytho
 
 ## 🎬 Peeling Cascade Animation
 
-Watch the complete 70-step tile reduction and boundary peeling cascade animation:
+Watch the complete 71-step tile reduction and boundary peeling cascade animation:
 
 [![Spectre Delta-2 Peeling Cascade Animation](https://img.shields.io/badge/Watch-Peeling%20Animation-ff007f?style=for-the-badge&logo=play)](./media/peeling_animation.mp4)
 
-*(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
+*(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic 3-lock reduction cascade verified in Lean.)*
 
 ## 🧩 Interactive Spectre Metatile Jigsaw Puzzle PWA
 
@@ -27,7 +27,7 @@ A full-featured Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spe
 
 ### Key Features:
 - **Interactive Drag & Snap Jigsaw Engine:** Drag, rotate, and snap Spectre monotile pieces onto the board with automatic geometric overlap and boundary validation.
-- **Dynamic Metatile Boundary Selector:** Switch seamlessly between the 70-tile Generation-2 $\Delta_2$ boundary frame and all 9 Tier-1 metatile boundary loops (**Gamma**, **Delta**, **Theta**, **Lambda**, **Xi**, **Pi**, **Sigma**, **Phi**, **Psi**).
+- **Dynamic Metatile Boundary Selector:** Switch seamlessly between the 71-tile Generation-2 $\Delta_2$ boundary frame and all 9 Tier-1 metatile boundary loops (**Gamma**, **Delta**, **Theta**, **Lambda**, **Xi**, **Pi**, **Sigma**, **Phi**, **Psi**).
 - **Interactive Solution & Play Modes:** Toggle between guided solution view and free-play puzzle mode for every metatile.
 - **Installable PWA Support:** One-click desktop and mobile installation via the native **Install App** button (`beforeinstallprompt`).
 - **Auto-Updating Service Worker:** Uses a Network-First strategy for HTML and background update checking (`controllerchange`) so web updates on GitHub Pages deploy instantly to users.
@@ -67,9 +67,9 @@ The verification framework is engineered as a multi-stage verification pipeline:
 ```
 [generate-n8-sieve.py]       --> Generates the foundational aperiodic lock database (CSV)
          │
-[generate-lean-data.py]      --> Simulates the 70-step tile cascade & serializes 4D coordinates
+[generate-lean-data.py]      --> Simulates the 71-step 3-lock tile cascade & serializes 4D coordinates
          │
-[Locks.lean]                 --> Proves the 5 core computational lock lemmas (Axiom-Free)
+[Locks.lean]                 --> Proves the 3 core computational lock lemmas (L1, L2, L4) (Axiom-Free)
          │
 [Certificate.lean]           --> Executes the edge-ledger symmetric difference state machine
          │
@@ -92,9 +92,9 @@ The verification framework is engineered as a multi-stage verification pipeline:
     ├── Bedrock.lean              # 4D lattice algebra and rigid transformation matrix structures
     ├── Paths.lean                # Discrete direction step grammar and boundary lookback functions
     ├── Monotile.lean             # Rigidly aligned Spectre monotile vertex extraction engines
-    ├── Locks.lean                # 5 standalone computational holographic lock lemmas
+    ├── Locks.lean                # Standalone computational holographic lock lemmas (L1, L2, L4)
     ├── Certificate.lean          # Topological edge-annihilation state machine validator
-    ├── CertificateData.lean      # Auto-generated 70-step explicit coordinate data payload
+    ├── CertificateData.lean      # Auto-generated 71-step explicit coordinate data payload
     ├── Theorem.lean              # Main tiling uniqueness theorem and kernel entry point
     ├── Tier1Certificates.lean    # Auto-generated certificates for Tier 1 metatiles
     ├── Tier1Theorems.lean        # Formal tiling uniqueness verification for Tier 1 metatiles
@@ -137,7 +137,7 @@ python3 generate-n8-sieve.py
 
 ### 4. Run the Cascading Simulation & Serialize Coordinates
 
-Execute the modular tiling solver and peeling certificate generator. This engine runs the 84-step tile removal sequence using connected/topological preservation and compactness heuristics, tracks the shifting boundaries, and exports the explicit coordinate arrays into a compile-ready Lean 4 anonymous constructor payload module.
+Execute the modular tiling solver and peeling certificate generator. This engine runs the 71-step tile removal sequence using connected/topological preservation and compactness heuristics, tracks the shifting boundaries, and exports the explicit coordinate arrays into a compile-ready Lean 4 anonymous constructor payload module.
 
 ```bash
 # Run the peeling cascade solver to regenerate the Lean 4 certificate

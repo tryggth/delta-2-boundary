@@ -12,7 +12,7 @@
 \maketitle
 
 \begin{abstract}
-This paper documents a formal verification framework that verifies boundary-forced tiling uniqueness for the Spectre chiral aperiodic monotile. Rather than attempting an unconstrained global search over an exponential packing space, we employ a verified certificate-checking mechanism via computational reflection. We demonstrate that a 70-step inductive peeling cascade natively executed via computational reflection completely reduces a 71-tile hierarchical patch cluster boundary with absolute axiom purity in the Lean 4 proof assistant.
+This paper documents a formal verification framework that verifies boundary-forced tiling uniqueness for the Spectre chiral aperiodic monotile. Rather than attempting an unconstrained global search over an exponential packing space, we employ a verified certificate-checking mechanism via computational reflection. We demonstrate that a 71-step inductive peeling cascade natively executed via computational reflection completely reduces a 71-tile hierarchical patch cluster boundary with absolute axiom purity in the Lean 4 proof assistant, using strictly 3 fundamental geometric lock classes.
 \end{abstract}
 
 \section{Introduction}
@@ -70,11 +70,11 @@ certificates.
 
 The machine verifies that the active boundary segment forces a unique tile choice by
 dynamically evaluating the local frustration matrix for alternative orientations at
-runtime.
+runtime. Remarkably, the entire 71-step peeling cascade for the Generation-2 $\Delta_2$ patch requires only 3 core geometric lock classes: Lock 1 (Low Lock $L_1$, 10 steps), Lock 2 (High Lock $L_2$, 51 steps), and Lock 4 (Long Lock $L_4$, 10 steps), with zero auxiliary or custom locks required.
 
 \section{Kernel Verification Results and Axiom Audit}
 \label{sec:results}
-The complete 70-step tile reduction cascade is executed natively within the Lean 4 kernel via
+The complete 71-step tile reduction cascade is executed natively within the Lean 4 kernel via
 the \texttt{decide} tactic. The verification of the top-level uniqueness theorem
 \texttt{verify\_delta2\_uniqueness} executes successfully under the following performance profile:
 
@@ -91,7 +91,7 @@ Axiom Count & 1 (\texttt{propext}) \\
 Unproven Axioms (\texttt{sorryAx}) & 0 \\
 \hline
 \end{tabular}
-\caption{Lean 4 kernel execution and performance profile for the 70-step verification cascade.}
+\caption{Lean 4 kernel execution and performance profile for the 71-step verification cascade.}
 \label{tab:perf}
 \end{table}
 
