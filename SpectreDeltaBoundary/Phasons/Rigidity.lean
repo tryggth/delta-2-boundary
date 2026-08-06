@@ -77,4 +77,37 @@ theorem peeling_step_preserves_phason_free
     (h_next_rigid : IsPhasonFree step.nextState) :
     IsPhasonFree state := by
   intro t1 t2 h1 h2
-  sorry
+  cases t1 with
+  | nil =>
+    cases t2 with
+    | nil => rfl
+    | cons b bs =>
+      have h1_len : (stateToAllEdges state).length = 0 := h1
+      have h2_len : (stateToAllEdges state).length = (b :: bs).length * 14 := h2
+      simp [h1_len] at h2_len
+  | cons a as =>
+    cases t2 with
+    | nil =>
+      have h1_len : (stateToAllEdges state).length = (a :: as).length * 14 := h1
+      have h2_len : (stateToAllEdges state).length = 0 := h2
+      simp [h2_len] at h1_len
+    | cons b bs =>
+      cases h_ne : step.nextState with
+      | nil =>
+        sorry
+      | cons v vs =>
+        have h_non_empty : step.nextState ≠ [] := by
+          rw [h_ne]; intro h; contradiction
+        have ha : a = step.tile :=
+          lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty a (by simp) h1
+        have hb : b = step.tile :=
+          lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty b (by simp) h2
+        subst ha; subst hb
+        have h_as_valid : IsValidTiling as step.nextState := by
+          dsimp [IsValidTiling]
+          sorry
+        have h_bs_valid : IsValidTiling bs step.nextState := by
+          dsimp [IsValidTiling]
+          sorry
+        have h_tail_eq : as = bs := h_next_rigid as bs h_as_valid h_bs_valid
+        rw [h_tail_eq]
