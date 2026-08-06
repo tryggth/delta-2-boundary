@@ -54,7 +54,18 @@ theorem lock_bearing_boundary_no_minimal_phason
     have h_forced : tile = step.tile := by
       exact lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty tile h_in_t1 h1
     have h_not_t2 : tile ∉ t2 := hdisj tile h_in_t1
-    sorry
+    subst h_forced
+    cases t2 with
+    | nil =>
+      have h2_len : (stateToAllEdges state).length = 0 := h2
+      have h1_len : (stateToAllEdges state).length = (step.tile :: ts).length * 14 := h1
+      simp [h2_len] at h1_len
+    | cons tile2 ts2 =>
+      have h_in_t2 : tile2 ∈ (tile2 :: ts2) := by simp
+      have h_forced2 : tile2 = step.tile := by
+        exact lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty tile2 h_in_t2 h2
+      subst h_forced2
+      exact h_not_t2 h_in_t2
 
 /-- Inductive Step for Phason Freedom:
     If executing a valid lock-driven peeling step reduces `state` to `step.nextState`,
