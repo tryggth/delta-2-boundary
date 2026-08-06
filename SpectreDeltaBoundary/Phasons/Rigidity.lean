@@ -92,22 +92,11 @@ theorem peeling_step_preserves_phason_free
       have h2_len : (stateToAllEdges state).length = 0 := h2
       simp [h2_len] at h1_len
     | cons b bs =>
-      cases h_ne : step.nextState with
-      | nil =>
-        sorry
-      | cons v vs =>
-        have h_non_empty : step.nextState ≠ [] := by
-          rw [h_ne]; intro h; contradiction
-        have ha : a = step.tile :=
-          lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty a (by simp) h1
+      by_cases h_ne : step.nextState = []
+      · sorry
+      · have ha : a = step.tile :=
+          lock_forces_unique_tile state step h_lock_valid h_exec h_ne a (by simp) h1
         have hb : b = step.tile :=
-          lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty b (by simp) h2
+          lock_forces_unique_tile state step h_lock_valid h_exec h_ne b (by simp) h2
         subst ha; subst hb
-        have h_as_valid : IsValidTiling as step.nextState := by
-          dsimp [IsValidTiling]
-          sorry
-        have h_bs_valid : IsValidTiling bs step.nextState := by
-          dsimp [IsValidTiling]
-          sorry
-        have h_tail_eq : as = bs := h_next_rigid as bs h_as_valid h_bs_valid
-        rw [h_tail_eq]
+        sorry
