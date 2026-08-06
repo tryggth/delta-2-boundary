@@ -15,7 +15,7 @@ import SpectreDeltaBoundary.Phasons.Rigidity
 /-!
 # Main Theorem: Spectre Delta_2 Patch is Phason-Free (Rigid)
 
-Ties the verified 70-step peeling certificate `pythonPeelingCertificate`
+Ties the verified peeling certificate `pythonPeelingCertificate`
 to the lock-driven rigidity induction to prove that the Generation-2 ($\Delta_2$)
 Spectre patch admits NO local phason flips and is strictly rigid.
 -/
@@ -25,7 +25,14 @@ theorem execute_certificate_preserves_phason_free
     (cert : PeelingCertificate) (state : PeelingState)
     (h_exec : executeCertificate state cert = []) :
     IsPhasonFree state := by
-  sorry
+  cases h_steps : cert.steps with
+  | nil =>
+    unfold executeCertificate at h_exec
+    rw [h_steps] at h_exec
+    subst h_exec
+    exact empty_state_phason_free
+  | cons step rest =>
+    sorry
 
 /-- **MAIN THEOREM**:
     The Generation-2 ($\Delta_2$) Spectre patch boundary `initialMetatileBoundary`
