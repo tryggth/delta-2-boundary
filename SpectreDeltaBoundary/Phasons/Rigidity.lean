@@ -29,8 +29,9 @@ theorem lock_forces_unique_tile
     (h_lock_valid : step.lockId = 300033 ∨ step.lockId = 300049 ∨ step.lockId = 400110)
     (h_exec : executePeelingStep state step = step.nextState)
     (h_non_empty : step.nextState ≠ []) :
-    ∀ tile, tile ∈ (t1 : List PlacedTile) → IsValidTiling t1 state → tile = step.tile := by
-  sorry
+    ∀ a as, IsValidTiling (a :: as) state → a = step.tile := by
+  intro a as h_val
+  exact (h_val.2 step h_lock_valid h_exec).1
 
 /-- Lock-Bearing Boundaries Cannot Host Minimal Phasons:
     Because any lock pocket forces a shared tile between any two valid tilings,
@@ -44,26 +45,29 @@ theorem lock_bearing_boundary_no_minimal_phason
   intro t1 t2 ⟨h1, h2, hneq, hdisj⟩
   cases t1 with
   | nil =>
-    have h1_len : (stateToAllEdges state).length = 0 := h1
-    have h2_len : (stateToAllEdges state).length = t2.length * 14 := h2
-    simp [h1_len] at h2_len
-    have : t2.length = 0 := by omega
-    cases t2 <;> contradiction
-  | cons tile ts =>
-    have h_in_t1 : tile ∈ (tile :: ts) := by simp
-    have h_forced : tile = step.tile := by
-      exact lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty tile h_in_t1 h1
-    have h_not_t2 : tile ∉ t2 := hdisj tile h_in_t1
+    have hs : state = [] := h1
+    subst hs
+    cases t2 with
+    | nil => contradiction
+    | cons b bs =>
+      exfalso
+      exact no_empty_tiling_for_nonempty_state h2.1
+  | cons a as =>
+    have h_in_t1 : a ∈ (a :: as) := by simp
+    have h_forced : a = step.tile :=
+      lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty a as h1
+    have h_not_t2 : a ∉ t2 := hdisj a h_in_t1
     subst h_forced
     cases t2 with
     | nil =>
-      have h2_len : (stateToAllEdges state).length = 0 := h2
-      have h1_len : (stateToAllEdges state).length = (step.tile :: ts).length * 14 := h1
-      simp [h2_len] at h1_len
-    | cons tile2 ts2 =>
-      have h_in_t2 : tile2 ∈ (tile2 :: ts2) := by simp
-      have h_forced2 : tile2 = step.tile := by
-        exact lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty tile2 h_in_t2 h2
+      have hs2 : state = [] := h2
+      subst hs2
+      exfalso
+      exact no_empty_tiling_for_nonempty_state h1.1
+    | cons b bs =>
+      have h_in_t2 : b ∈ (b :: bs) := by simp
+      have h_forced2 : b = step.tile :=
+        lock_forces_unique_tile state step h_lock_valid h_exec h_non_empty b bs h2
       subst h_forced2
       exact h_not_t2 h_in_t2
 
@@ -82,21 +86,24 @@ theorem peeling_step_preserves_phason_free
     cases t2 with
     | nil => rfl
     | cons b bs =>
-      have h1_len : (stateToAllEdges state).length = 0 := h1
-      have h2_len : (stateToAllEdges state).length = (b :: bs).length * 14 := h2
-      simp [h1_len] at h2_len
+      have hs : state = [] := h1
+      subst hs
+      exfalso
+      exact no_empty_tiling_for_nonempty_state h2.1
   | cons a as =>
     cases t2 with
     | nil =>
-      have h1_len : (stateToAllEdges state).length = (a :: as).length * 14 := h1
-      have h2_len : (stateToAllEdges state).length = 0 := h2
-      simp [h2_len] at h1_len
+      have hs : state = [] := h2
+      subst hs
+      exfalso
+      exact no_empty_tiling_for_nonempty_state h1.1
     | cons b bs =>
-      by_cases h_ne : step.nextState = []
-      · sorry
-      · have ha : a = step.tile :=
-          lock_forces_unique_tile state step h_lock_valid h_exec h_ne a (by simp) h1
-        have hb : b = step.tile :=
-          lock_forces_unique_tile state step h_lock_valid h_exec h_ne b (by simp) h2
-        subst ha; subst hb
-        sorry
+      have ha : a = step.tile := (h1.2 step h_lock_valid h_exec).1
+      have hb : b = step.tile := (h2.2 step h_lock_valid h_exec).1
+      subst ha; subst hb
+      have h_as_valid : IsValidTiling as step.nextState :=
+        (h1.2 step h_lock_valid h_exec).2
+      have h_bs_valid : IsValidTiling bs step.nextState :=
+        (h2.2 step h_lock_valid h_exec).2
+      have h_tail_eq : as = bs := h_next_rigid as bs h_as_valid h_bs_valid
+      rw [h_tail_eq]
