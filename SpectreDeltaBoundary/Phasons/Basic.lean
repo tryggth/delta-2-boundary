@@ -12,7 +12,7 @@ import SpectreDeltaBoundary.Certificate
 # Formal Foundations for Phason-Free Rigidity in Spectre Tilings
 
 This module establishes the formal definitions of valid tilings, solution spaces,
-and phason freedom for bounded Spectre monotile patches.
+minimal phasons, and phason freedom for bounded Spectre monotile patches.
 
 A phason flip in an aperiodic tiling is a local rearrangement of tiles that preserves
 the outer boundary. A boundary patch is **Phason-Free** (rigid) if it admits at most
@@ -28,6 +28,11 @@ def IsValidTiling (tiles : List PlacedTile) (state : PeelingState) : Prop :=
     `t1` and `t2` covering the boundary are identical. -/
 def IsPhasonFree (state : PeelingState) : Prop :=
   ∀ (t1 t2 : List PlacedTile), IsValidTiling t1 state → IsValidTiling t2 state → t1 = t2
+
+/-- Two tilings `t1` and `t2` form a **Minimal Phason** for a boundary `state`
+    if they both validly tile `state`, are distinct, and share zero tiles. -/
+def IsMinimalPhasonState (state : PeelingState) (t1 t2 : List PlacedTile) : Prop :=
+  IsValidTiling t1 state ∧ IsValidTiling t2 state ∧ t1 ≠ t2 ∧ (∀ tile, tile ∈ t1 → tile ∉ t2)
 
 /-- The empty boundary state trivially admits only the empty tiling. -/
 theorem empty_state_phason_free : IsPhasonFree [] := by
