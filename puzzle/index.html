@@ -1,0 +1,5924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spectre Monotile Δ₂ Jigsaw Puzzle PWA</title>
+  <meta name="description" content="Interactive Spectre Aperiodic Monotile Jigsaw Puzzle Progressive Web App (PWA).">
+
+  <!-- PWA Manifest & Theme Color -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+
+  <!-- iOS / Mobile Web App Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Spectre Δ₂">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --panel-bg: #1e293b;
+      --card-bg: #334155;
+      --card-hover: #475569;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --border-color: #334155;
+      --danger-color: #ef4444;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --grid-line: rgba(255, 255, 255, 0.04);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    /* Sidebar Panel */
+    #sidebar {
+      width: 320px;
+      background-color: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem;
+      gap: 1rem;
+      z-index: 10;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .header-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #6366f1, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Primary Action Toggle Button */
+    .btn-primary-action {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-primary-action:active {
+      transform: translateY(0);
+    }
+
+    /* PWA Install Button */
+    .btn-pwa-install {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none; /* Auto-displays when PWA prompt is ready */
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+      transition: all 0.2s ease;
+    }
+
+        .select-metatile {
+      width: 100%;
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s ease;
+      margin-bottom: 0.75rem;
+    }
+    .select-metatile:hover {
+      border-color: var(--accent-color);
+      background-color: var(--card-hover);
+    }
+
+        .version-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-color);
+      background-color: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      padding: 0.1rem 0.45rem;
+      border-radius: 6px;
+      margin-left: 0.35rem;
+      vertical-align: middle;
+      display: inline-block;
+    }
+        /* Right-Click Context Menu */
+    .context-menu {
+      position: fixed;
+      z-index: 2000;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.6rem;
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(16px);
+      min-width: 190px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      user-select: none;
+      display: none;
+      animation: menuFadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .menu-header {
+      font-size: 0.725rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem 0.35rem 0.5rem;
+    }
+    .menu-label {
+      font-size: 0.725rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.35rem 0.5rem 0.25rem 0.5rem;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.12s ease;
+    }
+    .menu-item:hover {
+      background-color: var(--card-hover);
+      color: var(--accent-color);
+    }
+    .menu-item.danger:hover {
+      background-color: rgba(244, 63, 94, 0.15);
+      color: #f43f5e;
+    }
+    .menu-shortcut {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: var(--bg-main);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+    .menu-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 0.4rem 0;
+    }
+    .color-swatch-grid {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0.35rem 0.4rem;
+      justify-content: space-between;
+    }
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .color-swatch:hover {
+      transform: scale(1.25);
+      border-color: #ffffff;
+    }
+    .color-swatch.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--accent-color);
+    }
+        /* Hidden Mode Lock Toggles */
+    .palette-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .hidden-lock-toggles {
+      display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+      align-items: center;
+    }
+    .lock-btn {
+      width: 24px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1.5px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      user-select: none;
+      padding: 0;
+    }
+    .lock-btn:hover {
+      transform: scale(1.08);
+    }
+    .lock-btn[data-lock="1"].active { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+    .lock-btn[data-lock="2"].active { background: rgba(6, 182, 212, 0.25); color: #06b6d4; border-color: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+    .lock-btn[data-lock="3"].active { background: rgba(244, 63, 94, 0.25); color: #f43f5e; border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+    .lock-btn[data-lock="4"].active { background: rgba(16, 185, 129, 0.25); color: #10b981; border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+    .lock-btn[data-lock="5"].active { background: rgba(168, 85, 247, 0.25); color: #a855f7; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+    .lock-btn[data-lock="6"].active { background: rgba(59, 130, 246, 0.25); color: #3b82f6; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    .lock-btn[data-lock="7"].active { background: rgba(234, 179, 8, 0.25); color: #eab308; border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+
+        /* Hidden Mode Vertex Debug Tooltip */
+    .vertex-debug-tooltip {
+      position: fixed;
+      z-index: 2500;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1.5px solid #38bdf8;
+      border-radius: 8px;
+      padding: 0.45rem 0.75rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: #38bdf8;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(56, 189, 248, 0.3);
+      pointer-events: none;
+      user-select: none;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      display: none;
+    }
+    .vertex-debug-tooltip strong {
+      color: #ffffff;
+    }
+
+    .btn-pwa-install:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.5);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* 4-Color Palette Tray */
+    #tile-palette {
+      flex: 1;
+      background-color: rgba(15, 23, 42, 0.6);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 0.85rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      overflow-y: auto;
+    }
+
+    .palette-card {
+      background-color: var(--card-bg);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: grab;
+      transition: all 0.2s ease;
+    }
+
+    .palette-card:hover {
+      transform: translateY(-3px);
+      background-color: var(--card-hover);
+      border-color: var(--accent-color);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .palette-card svg {
+      width: 75px;
+      height: 75px;
+      pointer-events: none;
+    }
+
+    .palette-card span {
+      font-size: 0.75rem;
+      color: var(--text-main);
+      margin-top: 0.3rem;
+      font-weight: 600;
+    }
+
+    /* Control Buttons */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: var(--card-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn.active {
+      background-color: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent-color);
+      color: #a5b4fc;
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background-color: rgba(239, 68, 68, 0.3);
+      border-color: var(--danger-color);
+      color: #ffffff;
+    }
+
+    /* Main Workspace Canvas */
+    #workspace {
+      flex: 1;
+      height: 100vh;
+      position: relative;
+      background-color: var(--bg-color);
+      cursor: default;
+    }
+
+    #workspace-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tile-polygon {
+      stroke: rgba(15, 23, 42, 0.8);
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+      cursor: pointer;
+      transition: filter 0.15s ease;
+    }
+
+    .tile-polygon:hover {
+      filter: brightness(1.2) drop-shadow(0 0 6px rgba(255,255,255,0.4));
+    }
+
+        .tile-polygon.staged-outside {
+      stroke: #f59e0b;
+      stroke-width: 2.5px;
+      stroke-dasharray: 5 3;
+    }
+
+    .tile-polygon.selected {
+      stroke: #ffffff;
+      stroke-width: 2.5;
+      filter: brightness(1.25) drop-shadow(0 0 10px rgba(99,102,241,0.8));
+    }
+
+    /* Ghost Tile (Validation Drag Feedback) */
+    .ghost-tile {
+      stroke-width: 2.0;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .ghost-tile.valid {
+      opacity: 0.85;
+      stroke: #ffffff;
+      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+    }
+
+    .ghost-tile.invalid {
+      fill: rgba(239, 68, 68, 0.45) !important;
+      stroke: #ef4444 !important;
+      stroke-width: 3.0 !important;
+      filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8));
+    }
+
+    /* HUD Bar */
+    #hud {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      z-index: 5;
+      box-shadow: var(--shadow-lg);
+    }
+
+    #hud span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    #hud strong {
+      color: #a5b4fc;
+      font-weight: 700;
+    }
+
+    /* Toast Notification Banner */
+    #toast-banner {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: rgba(239, 68, 68, 0.95);
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5);
+      z-index: 100;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #toast-banner.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Instructions Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 520px;
+      max-width: 90vw;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-card h2 {
+      font-size: 1.35rem;
+      color: #a5b4fc;
+    }
+
+    .modal-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .modal-card ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Controls -->
+  <div id="sidebar">
+    <div class="header-box">
+      <div class="header-title">🧩 Spectre Monotile</div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1785889479536</span></div>
+    </div>
+
+    <!-- Game Flow Primary Toggle Button -->
+    <button id="btn-game-toggle" class="btn-primary-action" title="Toggle between solution view and active play mode">
+      🎮 Start Game
+    </button>
+
+    <!-- PWA Install Prompt Button -->
+    <button id="btn-pwa-install" class="btn-pwa-install" title="Install as Progressive Web App on Desktop or Mobile">
+      📲 Install App
+    </button>
+
+        <div class="section-label">Metatile Boundary</div>
+    <select id="select-boundary" class="select-metatile" title="Switch target metatile boundary frame">
+      <option value="Delta_2">Delta Gen-2 (71 tiles)</option>
+      <option value="Delta">Tier-1 Metatile Cluster (9 tiles)</option>
+      <option value="Gamma">Gamma Tier-1 Metatile (8 tiles)</option>
+    </select>
+
+    <div class="section-label">Spectre Tile Palette</div>
+    <div class="palette-wrapper">
+      <div id="tile-palette" style="flex: 1;"></div>
+      <div id="hidden-lock-toggles" class="hidden-lock-toggles">
+        <button class="lock-btn" data-lock="1" title="Toggle Lock 1: Low Lock [-60°, 0°, 60°]">L1</button>
+        <button class="lock-btn" data-lock="2" title="Toggle Lock 2: High Lock [60°, 90°, 60°]">L2</button>
+        <button class="lock-btn" data-lock="3" title="Toggle Lock 3: Long Lock 1 [0°, -60°, 90°, 60°]">L3</button>
+        <button class="lock-btn" data-lock="4" title="Toggle Lock 4: Long Lock 2 [60°, 90°, -60°, 90°]">L4</button>
+        <button class="lock-btn" data-lock="5" title="Toggle Lock 5: Long Lock 3 [90°, -60°, 90°, 60°]">L5</button>
+        <button class="lock-btn" data-lock="6" title="Toggle Lock 6: Delta Lock 1 [-90°, 60°, -90°, 60°, 90°, 60°]">L6</button>
+        <button class="lock-btn" data-lock="7" title="Toggle Lock 7: Delta Lock 2 [-90°, 60°, -90°, 60°, 90°, -60°, 90°]">L7</button>
+        <button id="btn-export-log" class="lock-btn" style="width: 100%; height: 24px; font-size: 0.6rem; margin-top: 0.3rem; background: rgba(99, 102, 241, 0.25); color: #818cf8; border-color: #6366f1;" title="View & Export Peeling Session Log">📋 Log</button>
+      </div>
+    </div>
+
+    <div class="section-label">Board Controls</div>
+    <div class="controls-grid">
+      <button id="btn-boundary" class="btn active" title="Toggle 1D Delta_2 Boundary Frame">
+        🖼️ Frame: ON
+      </button>
+      <button id="btn-rotate" class="btn" title="Rotate selected or staged tile by 30° (or press R / Scroll Wheel)">
+        🔄 Rotate (R)
+      </button>
+      <button id="btn-snap" class="btn active" title="Toggle automatic vertex & edge snapping">
+        ⚡ Snap: ON
+      </button>
+      <button id="btn-grid" class="btn active" title="Toggle background isometric grid">
+        🌐 Grid: ON
+      </button>
+      <button id="btn-reset" class="btn" title="Reset View & Center Canvas">
+        🎯 Reset View
+      </button>
+      <button id="btn-help" class="btn" title="View Instructions & Shortcuts">
+        ❓ Rules / Help
+      </button>
+      <button id="btn-step-peel" class="btn" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: 700;" title="Place next recorded tile from peeling sequence (1 by 1)">
+        ⏩ Step Next
+      </button>
+      <button id="btn-reset-peel" class="btn" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;" title="Clear board and reset peeling sequence to 0">
+        ⏮️ Reset Steps
+      </button>
+    </div>
+
+    <button id="btn-clear" class="btn btn-danger" style="margin-top: auto;" title="Clear all placed tiles from board">
+      🗑️ Clear Board
+    </button>
+  </div>
+
+  <!-- Main Canvas Workspace -->
+  <div id="workspace">
+    <svg id="workspace-svg">
+      <defs>
+        <!-- Background Isometric Grid Pattern -->
+        <pattern id="iso-grid" width="60" height="103.923" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 60 17.32 L 60 51.96 L 30 69.28 L 0 51.96 L 0 17.32 Z" fill="none" stroke="var(--grid-line)" stroke-width="0.8" />
+          <path d="M 30 51.96 L 60 69.28 L 60 103.92 L 30 86.6 L 0 103.92 L 0 69.28 Z" fill="none" stroke="var(--grid-line)" stroke-width="0.8" />
+        </pattern>
+      </defs>
+
+      <!-- Background Rect for Grid -->
+      <rect id="bg-rect" width="100%" height="100%" fill="url(#iso-grid)" />
+
+      <!-- Main Transformed Layer for Pan & Zoom -->
+      <g id="viewport-layer">
+        <g id="boundary-layer"></g>
+        <g id="placed-tiles-group"></g>
+        <g id="lock-highlight-layer"></g>
+        <g id="ghost-tile-group"></g>
+      </g>
+    </svg>
+
+    <!-- Top Right HUD -->
+    <div id="hud">
+      <span>Tiles: <strong id="hud-tile-count">0</strong></span>
+      <span>Angle: <strong id="hud-angle">0°</strong></span>
+      <span>Snap: <strong id="hud-snap-status">Enabled</strong></span>
+      <span>Status: <strong id="hud-valid-status" style="color: #10b981;">Valid</strong></span>
+      <span id="hud-coords-wrapper" style="display: none;">Pos: <strong id="hud-coords" style="color: #a5b4fc;">—</strong></span>
+    </div>
+
+    <!-- Error Toast Notification -->
+    <div id="toast-banner">
+      ⚠️ Invalid Placement: Must be inside boundary and cannot overlap existing tiles!
+    </div>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>Spectre Aperiodic Monotile Rules</h2>
+      <p>Discovered in 2023 by Smith, Myers, Kaplan, and Goodman-Strauss, the <strong>Spectre</strong> is a strictly chiral aperiodic monotile (an "einstein") that tiles the 2D plane infinitely without repeating a periodic pattern.</p>
+      <ul>
+        <li><strong>Metatile Boundary Selector:</strong> Use the dropdown control to switch between the 71-tile Generation-2 $\Delta_2$ boundary frame, the 9-tile Tier-1 metatile cluster, and the 8-tile Gamma metatile.</li>
+        <li><strong>Real-Time Mid-Drag & Pre-Drag Rotation:</strong> Rotate tiles in 30° steps mid-drag by scrolling the mouse wheel or pressing <kbd>R</kbd>. You can also rotate selected tiles anytime on the board or staging area.</li>
+        <li><strong>Outside-Boundary Staging Area & Rotation:</strong> When space inside the frame is tight, drop tiles anywhere outside the boundary to stage them! Rotate staged tiles anytime using the <strong>🔄 Rotate (R)</strong> button, the <kbd>R</kbd> key, or mouse wheel, then drag them into place.</li>
+        <li><strong>Automatic Snapping & Overlap Validation:</strong> Tiles snap to boundary vertices and existing tile edges. Overlapping tiles are rejected.</li>
+        <li><strong>Start Game / Solution Toggle:</strong> Click <strong>Start Game</strong> to solve, or <strong>Show Solution</strong> to view the full solved layout for the selected metatile frame—your in-progress board is automatically stashed and restored when resuming!</li>
+        <li><strong>PWA Offline Install & Auto-Update:</strong> Install as a desktop or mobile PWA via the <strong>📲 Install App</strong> button for complete offline capability and instant web updates.</li>
+      </ul>
+      <button id="btn-close-modal" class="btn active" style="width: 100%; margin-top: 1rem;">Got it!</button>
+    </div>
+  </div>
+
+  <!-- Export Log Modal -->
+  <div id="export-log-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px; width: 90%;">
+      <h2>📋 Peeling Session Log</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+        Append-only recorded sequence of tile placements, vertex/edge matches, and lock toggle events for LEAN certificate generation.
+      </p>
+      <textarea id="export-log-textarea" readonly style="width: 100%; height: 300px; background: rgba(15, 23, 42, 0.95); color: #a5b4fc; font-family: monospace; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; resize: vertical; margin-bottom: 1rem;"></textarea>
+      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button id="btn-copy-log" class="btn active" style="flex: 1; background: #6366f1;">📋 Copy to Clipboard</button>
+        <button id="btn-download-log" class="btn active" style="flex: 1; background: #10b981;">💾 Download JSON</button>
+        <button id="btn-close-export-modal" class="btn" style="width: 90px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Engine -->
+  <script>
+    (function() {
+      "use strict";
+      const APP_VERSION = "v1.0.1785889479536";
+
+      // Offline Service Worker & Auto-Invalidation Handler
+      if ('serviceWorker' in navigator) {
+        let refreshing = false;
+
+        // Auto-reload app when new Service Worker takes control
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            console.log('[PWA Update] New version activated! Reloading app...');
+            window.location.reload();
+          }
+        });
+
+        
+
+      window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('./sw.js')
+            .then((reg) => {
+              console.log('[PWA] Service Worker active with scope:', reg.scope);
+              // Force check for SW update on launch
+              reg.update();
+
+              // Check for SW update whenever user refocuses tab/app window
+              window.addEventListener('focus', () => {
+                reg.update();
+              });
+            })
+            .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
+        });
+      }
+
+      // 1. EXACT SPECTRE BASE GEOMETRY & CONSTANTS
+      const SQRT3 = Math.sqrt(3);
+
+      const SPECTRE_BASE_VERTICES = [
+        { x: 0.0, y: 0.0 },
+        { x: 1.0, y: 0.0 },
+        { x: 1.5, y: -SQRT3 / 2 },
+        { x: 1.5 + SQRT3 / 2, y: 0.5 - SQRT3 / 2 },
+        { x: 1.5 + SQRT3 / 2, y: 1.5 - SQRT3 / 2 },
+        { x: 2.5 + SQRT3 / 2, y: 1.5 - SQRT3 / 2 },
+        { x: 3.0 + SQRT3 / 2, y: 1.5 },
+        { x: 3.0, y: 2.0 },
+        { x: 3.0 - SQRT3 / 2, y: 1.5 },
+        { x: 2.5 - SQRT3 / 2, y: 1.5 + SQRT3 / 2 },
+        { x: 1.5 - SQRT3 / 2, y: 1.5 + SQRT3 / 2 },
+        { x: 0.5 - SQRT3 / 2, y: 1.5 + SQRT3 / 2 },
+        { x: -SQRT3 / 2, y: 1.5 },
+        { x: 0.0, y: 1.0 }
+      ];
+
+      const SCALE = 40;
+      const SCALED_VERTICES = SPECTRE_BASE_VERTICES.map(v => ({
+        x: v.x * SCALE,
+        y: -v.y * SCALE
+      }));
+
+      const CENTROID = SCALED_VERTICES.reduce(
+        (acc, v) => ({ x: acc.x + v.x / 14, y: acc.y + v.y / 14 }),
+        { x: 0, y: 0 }
+      );
+
+      const LOCAL_VERTICES = SCALED_VERTICES.map(v => ({
+        x: v.x - CENTROID.x,
+        y: v.y - CENTROID.y
+      }));
+
+      // 4-Color Distinct Harmonious Palette
+      // Single Default Teal Tile Palette
+      const TILE_COLORS = [
+        { name: "Teal Spectre", fill: "#0d9488" }
+      ];
+
+      // Available Color Palette Options for Context Menu & Customization
+      const TILE_COLOR_OPTIONS = [
+        { name: "Teal", fill: "#0d9488" },
+        { name: "Cyan", fill: "#06b6d4" },
+        { name: "Indigo", fill: "#6366f1" },
+        { name: "Amber", fill: "#f59e0b" },
+        { name: "Rose", fill: "#f43f5e" },
+        { name: "Emerald", fill: "#10b981" },
+        { name: "Purple", fill: "#a855f7" }
+      ];
+
+                  const METATILE_BOUNDARIES = {
+  "Delta_2": {
+    "name": "Delta Gen-2 (71 tiles)",
+    "tileCount": 71,
+    "boundary": [
+      {
+        "x": -139.474,
+        "y": 649.808
+      },
+      {
+        "x": -174.115,
+        "y": 669.808
+      },
+      {
+        "x": -208.756,
+        "y": 649.808
+      },
+      {
+        "x": -188.756,
+        "y": 615.167
+      },
+      {
+        "x": -148.756,
+        "y": 615.167
+      },
+      {
+        "x": -148.756,
+        "y": 575.167
+      },
+      {
+        "x": -183.397,
+        "y": 555.167
+      },
+      {
+        "x": -163.397,
+        "y": 520.526
+      },
+      {
+        "x": -183.397,
+        "y": 485.885
+      },
+      {
+        "x": -203.397,
+        "y": 451.244
+      },
+      {
+        "x": -183.397,
+        "y": 416.603
+      },
+      {
+        "x": -218.038,
+        "y": 396.603
+      },
+      {
+        "x": -218.038,
+        "y": 356.603
+      },
+      {
+        "x": -178.038,
+        "y": 356.603
+      },
+      {
+        "x": -158.038,
+        "y": 321.962
+      },
+      {
+        "x": -192.679,
+        "y": 301.962
+      },
+      {
+        "x": -227.321,
+        "y": 321.962
+      },
+      {
+        "x": -247.321,
+        "y": 287.321
+      },
+      {
+        "x": -287.321,
+        "y": 287.321
+      },
+      {
+        "x": -287.321,
+        "y": 247.321
+      },
+      {
+        "x": -321.962,
+        "y": 227.321
+      },
+      {
+        "x": -301.962,
+        "y": 192.679
+      },
+      {
+        "x": -321.962,
+        "y": 158.038
+      },
+      {
+        "x": -341.962,
+        "y": 123.397
+      },
+      {
+        "x": -321.962,
+        "y": 88.756
+      },
+      {
+        "x": -356.603,
+        "y": 68.756
+      },
+      {
+        "x": -391.244,
+        "y": 88.756
+      },
+      {
+        "x": -411.244,
+        "y": 54.115
+      },
+      {
+        "x": -451.244,
+        "y": 54.115
+      },
+      {
+        "x": -491.244,
+        "y": 54.115
+      },
+      {
+        "x": -511.244,
+        "y": 19.474
+      },
+      {
+        "x": -545.885,
+        "y": 39.474
+      },
+      {
+        "x": -580.526,
+        "y": 19.474
+      },
+      {
+        "x": -560.526,
+        "y": -15.167
+      },
+      {
+        "x": -520.526,
+        "y": -15.167
+      },
+      {
+        "x": -520.526,
+        "y": -55.167
+      },
+      {
+        "x": -555.167,
+        "y": -75.167
+      },
+      {
+        "x": -535.167,
+        "y": -109.808
+      },
+      {
+        "x": -555.167,
+        "y": -144.449
+      },
+      {
+        "x": -575.167,
+        "y": -179.09
+      },
+      {
+        "x": -555.167,
+        "y": -213.731
+      },
+      {
+        "x": -589.808,
+        "y": -233.731
+      },
+      {
+        "x": -589.808,
+        "y": -273.731
+      },
+      {
+        "x": -549.808,
+        "y": -273.731
+      },
+      {
+        "x": -529.808,
+        "y": -308.372
+      },
+      {
+        "x": -509.808,
+        "y": -343.013
+      },
+      {
+        "x": -469.808,
+        "y": -343.013
+      },
+      {
+        "x": -469.808,
+        "y": -383.013
+      },
+      {
+        "x": -435.167,
+        "y": -403.013
+      },
+      {
+        "x": -415.167,
+        "y": -368.372
+      },
+      {
+        "x": -435.167,
+        "y": -333.731
+      },
+      {
+        "x": -400.526,
+        "y": -313.731
+      },
+      {
+        "x": -365.885,
+        "y": -333.731
+      },
+      {
+        "x": -345.885,
+        "y": -299.09
+      },
+      {
+        "x": -305.885,
+        "y": -299.09
+      },
+      {
+        "x": -265.885,
+        "y": -299.09
+      },
+      {
+        "x": -245.885,
+        "y": -264.449
+      },
+      {
+        "x": -211.244,
+        "y": -284.449
+      },
+      {
+        "x": -176.603,
+        "y": -264.449
+      },
+      {
+        "x": -196.603,
+        "y": -229.808
+      },
+      {
+        "x": -176.603,
+        "y": -195.167
+      },
+      {
+        "x": -141.962,
+        "y": -215.167
+      },
+      {
+        "x": -141.962,
+        "y": -255.167
+      },
+      {
+        "x": -101.962,
+        "y": -255.167
+      },
+      {
+        "x": -81.962,
+        "y": -289.808
+      },
+      {
+        "x": -61.962,
+        "y": -324.449
+      },
+      {
+        "x": -21.962,
+        "y": -324.449
+      },
+      {
+        "x": -21.962,
+        "y": -364.449
+      },
+      {
+        "x": -56.603,
+        "y": -384.449
+      },
+      {
+        "x": -36.603,
+        "y": -419.09
+      },
+      {
+        "x": -56.603,
+        "y": -453.731
+      },
+      {
+        "x": -76.603,
+        "y": -488.372
+      },
+      {
+        "x": -56.603,
+        "y": -523.013
+      },
+      {
+        "x": -91.244,
+        "y": -543.013
+      },
+      {
+        "x": -91.244,
+        "y": -583.013
+      },
+      {
+        "x": -51.244,
+        "y": -583.013
+      },
+      {
+        "x": -31.244,
+        "y": -548.372
+      },
+      {
+        "x": 3.397,
+        "y": -568.372
+      },
+      {
+        "x": 3.397,
+        "y": -608.372
+      },
+      {
+        "x": 43.397,
+        "y": -608.372
+      },
+      {
+        "x": 63.397,
+        "y": -643.013
+      },
+      {
+        "x": 83.397,
+        "y": -677.654
+      },
+      {
+        "x": 123.397,
+        "y": -677.654
+      },
+      {
+        "x": 123.397,
+        "y": -717.654
+      },
+      {
+        "x": 158.038,
+        "y": -737.654
+      },
+      {
+        "x": 178.038,
+        "y": -703.013
+      },
+      {
+        "x": 218.038,
+        "y": -703.013
+      },
+      {
+        "x": 258.038,
+        "y": -703.013
+      },
+      {
+        "x": 278.038,
+        "y": -668.372
+      },
+      {
+        "x": 312.679,
+        "y": -688.372
+      },
+      {
+        "x": 347.321,
+        "y": -668.372
+      },
+      {
+        "x": 327.321,
+        "y": -633.731
+      },
+      {
+        "x": 287.321,
+        "y": -633.731
+      },
+      {
+        "x": 287.321,
+        "y": -593.731
+      },
+      {
+        "x": 321.962,
+        "y": -573.731
+      },
+      {
+        "x": 301.962,
+        "y": -539.09
+      },
+      {
+        "x": 321.962,
+        "y": -504.449
+      },
+      {
+        "x": 341.962,
+        "y": -469.808
+      },
+      {
+        "x": 321.962,
+        "y": -435.167
+      },
+      {
+        "x": 356.603,
+        "y": -415.167
+      },
+      {
+        "x": 356.603,
+        "y": -375.167
+      },
+      {
+        "x": 316.603,
+        "y": -375.167
+      },
+      {
+        "x": 296.603,
+        "y": -340.526
+      },
+      {
+        "x": 331.244,
+        "y": -320.526
+      },
+      {
+        "x": 365.885,
+        "y": -340.526
+      },
+      {
+        "x": 385.885,
+        "y": -305.885
+      },
+      {
+        "x": 425.885,
+        "y": -305.885
+      },
+      {
+        "x": 465.885,
+        "y": -305.885
+      },
+      {
+        "x": 485.885,
+        "y": -271.244
+      },
+      {
+        "x": 520.526,
+        "y": -291.244
+      },
+      {
+        "x": 555.167,
+        "y": -271.244
+      },
+      {
+        "x": 535.167,
+        "y": -236.603
+      },
+      {
+        "x": 555.167,
+        "y": -201.962
+      },
+      {
+        "x": 575.167,
+        "y": -167.321
+      },
+      {
+        "x": 555.167,
+        "y": -132.679
+      },
+      {
+        "x": 589.808,
+        "y": -112.679
+      },
+      {
+        "x": 589.808,
+        "y": -72.679
+      },
+      {
+        "x": 549.808,
+        "y": -72.679
+      },
+      {
+        "x": 529.808,
+        "y": -107.321
+      },
+      {
+        "x": 495.167,
+        "y": -87.321
+      },
+      {
+        "x": 495.167,
+        "y": -47.321
+      },
+      {
+        "x": 455.167,
+        "y": -47.321
+      },
+      {
+        "x": 435.167,
+        "y": -12.679
+      },
+      {
+        "x": 415.167,
+        "y": 21.962
+      },
+      {
+        "x": 375.167,
+        "y": 21.962
+      },
+      {
+        "x": 375.167,
+        "y": 61.962
+      },
+      {
+        "x": 340.526,
+        "y": 81.962
+      },
+      {
+        "x": 320.526,
+        "y": 47.321
+      },
+      {
+        "x": 280.526,
+        "y": 47.321
+      },
+      {
+        "x": 280.526,
+        "y": 87.321
+      },
+      {
+        "x": 315.167,
+        "y": 107.321
+      },
+      {
+        "x": 295.167,
+        "y": 141.962
+      },
+      {
+        "x": 315.167,
+        "y": 176.603
+      },
+      {
+        "x": 335.167,
+        "y": 211.244
+      },
+      {
+        "x": 315.167,
+        "y": 245.885
+      },
+      {
+        "x": 349.808,
+        "y": 265.885
+      },
+      {
+        "x": 384.449,
+        "y": 245.885
+      },
+      {
+        "x": 404.449,
+        "y": 280.526
+      },
+      {
+        "x": 444.449,
+        "y": 280.526
+      },
+      {
+        "x": 484.449,
+        "y": 280.526
+      },
+      {
+        "x": 504.449,
+        "y": 315.167
+      },
+      {
+        "x": 539.09,
+        "y": 295.167
+      },
+      {
+        "x": 573.731,
+        "y": 315.167
+      },
+      {
+        "x": 553.731,
+        "y": 349.808
+      },
+      {
+        "x": 513.731,
+        "y": 349.808
+      },
+      {
+        "x": 513.731,
+        "y": 389.808
+      },
+      {
+        "x": 548.372,
+        "y": 409.808
+      },
+      {
+        "x": 528.372,
+        "y": 444.449
+      },
+      {
+        "x": 548.372,
+        "y": 479.09
+      },
+      {
+        "x": 568.372,
+        "y": 513.731
+      },
+      {
+        "x": 548.372,
+        "y": 548.372
+      },
+      {
+        "x": 583.013,
+        "y": 568.372
+      },
+      {
+        "x": 583.013,
+        "y": 608.372
+      },
+      {
+        "x": 543.013,
+        "y": 608.372
+      },
+      {
+        "x": 523.013,
+        "y": 643.013
+      },
+      {
+        "x": 503.013,
+        "y": 677.654
+      },
+      {
+        "x": 463.013,
+        "y": 677.654
+      },
+      {
+        "x": 463.013,
+        "y": 717.654
+      },
+      {
+        "x": 428.372,
+        "y": 737.654
+      },
+      {
+        "x": 408.372,
+        "y": 703.013
+      },
+      {
+        "x": 428.372,
+        "y": 668.372
+      },
+      {
+        "x": 393.731,
+        "y": 648.372
+      },
+      {
+        "x": 359.09,
+        "y": 668.372
+      },
+      {
+        "x": 339.09,
+        "y": 633.731
+      },
+      {
+        "x": 299.09,
+        "y": 633.731
+      },
+      {
+        "x": 259.09,
+        "y": 633.731
+      },
+      {
+        "x": 239.09,
+        "y": 599.09
+      },
+      {
+        "x": 204.449,
+        "y": 619.09
+      },
+      {
+        "x": 169.808,
+        "y": 599.09
+      },
+      {
+        "x": 189.808,
+        "y": 564.449
+      },
+      {
+        "x": 169.808,
+        "y": 529.808
+      },
+      {
+        "x": 135.167,
+        "y": 549.808
+      },
+      {
+        "x": 135.167,
+        "y": 589.808
+      },
+      {
+        "x": 95.167,
+        "y": 589.808
+      },
+      {
+        "x": 75.167,
+        "y": 624.449
+      },
+      {
+        "x": 55.167,
+        "y": 659.09
+      },
+      {
+        "x": 15.167,
+        "y": 659.09
+      },
+      {
+        "x": 15.167,
+        "y": 699.09
+      },
+      {
+        "x": -19.474,
+        "y": 719.09
+      },
+      {
+        "x": -39.474,
+        "y": 684.449
+      },
+      {
+        "x": -79.474,
+        "y": 684.449
+      },
+      {
+        "x": -119.474,
+        "y": 684.449
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": -331.244,
+        "y": -204.449,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -391.244,
+        "y": -169.808,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -460.526,
+        "y": -239.09,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -460.526,
+        "y": -169.808,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -400.526,
+        "y": -135.167,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -425.885,
+        "y": -40.526,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": -365.885,
+        "y": -75.167,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": -201.962,
+        "y": -100.526,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": -296.603,
+        "y": -144.449,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      },
+      {
+        "id": 10,
+        "x": 81.962,
+        "y": -125.885,
+        "rotationDeg": 300,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 11,
+        "x": 21.962,
+        "y": -160.526,
+        "rotationDeg": 0,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 12,
+        "x": 47.321,
+        "y": -255.167,
+        "rotationDeg": 0,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 13,
+        "x": -12.679,
+        "y": -220.526,
+        "rotationDeg": 60,
+        "color": "#6366f1"
+      },
+      {
+        "id": 14,
+        "x": -12.679,
+        "y": -151.244,
+        "rotationDeg": 120,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 15,
+        "x": -107.321,
+        "y": -125.885,
+        "rotationDeg": 120,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 16,
+        "x": -47.321,
+        "y": -91.244,
+        "rotationDeg": 180,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 17,
+        "x": 56.603,
+        "y": 38.038,
+        "rotationDeg": 60,
+        "color": "#6366f1"
+      },
+      {
+        "id": 18,
+        "x": 47.321,
+        "y": -65.885,
+        "rotationDeg": 90,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 19,
+        "x": 227.321,
+        "y": -479.09,
+        "rotationDeg": 300,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 20,
+        "x": 167.321,
+        "y": -513.731,
+        "rotationDeg": 0,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 21,
+        "x": 192.679,
+        "y": -608.372,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 22,
+        "x": 132.679,
+        "y": -573.731,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 23,
+        "x": 132.679,
+        "y": -504.449,
+        "rotationDeg": 120,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 24,
+        "x": 38.038,
+        "y": -479.09,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 25,
+        "x": 98.038,
+        "y": -444.449,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 26,
+        "x": 201.962,
+        "y": -315.167,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 27,
+        "x": 192.679,
+        "y": -419.09,
+        "rotationDeg": 90,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 28,
+        "x": 365.885,
+        "y": -81.962,
+        "rotationDeg": 240,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 29,
+        "x": 365.885,
+        "y": -151.244,
+        "rotationDeg": 300,
+        "color": "#6366f1"
+      },
+      {
+        "id": 30,
+        "x": 460.526,
+        "y": -176.603,
+        "rotationDeg": 300,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 31,
+        "x": 400.526,
+        "y": -211.244,
+        "rotationDeg": 0,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 32,
+        "x": 340.526,
+        "y": -176.603,
+        "rotationDeg": 60,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 33,
+        "x": 271.244,
+        "y": -245.885,
+        "rotationDeg": 60,
+        "color": "#6366f1"
+      },
+      {
+        "id": 34,
+        "x": 271.244,
+        "y": -176.603,
+        "rotationDeg": 120,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 35,
+        "x": 211.244,
+        "y": -21.962,
+        "rotationDeg": 0,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 36,
+        "x": 296.603,
+        "y": -81.962,
+        "rotationDeg": 30,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 37,
+        "x": 91.244,
+        "y": 236.603,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 38,
+        "x": 151.244,
+        "y": 201.962,
+        "rotationDeg": 240,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 39,
+        "x": 220.526,
+        "y": 271.244,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 40,
+        "x": 220.526,
+        "y": 201.962,
+        "rotationDeg": 300,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 41,
+        "x": 160.526,
+        "y": 167.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 42,
+        "x": 185.885,
+        "y": 72.679,
+        "rotationDeg": 0,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 43,
+        "x": 125.885,
+        "y": 107.321,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 44,
+        "x": -38.038,
+        "y": 132.679,
+        "rotationDeg": 300,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 45,
+        "x": 56.603,
+        "y": 176.603,
+        "rotationDeg": 330,
+        "color": "#6366f1"
+      },
+      {
+        "id": 46,
+        "x": 324.449,
+        "y": 539.09,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 47,
+        "x": 384.449,
+        "y": 504.449,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 48,
+        "x": 453.731,
+        "y": 573.731,
+        "rotationDeg": 240,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 49,
+        "x": 453.731,
+        "y": 504.449,
+        "rotationDeg": 300,
+        "color": "#6366f1"
+      },
+      {
+        "id": 50,
+        "x": 393.731,
+        "y": 469.808,
+        "rotationDeg": 0,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 51,
+        "x": 419.09,
+        "y": 375.167,
+        "rotationDeg": 0,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 52,
+        "x": 359.09,
+        "y": 409.808,
+        "rotationDeg": 60,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 53,
+        "x": 195.167,
+        "y": 435.167,
+        "rotationDeg": 300,
+        "color": "#6366f1"
+      },
+      {
+        "id": 54,
+        "x": 289.808,
+        "y": 479.09,
+        "rotationDeg": 330,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 55,
+        "x": -88.756,
+        "y": 460.526,
+        "rotationDeg": 120,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 56,
+        "x": -28.756,
+        "y": 495.167,
+        "rotationDeg": 180,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 57,
+        "x": -54.115,
+        "y": 589.808,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 58,
+        "x": 5.885,
+        "y": 555.167,
+        "rotationDeg": 240,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 59,
+        "x": 5.885,
+        "y": 485.885,
+        "rotationDeg": 300,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 60,
+        "x": 100.526,
+        "y": 460.526,
+        "rotationDeg": 300,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 61,
+        "x": 40.526,
+        "y": 425.885,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 62,
+        "x": -63.397,
+        "y": 296.603,
+        "rotationDeg": 240,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 63,
+        "x": -54.115,
+        "y": 400.526,
+        "rotationDeg": 270,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 64,
+        "x": -132.679,
+        "y": 227.321,
+        "rotationDeg": 240,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 65,
+        "x": -132.679,
+        "y": 158.038,
+        "rotationDeg": 300,
+        "color": "#6366f1"
+      },
+      {
+        "id": 66,
+        "x": -98.038,
+        "y": 98.038,
+        "rotationDeg": 0,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 67,
+        "x": -158.038,
+        "y": 132.679,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 68,
+        "x": -227.321,
+        "y": 63.397,
+        "rotationDeg": 60,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 69,
+        "x": -227.321,
+        "y": 132.679,
+        "rotationDeg": 120,
+        "color": "#6366f1"
+      },
+      {
+        "id": 70,
+        "x": -287.321,
+        "y": 287.321,
+        "rotationDeg": 0,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 71,
+        "x": -201.962,
+        "y": 227.321,
+        "rotationDeg": 30,
+        "color": "#f59e0b"
+      }
+    ]
+  },
+  "Gamma": {
+    "name": "Gamma Tier-1 (8 tiles)",
+    "tileCount": 8,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -47.321
+      },
+      {
+        "x": 161.244,
+        "y": -12.679
+      },
+      {
+        "x": 181.244,
+        "y": 21.962
+      },
+      {
+        "x": 146.603,
+        "y": 41.962
+      },
+      {
+        "x": 146.603,
+        "y": 81.962
+      },
+      {
+        "x": 106.603,
+        "y": 81.962
+      },
+      {
+        "x": 86.603,
+        "y": 116.603
+      },
+      {
+        "x": 66.603,
+        "y": 151.244
+      },
+      {
+        "x": 26.603,
+        "y": 151.244
+      },
+      {
+        "x": 26.603,
+        "y": 191.244
+      },
+      {
+        "x": -8.038,
+        "y": 211.244
+      },
+      {
+        "x": -28.038,
+        "y": 176.603
+      },
+      {
+        "x": -68.038,
+        "y": 176.603
+      },
+      {
+        "x": -108.038,
+        "y": 176.603
+      },
+      {
+        "x": -128.038,
+        "y": 141.962
+      },
+      {
+        "x": -162.679,
+        "y": 161.962
+      },
+      {
+        "x": -197.321,
+        "y": 141.962
+      },
+      {
+        "x": -177.321,
+        "y": 107.321
+      },
+      {
+        "x": -137.321,
+        "y": 107.321
+      },
+      {
+        "x": -137.321,
+        "y": 67.321
+      },
+      {
+        "x": -171.962,
+        "y": 47.321
+      },
+      {
+        "x": -151.962,
+        "y": 12.679
+      },
+      {
+        "x": -171.962,
+        "y": -21.962
+      },
+      {
+        "x": -191.962,
+        "y": -56.603
+      },
+      {
+        "x": -171.962,
+        "y": -91.244
+      },
+      {
+        "x": -206.603,
+        "y": -111.244
+      },
+      {
+        "x": -206.603,
+        "y": -151.244
+      },
+      {
+        "x": -166.603,
+        "y": -151.244
+      },
+      {
+        "x": -146.603,
+        "y": -116.603
+      },
+      {
+        "x": -111.962,
+        "y": -136.603
+      },
+      {
+        "x": -77.321,
+        "y": -116.603
+      },
+      {
+        "x": -57.321,
+        "y": -151.244
+      },
+      {
+        "x": -17.321,
+        "y": -151.244
+      },
+      {
+        "x": -17.321,
+        "y": -191.244
+      },
+      {
+        "x": 17.321,
+        "y": -211.244
+      },
+      {
+        "x": 37.321,
+        "y": -176.603
+      },
+      {
+        "x": 77.321,
+        "y": -176.603
+      },
+      {
+        "x": 117.321,
+        "y": -176.603
+      },
+      {
+        "x": 137.321,
+        "y": -141.962
+      },
+      {
+        "x": 171.962,
+        "y": -161.962
+      },
+      {
+        "x": 206.603,
+        "y": -141.962
+      },
+      {
+        "x": 186.603,
+        "y": -107.321
+      },
+      {
+        "x": 146.603,
+        "y": -107.321
+      },
+      {
+        "x": 146.603,
+        "y": -67.321
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -81.962,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -47.321,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -47.321,
+        "rotationDeg": 120,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -17.321,
+        "y": -12.679,
+        "rotationDeg": 180,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -42.679,
+        "y": 81.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": 17.321,
+        "y": 47.321,
+        "rotationDeg": 240,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 181.244,
+        "y": 21.962,
+        "rotationDeg": 120,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 86.603,
+        "y": -21.962,
+        "rotationDeg": 150,
+        "color": "#f43f5e"
+      }
+    ]
+  },
+  "Delta": {
+    "name": "Delta Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Theta": {
+    "name": "Theta Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Lambda": {
+    "name": "Lambda Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Xi": {
+    "name": "Xi Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Pi": {
+    "name": "Pi Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Sigma": {
+    "name": "Sigma Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Phi": {
+    "name": "Phi Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "Psi": {
+    "name": "Psi Tier-1 (9 tiles)",
+    "tileCount": 9,
+    "boundary": [
+      {
+        "x": 181.244,
+        "y": -12.679
+      },
+      {
+        "x": 161.244,
+        "y": 21.962
+      },
+      {
+        "x": 181.244,
+        "y": 56.603
+      },
+      {
+        "x": 146.603,
+        "y": 76.603
+      },
+      {
+        "x": 146.603,
+        "y": 116.603
+      },
+      {
+        "x": 106.603,
+        "y": 116.603
+      },
+      {
+        "x": 86.603,
+        "y": 151.244
+      },
+      {
+        "x": 66.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 185.885
+      },
+      {
+        "x": 26.603,
+        "y": 225.885
+      },
+      {
+        "x": -8.038,
+        "y": 245.885
+      },
+      {
+        "x": -28.038,
+        "y": 211.244
+      },
+      {
+        "x": -68.038,
+        "y": 211.244
+      },
+      {
+        "x": -108.038,
+        "y": 211.244
+      },
+      {
+        "x": -128.038,
+        "y": 176.603
+      },
+      {
+        "x": -162.679,
+        "y": 196.603
+      },
+      {
+        "x": -197.321,
+        "y": 176.603
+      },
+      {
+        "x": -177.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 141.962
+      },
+      {
+        "x": -137.321,
+        "y": 101.962
+      },
+      {
+        "x": -171.962,
+        "y": 81.962
+      },
+      {
+        "x": -151.962,
+        "y": 47.321
+      },
+      {
+        "x": -171.962,
+        "y": 12.679
+      },
+      {
+        "x": -191.962,
+        "y": -21.962
+      },
+      {
+        "x": -171.962,
+        "y": -56.603
+      },
+      {
+        "x": -206.603,
+        "y": -76.603
+      },
+      {
+        "x": -206.603,
+        "y": -116.603
+      },
+      {
+        "x": -166.603,
+        "y": -116.603
+      },
+      {
+        "x": -146.603,
+        "y": -151.244
+      },
+      {
+        "x": -126.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -185.885
+      },
+      {
+        "x": -86.603,
+        "y": -225.885
+      },
+      {
+        "x": -51.962,
+        "y": -245.885
+      },
+      {
+        "x": -31.962,
+        "y": -211.244
+      },
+      {
+        "x": -51.962,
+        "y": -176.603
+      },
+      {
+        "x": -17.321,
+        "y": -156.603
+      },
+      {
+        "x": 17.321,
+        "y": -176.603
+      },
+      {
+        "x": 37.321,
+        "y": -141.962
+      },
+      {
+        "x": 77.321,
+        "y": -141.962
+      },
+      {
+        "x": 117.321,
+        "y": -141.962
+      },
+      {
+        "x": 137.321,
+        "y": -107.321
+      },
+      {
+        "x": 171.962,
+        "y": -127.321
+      },
+      {
+        "x": 206.603,
+        "y": -107.321
+      },
+      {
+        "x": 186.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -72.679
+      },
+      {
+        "x": 146.603,
+        "y": -32.679
+      }
+    ],
+    "solvedTiles": [
+      {
+        "id": 1,
+        "x": 51.962,
+        "y": -47.321,
+        "rotationDeg": 0,
+        "color": "#6366f1"
+      },
+      {
+        "id": 2,
+        "x": -8.038,
+        "y": -12.679,
+        "rotationDeg": 60,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 3,
+        "x": -77.321,
+        "y": -81.962,
+        "rotationDeg": 60,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "x": -77.321,
+        "y": -12.679,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 5,
+        "x": -17.321,
+        "y": 21.962,
+        "rotationDeg": 180,
+        "color": "#6366f1"
+      },
+      {
+        "id": 6,
+        "x": -42.679,
+        "y": 116.603,
+        "rotationDeg": 180,
+        "color": "#06b6d4"
+      },
+      {
+        "id": 7,
+        "x": 17.321,
+        "y": 81.962,
+        "rotationDeg": 240,
+        "color": "#f59e0b"
+      },
+      {
+        "id": 8,
+        "x": 181.244,
+        "y": 56.603,
+        "rotationDeg": 120,
+        "color": "#f43f5e"
+      },
+      {
+        "id": 9,
+        "x": 86.603,
+        "y": 12.679,
+        "rotationDeg": 150,
+        "color": "#6366f1"
+      }
+    ]
+  }
+};
+
+      let activeBoundaryKey = "Delta_2";
+      let currentBoundaryVertices = METATILE_BOUNDARIES["Delta_2"].boundary;
+
+
+      const SOLVED_DELTA2_TILES = [{"id": 1, "x": -272.289, "y": -246.26, "rotationDeg": 0, "color": "#6366f1"}, {"id": 2, "x": -397.976, "y": -241.769, "rotationDeg": 300, "color": "#06b6d4"}, {"id": 3, "x": -467.258, "y": -311.051, "rotationDeg": 300, "color": "#f59e0b"}, {"id": 4, "x": -526.212, "y": -199.958, "rotationDeg": 240, "color": "#f43f5e"}, {"id": 5, "x": -459.48, "y": -93.355, "rotationDeg": 180, "color": "#6366f1"}, {"id": 6, "x": -484.839, "y": 1.286, "rotationDeg": 180, "color": "#06b6d4"}, {"id": 7, "x": -359.152, "y": -3.205, "rotationDeg": 120, "color": "#f59e0b"}, {"id": 8, "x": -267.648, "y": -130.676, "rotationDeg": 240, "color": "#f43f5e"}, {"id": 9, "x": -368.564, "y": -137.716, "rotationDeg": 210, "color": "#6366f1"}, {"id": 10, "x": 147.648, "y": -95.734, "rotationDeg": 60, "color": "#06b6d4"}, {"id": 11, "x": 80.916, "y": -202.337, "rotationDeg": 0, "color": "#f59e0b"}, {"id": 12, "x": 106.275, "y": -296.978, "rotationDeg": 0, "color": "#f43f5e"}, {"id": 13, "x": -19.412, "y": -292.487, "rotationDeg": 300, "color": "#6366f1"}, {"id": 14, "x": -78.366, "y": -181.394, "rotationDeg": 240, "color": "#06b6d4"}, {"id": 15, "x": -173.007, "y": -156.035, "rotationDeg": 240, "color": "#f59e0b"}, {"id": 16, "x": -106.275, "y": -49.432, "rotationDeg": 180, "color": "#f43f5e"}, {"id": 17, "x": 49.87, "y": -33.923, "rotationDeg": 300, "color": "#6366f1"}, {"id": 18, "x": 5.509, "y": -124.839, "rotationDeg": 270, "color": "#06b6d4"}, {"id": 19, "x": 293.007, "y": -448.939, "rotationDeg": 60, "color": "#f59e0b"}, {"id": 20, "x": 226.275, "y": -555.542, "rotationDeg": 0, "color": "#f43f5e"}, {"id": 21, "x": 251.634, "y": -650.183, "rotationDeg": 0, "color": "#6366f1"}, {"id": 22, "x": 125.947, "y": -645.692, "rotationDeg": 300, "color": "#06b6d4"}, {"id": 23, "x": 66.993, "y": -534.599, "rotationDeg": 240, "color": "#f59e0b"}, {"id": 24, "x": -27.648, "y": -509.24, "rotationDeg": 240, "color": "#f43f5e"}, {"id": 25, "x": 39.084, "y": -402.637, "rotationDeg": 180, "color": "#6366f1"}, {"id": 26, "x": 195.229, "y": -387.128, "rotationDeg": 300, "color": "#06b6d4"}, {"id": 27, "x": 150.868, "y": -478.044, "rotationDeg": 270, "color": "#f59e0b"}, {"id": 28, "x": 372.617, "y": -10.0, "rotationDeg": 120, "color": "#f43f5e"}, {"id": 29, "x": 431.571, "y": -121.093, "rotationDeg": 60, "color": "#6366f1"}, {"id": 30, "x": 526.212, "y": -146.452, "rotationDeg": 60, "color": "#06b6d4"}, {"id": 31, "x": 459.48, "y": -253.055, "rotationDeg": 0, "color": "#f59e0b"}, {"id": 32, "x": 333.793, "y": -248.564, "rotationDeg": 300, "color": "#f43f5e"}, {"id": 33, "x": 264.511, "y": -317.846, "rotationDeg": 300, "color": "#6366f1"}, {"id": 34, "x": 205.557, "y": -206.753, "rotationDeg": 240, "color": "#06b6d4"}, {"id": 35, "x": 270.198, "y": -63.773, "rotationDeg": 0, "color": "#f59e0b"}, {"id": 36, "x": 326.753, "y": -147.648, "rotationDeg": 330, "color": "#f43f5e"}, {"id": 37, "x": 32.289, "y": 278.414, "rotationDeg": 180, "color": "#6366f1"}, {"id": 38, "x": 157.976, "y": 273.923, "rotationDeg": 120, "color": "#06b6d4"}, {"id": 39, "x": 227.258, "y": 343.205, "rotationDeg": 120, "color": "#f59e0b"}, {"id": 40, "x": 286.212, "y": 232.112, "rotationDeg": 60, "color": "#f43f5e"}, {"id": 41, "x": 219.48, "y": 125.509, "rotationDeg": 0, "color": "#6366f1"}, {"id": 42, "x": 244.839, "y": 30.868, "rotationDeg": 0, "color": "#06b6d4"}, {"id": 43, "x": 119.152, "y": 35.359, "rotationDeg": 300, "color": "#f59e0b"}, {"id": 44, "x": 27.648, "y": 162.83, "rotationDeg": 60, "color": "#f43f5e"}, {"id": 45, "x": 128.564, "y": 169.87, "rotationDeg": 30, "color": "#6366f1"}, {"id": 46, "x": 265.494, "y": 580.901, "rotationDeg": 180, "color": "#06b6d4"}, {"id": 47, "x": 391.181, "y": 576.41, "rotationDeg": 120, "color": "#f59e0b"}, {"id": 48, "x": 460.463, "y": 645.692, "rotationDeg": 120, "color": "#f43f5e"}, {"id": 49, "x": 519.417, "y": 534.599, "rotationDeg": 60, "color": "#6366f1"}, {"id": 50, "x": 452.685, "y": 427.996, "rotationDeg": 0, "color": "#06b6d4"}, {"id": 51, "x": 478.044, "y": 333.355, "rotationDeg": 0, "color": "#f59e0b"}, {"id": 52, "x": 352.357, "y": 337.846, "rotationDeg": 300, "color": "#f43f5e"}, {"id": 53, "x": 260.853, "y": 465.317, "rotationDeg": 60, "color": "#6366f1"}, {"id": 54, "x": 361.769, "y": 472.357, "rotationDeg": 30, "color": "#06b6d4"}, {"id": 55, "x": -154.443, "y": 430.375, "rotationDeg": 240, "color": "#f59e0b"}, {"id": 56, "x": -87.711, "y": 536.978, "rotationDeg": 180, "color": "#f43f5e"}, {"id": 57, "x": -113.07, "y": 631.619, "rotationDeg": 180, "color": "#6366f1"}, {"id": 58, "x": 12.617, "y": 627.128, "rotationDeg": 120, "color": "#06b6d4"}, {"id": 59, "x": 71.571, "y": 516.035, "rotationDeg": 60, "color": "#f59e0b"}, {"id": 60, "x": 166.212, "y": 490.676, "rotationDeg": 60, "color": "#f43f5e"}, {"id": 61, "x": 99.48, "y": 384.073, "rotationDeg": 0, "color": "#6366f1"}, {"id": 62, "x": -56.665, "y": 368.564, "rotationDeg": 120, "color": "#06b6d4"}, {"id": 63, "x": -12.304, "y": 459.48, "rotationDeg": 90, "color": "#f59e0b"}, {"id": 64, "x": -125.947, "y": 299.282, "rotationDeg": 120, "color": "#f43f5e"}, {"id": 65, "x": -66.993, "y": 188.189, "rotationDeg": 60, "color": "#6366f1"}, {"id": 66, "x": -39.084, "y": 56.227, "rotationDeg": 0, "color": "#06b6d4"}, {"id": 67, "x": -164.771, "y": 60.718, "rotationDeg": 300, "color": "#f59e0b"}, {"id": 68, "x": -234.053, "y": -8.564, "rotationDeg": 300, "color": "#f43f5e"}, {"id": 69, "x": -293.007, "y": 102.529, "rotationDeg": 240, "color": "#6366f1"}, {"id": 70, "x": -228.366, "y": 245.509, "rotationDeg": 0, "color": "#06b6d4"}, {"id": 71, "x": -171.811, "y": 161.634, "rotationDeg": 330, "color": "#f59e0b"}];
+
+      // 2. STATE MANAGEMENT
+      const state = {
+        tiles: [], // Active board tiles: { id, x, y, rotationDeg, color }
+        solvedTiles: SOLVED_DELTA2_TILES,
+        savedUserTiles: [], // Stashed player layout when viewing solution
+        isGameActive: false,
+        nextTileId: 1000,
+        selectedTileId: null,
+        snappingEnabled: true,
+        boundaryVisible: true,
+        gridVisible: true,
+        snapDistanceThreshold: 18,
+
+        // Dragging & Interaction
+        dragMode: null, // 'PALETTE', 'PLACED', 'PAN'
+        draggedTileId: null,
+        dragPaletteColor: null,
+        dragRotationDeg: 0,
+        dragStartPos: { x: 0, y: 0 },
+        dragOffset: { x: 0, y: 0 },
+
+        // Viewport Pan & Zoom
+        view: { x: 0, y: 0, zoom: 0.65 }
+      };
+
+      // 3. DOM ELEMENTS
+      const workspaceSvg = document.getElementById('workspace-svg');
+      // Expose debug globals on window for browser console testing
+      window.state = state;
+      window.getActiveBoundaryLoop = getActiveBoundaryLoop;
+      window.renderPlacedTiles = renderPlacedTiles;
+      window.renderLockHighlights = renderLockHighlights;
+      window.updateVertexDebugTooltip = updateVertexDebugTooltip;
+      window.calculateBoundaryTurns = calculateBoundaryTurns;
+      window.findSnapPosition = findSnapPosition;
+      window.getTransformedVertices = getTransformedVertices;
+      const viewportLayer = document.getElementById('viewport-layer');
+      const boundaryLayer = document.getElementById('boundary-layer');
+      const placedTilesGroup = document.getElementById('placed-tiles-group');
+      const ghostTileGroup = document.getElementById('ghost-tile-group');
+      const tilePaletteContainer = document.getElementById('tile-palette');
+      const bgRect = document.getElementById('bg-rect');
+
+      const btnGameToggle = document.getElementById('btn-game-toggle');
+      const btnPwaInstall = document.getElementById('btn-pwa-install');
+      const btnSnap = document.getElementById('btn-snap');
+      const btnBoundary = document.getElementById('btn-boundary');
+      const btnGrid = document.getElementById('btn-grid');
+      const btnReset = document.getElementById('btn-reset');
+      const btnHelp = document.getElementById('btn-help');
+      const btnClear = document.getElementById('btn-clear');
+      const helpModal = document.getElementById('help-modal');
+      const btnCloseModal = document.getElementById('btn-close-modal');
+      const toastBanner = document.getElementById('toast-banner');
+
+      const hudTileCount = document.getElementById('hud-tile-count');
+      const hudAngle = document.getElementById('hud-angle');
+      const hudSnapStatus = document.getElementById('hud-snap-status');
+      const hudValidStatus = document.getElementById('hud-valid-status');
+
+      // PWA Install Prompt Listener
+      let deferredPrompt = null;
+                  // Metatile Boundary Selector Change Listener
+      const selectBoundary = document.getElementById('select-boundary');
+      if (selectBoundary) {
+        selectBoundary.addEventListener('change', (e) => {
+          activeBoundaryKey = e.target.value;
+          const metaData = METATILE_BOUNDARIES[activeBoundaryKey];
+          if (!metaData) return;
+
+          currentBoundaryVertices = metaData.boundary;
+          state.solvedTiles = metaData.solvedTiles || [];
+          state.tiles = [];
+          state.selectedTileId = null;
+          state.savedUserTiles = [];
+          state.isGameActive = false;
+
+          const btnGameToggle = document.getElementById('btn-game-toggle');
+          if (btnGameToggle) {
+            btnGameToggle.textContent = "🎮 Start Game";
+            btnGameToggle.classList.remove("active-playing");
+            btnGameToggle.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+          }
+
+          renderBoundaryFrame();
+          renderPlacedTiles();
+          updateHUD();
+          showToast(`Switched boundary frame to ${metaData.name}`);
+        });
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (btnPwaInstall) {
+          btnPwaInstall.style.display = 'flex';
+        }
+      });
+
+      btnPwaInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          btnPwaInstall.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+
+      window.addEventListener('appinstalled', () => {
+        if (btnPwaInstall) btnPwaInstall.style.display = 'none';
+        showToast("🎉 Spectre Δ₂ PWA installed successfully!");
+      });
+
+      // 4. COMPUTATIONAL GEOMETRY & VALIDATION ENGINE
+      function getRotatedVertices(rotationDeg) {
+        const rad = (rotationDeg * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        return LOCAL_VERTICES.map(v => ({
+          x: v.x * cos - v.y * sin,
+          y: v.x * sin + v.y * cos
+        }));
+      }
+
+      function getTransformedVertices(x, y, rotationDeg) {
+        const rotVerts = getRotatedVertices(rotationDeg);
+        return rotVerts.map(v => ({
+          x: v.x + x,
+          y: v.y + y
+        }));
+      }
+
+      function verticesToSvgPoints(verts) {
+        return verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' ');
+      }
+
+      // Point-in-Polygon (Ray casting)
+      function pointInPolygon(pt, poly) {
+        let inside = false;
+        const n = poly.length;
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+          const xi = poly[i].x, yi = poly[i].y;
+          const xj = poly[j].x, yj = poly[j].y;
+          const intersect = ((yi > pt.y) !== (yj > pt.y)) &&
+              (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi + 1e-12) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      function distanceToSegment(pt, a, b) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return Math.hypot(pt.x - a.x, pt.y - a.y);
+        let t = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        const projX = a.x + t * dx;
+        const projY = a.y + t * dy;
+        return Math.hypot(pt.x - projX, pt.y - projY);
+      }
+
+      function pointInOrOnPolygon(pt, poly, tol = 0.85) {
+        const n = poly.length;
+        for (let i = 0; i < n; i++) {
+          if (distanceToSegment(pt, poly[i], poly[(i + 1) % n]) <= tol) return true;
+        }
+        return pointInPolygon(pt, poly);
+      }
+
+      // Check if tile vertices & edge midpoints lie inside boundary
+      function isTileInsideBoundary(tileVerts) {
+        const n = tileVerts.length;
+        for (let i = 0; i < n; i++) {
+          if (!pointInOrOnPolygon(tileVerts[i], currentBoundaryVertices)) return false;
+          const mid = {
+            x: (tileVerts[i].x + tileVerts[(i + 1) % n].x) / 2,
+            y: (tileVerts[i].y + tileVerts[(i + 1) % n].y) / 2
+          };
+          if (!pointInOrOnPolygon(mid, currentBoundaryVertices)) return false;
+        }
+        return true;
+      }
+
+      // Line Segment Intersection
+      function segmentsCrossProperly(a, b, c, d) {
+        const cp1 = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        const cp2 = (b.x - a.x) * (d.y - a.y) - (b.y - a.y) * (d.x - a.x);
+        const cp3 = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x);
+        const cp4 = (d.x - c.x) * (b.y - c.y) - (d.y - c.y) * (b.x - c.x);
+
+        if (((cp1 > 0.1 && cp2 < -0.1) || (cp1 < -0.1 && cp2 > 0.1)) &&
+            ((cp3 > 0.1 && cp4 < -0.1) || (cp3 < -0.1 && cp4 > 0.1))) {
+          return true;
+        }
+        return false;
+      }
+
+      // Check polygon overlap
+      function doTilesOverlap(poly1, poly2) {
+        const n1 = poly1.length;
+        const n2 = poly2.length;
+
+        // Bounding box pre-check
+        let minX1 = Infinity, maxX1 = -Infinity, minY1 = Infinity, maxY1 = -Infinity;
+        let minX2 = Infinity, maxX2 = -Infinity, minY2 = Infinity, maxY2 = -Infinity;
+        for (let i = 0; i < n1; i++) {
+          minX1 = Math.min(minX1, poly1[i].x); maxX1 = Math.max(maxX1, poly1[i].x);
+          minY1 = Math.min(minY1, poly1[i].y); maxY1 = Math.max(maxY1, poly1[i].y);
+        }
+        for (let j = 0; j < n2; j++) {
+          minX2 = Math.min(minX2, poly2[j].x); maxX2 = Math.max(maxX2, poly2[j].x);
+          minY2 = Math.min(minY2, poly2[j].y); maxY2 = Math.max(maxY2, poly2[j].y);
+        }
+        if (maxX1 < minX2 || maxX2 < minX1 || maxY1 < minY2 || maxY2 < minY1) return false;
+
+        // Line segment intersection
+        for (let i = 0; i < n1; i++) {
+          const a = poly1[i], b = poly1[(i + 1) % n1];
+          for (let j = 0; j < n2; j++) {
+            const c = poly2[j], d = poly2[(j + 1) % n2];
+            if (segmentsCrossProperly(a, b, c, d)) return true;
+          }
+        }
+
+        // Interior point check
+        const c1 = poly1.reduce((acc, v) => ({ x: acc.x + v.x / n1, y: acc.y + v.y / n1 }), { x: 0, y: 0 });
+        const c2 = poly2.reduce((acc, v) => ({ x: acc.x + v.x / n2, y: acc.y + v.y / n2 }), { x: 0, y: 0 });
+
+        if (pointInPolygon(c1, poly2) || pointInPolygon(c2, poly1)) return true;
+        return false;
+      }
+
+      // Validate candidate placement
+      function validateTilePlacement(candVerts, ignoreTileId = null) {
+        if (!isTileInsideBoundary(candVerts)) {
+          return { valid: false, reason: "OUTSIDE_BOUNDARY" };
+        }
+
+        for (const tile of state.tiles) {
+          if (tile.id === ignoreTileId) continue;
+          const placedVerts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (doTilesOverlap(candVerts, placedVerts)) {
+            return { valid: false, reason: "OVERLAP" };
+          }
+        }
+
+        return { valid: true };
+      }
+
+      // Convert Screen Pixel Coordinates to World SVG Coordinates
+      function screenToWorldPos(screenX, screenY) {
+        const rect = workspaceSvg.getBoundingClientRect();
+        const mouseSvgX = screenX - rect.left;
+        const mouseSvgY = screenY - rect.top;
+        return {
+          x: (mouseSvgX - state.view.x) / state.view.zoom,
+          y: (mouseSvgY - state.view.y) / state.view.zoom
+        };
+      }
+
+      function centerViewport() {
+        const rect = workspaceSvg.getBoundingClientRect();
+        state.view.x = rect.width / 2;
+        state.view.y = rect.height / 2;
+        state.view.zoom = 0.65;
+        updateViewportTransform();
+      }
+
+      function updateViewportTransform() {
+        viewportLayer.setAttribute('transform', `translate(${state.view.x}, ${state.view.y}) scale(${state.view.zoom})`);
+      }
+
+      // Toast Notification
+      let toastTimeout = null;
+      function showToast(msg) {
+        toastBanner.textContent = msg;
+        toastBanner.classList.add('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toastBanner.classList.remove('show');
+        }, 2800);
+      }
+
+      // 5. SNAPPING ENGINE
+      function findSnapPosition(targetX, targetY, rotationDeg, ignoreTileId = null) {
+        if (!state.snappingEnabled) {
+          return { x: targetX, y: targetY, snapped: false };
+        }
+
+        const candidateVerts = getTransformedVertices(targetX, targetY, rotationDeg);
+        let bestSnapOffset = { x: 0, y: 0 };
+        let foundSnap = false;
+        let maxMatchedVerts = 0;
+        let minSingleDist = Infinity;
+
+        const existingVertsList = [];
+        for (const existingTile of state.tiles) {
+          if (existingTile.id === ignoreTileId) continue;
+          const evs = getTransformedVertices(existingTile.x, existingTile.y, existingTile.rotationDeg);
+          existingVertsList.push(...evs);
+        }
+
+        if (state.boundaryVisible && currentBoundaryVertices) {
+          existingVertsList.push(...currentBoundaryVertices);
+        }
+
+        if (existingVertsList.length === 0) {
+          return { x: targetX, y: targetY, snapped: false };
+        }
+
+        for (let i = 0; i < candidateVerts.length; i++) {
+          const cVert = candidateVerts[i];
+          for (let j = 0; j < existingVertsList.length; j++) {
+            const eVert = existingVertsList[j];
+            const dist = Math.hypot(cVert.x - eVert.x, cVert.y - eVert.y);
+            if (dist > state.snapDistanceThreshold) continue;
+
+            const offsetX = eVert.x - cVert.x;
+            const offsetY = eVert.y - cVert.y;
+
+            let matchedCount = 0;
+            for (let k = 0; k < candidateVerts.length; k++) {
+              const testX = candidateVerts[k].x + offsetX;
+              const testY = candidateVerts[k].y + offsetY;
+              for (let m = 0; m < existingVertsList.length; m++) {
+                const d = Math.hypot(testX - existingVertsList[m].x, testY - existingVertsList[m].y);
+                if (d < 3.0) {
+                  matchedCount++;
+                  break;
+                }
+              }
+            }
+
+            if (matchedCount > maxMatchedVerts || (matchedCount === maxMatchedVerts && dist < minSingleDist)) {
+              maxMatchedVerts = matchedCount;
+              minSingleDist = dist;
+              bestSnapOffset = { x: offsetX, y: offsetY };
+              foundSnap = true;
+            }
+          }
+        }
+
+        if (foundSnap) {
+          return {
+            x: targetX + bestSnapOffset.x,
+            y: targetY + bestSnapOffset.y,
+            snapped: true
+          };
+        }
+
+        return { x: targetX, y: targetY, snapped: false };
+      }
+
+      // 6. RENDERERS
+      function renderBoundaryFrame() {
+        if (!boundaryLayer) return;
+        boundaryLayer.innerHTML = '';
+        if (!state.boundaryVisible || typeof currentBoundaryVertices === 'undefined') return;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const pathD = "M " + currentBoundaryVertices.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(" L ") + " Z";
+        path.setAttribute('d', pathD);
+        path.setAttribute('id', 'delta2-boundary-path');
+        path.setAttribute('fill', 'rgba(56, 189, 248, 0.06)');
+        path.setAttribute('stroke', '#38bdf8');
+        path.setAttribute('stroke-width', '2.5');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('filter', 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.35))');
+
+        boundaryLayer.appendChild(path);
+        renderLockHighlights();
+      }
+
+      function renderPalette() {
+        tilePaletteContainer.innerHTML = '';
+        const miniSvgPoints = verticesToSvgPoints(LOCAL_VERTICES.map(v => ({ x: v.x * 0.3, y: v.y * 0.3 })));
+
+        TILE_COLORS.forEach(colorItem => {
+          const card = document.createElement('div');
+          card.className = 'palette-card';
+          card.dataset.color = colorItem.fill;
+
+          card.innerHTML = `
+            <svg viewBox="-45 -45 90 90">
+              <polygon points="${miniSvgPoints}" fill="${colorItem.fill}" stroke="#0f172a" stroke-width="1.5" />
+            </svg>
+            <span>${colorItem.name}</span>
+          `;
+
+          card.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const worldPos = screenToWorldPos(e.clientX, e.clientY);
+            state.dragMode = 'PALETTE';
+            state.dragPaletteColor = colorItem.fill;
+            state.dragRotationDeg = 0;
+            state.dragStartPos = worldPos;
+            state.dragOffset = { x: 0, y: 0 };
+            updateGhostTile(worldPos.x, worldPos.y, 0, colorItem.fill);
+            updateHUD();
+          });
+
+          tilePaletteContainer.appendChild(card);
+        });
+      }
+
+      function renderPlacedTiles() {
+        placedTilesGroup.innerHTML = '';
+        
+        // Draw IDs for unplaced tiles as hints
+        if (state.solvedTiles) {
+          state.solvedTiles.forEach(sTile => {
+            const isPlaced = state.tiles.some(t => Math.hypot(t.x - sTile.x, t.y - sTile.y) < 8.0);
+            if (!isPlaced) {
+              const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+              text.setAttribute("x", sTile.x);
+              text.setAttribute("y", sTile.y);
+              text.setAttribute("text-anchor", "middle");
+              text.setAttribute("dominant-baseline", "middle");
+              text.setAttribute("fill", "rgba(255, 255, 255, 0.7)");
+              text.setAttribute("font-size", "24px");
+              text.setAttribute("font-weight", "bold");
+              text.setAttribute("pointer-events", "none");
+              text.textContent = sTile.id;
+              placedTilesGroup.appendChild(text);
+            }
+          });
+        }
+        state.tiles.forEach(tile => {
+          const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          polygon.setAttribute('points', verticesToSvgPoints(verts));
+          polygon.setAttribute('fill', tile.color);
+          const isInside = isTileInsideBoundary(verts);
+          const isSelected = tile.id === state.selectedTileId;
+          polygon.setAttribute('class', `tile-polygon ${isSelected ? 'selected' : ''} ${!isInside ? 'staged-outside' : ''}`);
+          polygon.dataset.id = tile.id;
+
+          polygon.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e.clientX, e.clientY, tile);
+          });
+
+          polygon.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const worldPos = screenToWorldPos(e.clientX, e.clientY);
+            state.selectedTileId = tile.id;
+            state.dragMode = 'PLACED';
+            state.draggedTileId = tile.id;
+            state.dragRotationDeg = tile.rotationDeg;
+            state.dragOffset = {
+              x: worldPos.x - tile.x,
+              y: worldPos.y - tile.y
+            };
+            updateGhostTile(tile.x, tile.y, tile.rotationDeg, tile.color);
+            renderPlacedTiles();
+            updateHUD();
+          });
+
+          placedTilesGroup.appendChild(polygon);
+
+          // Render tile coordinates inside tile when Hidden Mode is active
+          if (state.hiddenMode) {
+            const textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textElem.setAttribute('x', tile.x.toFixed(1));
+            textElem.setAttribute('y', tile.y.toFixed(1));
+            textElem.setAttribute('fill', '#ffffff');
+            textElem.setAttribute('font-size', '11');
+            textElem.setAttribute('font-family', 'monospace');
+            textElem.setAttribute('font-weight', 'bold');
+            textElem.setAttribute('text-anchor', 'middle');
+            textElem.setAttribute('dominant-baseline', 'central');
+            textElem.setAttribute('pointer-events', 'none');
+            textElem.setAttribute('filter', 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))');
+            textElem.textContent = `(${Math.round(tile.x)}, ${Math.round(tile.y)})`;
+            placedTilesGroup.appendChild(textElem);
+          }
+        });
+        renderLockHighlights();
+
+        // HUD tile count updated dynamically in updateHUD()
+      }
+
+      function updateGhostTile(x, y, rotationDeg, color) {
+        ghostTileGroup.innerHTML = '';
+        if (state.dragMode === null) return;
+
+        const snapResult = findSnapPosition(x, y, rotationDeg, state.draggedTileId);
+        const finalX = snapResult.x;
+        const finalY = snapResult.y;
+
+        const verts = getTransformedVertices(finalX, finalY, rotationDeg);
+        const valResult = validateTilePlacement(verts, state.draggedTileId);
+
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', verticesToSvgPoints(verts));
+        polygon.setAttribute('fill', color);
+        polygon.setAttribute('class', `ghost-tile ${valResult.valid ? 'valid' : 'invalid'}`);
+
+        ghostTileGroup.appendChild(polygon);
+
+        if (!valResult.valid) {
+          hudValidStatus.textContent = valResult.reason === "OUTSIDE_BOUNDARY" ? "Outside Boundary" : "Overlapping";
+          hudValidStatus.style.color = "#ef4444";
+        } else {
+          hudValidStatus.textContent = snapResult.snapped ? "Snapped Valid" : "Valid";
+          hudValidStatus.style.color = "#10b981";
+        }
+      }
+
+      function updateHUD() {
+        const cwDeg = (state.dragRotationDeg % 360 + 360) % 360;
+        const ccwDeg = cwDeg === 0 ? 0 : 360 - cwDeg;
+        const displayDeg = ccwDeg > 180 ? ccwDeg - 360 : ccwDeg;
+        hudAngle.textContent = `${displayDeg}°`;
+        if (hudSnapStatus) {
+          hudSnapStatus.textContent = state.snappingEnabled ? 'Enabled' : 'Disabled';
+          hudSnapStatus.style.color = state.snappingEnabled ? '#10b981' : '#ef4444';
+        }
+
+        const metaData = typeof METATILE_BOUNDARIES !== 'undefined' ? METATILE_BOUNDARIES[activeBoundaryKey] : null;
+        const totalTarget = metaData ? metaData.tileCount : 71;
+
+        let insideCount = 0;
+        let stagedCount = 0;
+        let hasOverlap = false;
+
+        const tileVertsList = [];
+        state.tiles.forEach(t => {
+          const verts = getTransformedVertices(t.x, t.y, t.rotationDeg);
+          tileVertsList.push({ id: t.id, verts });
+          if (isTileInsideBoundary(verts)) {
+            insideCount++;
+          } else {
+            stagedCount++;
+          }
+        });
+
+        for (let i = 0; i < tileVertsList.length; i++) {
+          for (let j = i + 1; j < tileVertsList.length; j++) {
+            if (doTilesOverlap(tileVertsList[i].verts, tileVertsList[j].verts)) {
+              hasOverlap = true;
+              break;
+            }
+          }
+          if (hasOverlap) break;
+        }
+
+        if (hudTileCount) {
+          if (stagedCount > 0) {
+            hudTileCount.textContent = `${insideCount} / ${totalTarget} (${stagedCount} staged)`;
+          } else {
+            hudTileCount.textContent = `${insideCount} / ${totalTarget}`;
+          }
+        }
+
+        if (hudValidStatus && state.dragMode === null) {
+          if (state.tiles.length === 0) {
+            hudValidStatus.textContent = "Empty";
+            hudValidStatus.style.color = "#94a3b8";
+          } else if (hasOverlap) {
+            hudValidStatus.textContent = "Overlapping Tiles";
+            hudValidStatus.style.color = "#ef4444";
+          } else if (stagedCount > 0) {
+            hudValidStatus.textContent = "Tile Staged Outside";
+            hudValidStatus.style.color = "#f59e0b";
+          } else if (insideCount === totalTarget) {
+            hudValidStatus.textContent = "🎉 PUZZLE SOLVED!";
+            hudValidStatus.style.color = "#10b981";
+          } else {
+            hudValidStatus.textContent = "Valid Placement";
+            hudValidStatus.style.color = "#10b981";
+          }
+        }
+      }
+
+                        // Helper to compute CCW orientation and active remaining boundary loop
+            // Filter out duplicate and collinear (0-degree turn) sub-segment vertices
+      function filterCollinearVertices(poly) {
+        if (!poly || poly.length < 3) return poly;
+        const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+        // Remove adjacent duplicate vertices
+        const clean = [];
+        const n = poly.length;
+        for (let i = 0; i < n; i++) {
+          if (clean.length === 0 || dist(poly[i], clean[clean.length - 1]) > 0.5) {
+            clean.push(poly[i]);
+          }
+        }
+        if (clean.length > 1 && dist(clean[0], clean[clean.length - 1]) <= 0.5) {
+          clean.pop();
+        }
+
+        return clean;
+      }
+
+      function ensureCCW(poly) {
+        if (!poly || poly.length < 3) return poly;
+        const cleanPoly = filterCollinearVertices(poly);
+        let area = 0;
+        const n = cleanPoly.length;
+        for (let i = 0; i < n; i++) {
+          const p1 = cleanPoly[i];
+          const p2 = cleanPoly[(i + 1) % n];
+          area += (p1.x * p2.y - p2.x * p1.y);
+        }
+        if (area < 0) {
+          return cleanPoly.slice().reverse();
+        }
+        return cleanPoly;
+      }
+
+      function splitEdgeSubSegments(p1, p2) {
+        const length = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const steps = Math.max(1, Math.round(length / 40.0));
+        const sub = [];
+        for (let i = 0; i < steps; i++) {
+          const t1 = i / steps;
+          const t2 = (i + 1) / steps;
+          const sub1 = { x: p1.x + t1 * (p2.x - p1.x), y: p1.y + t1 * (p2.y - p1.y) };
+          const sub2 = { x: p1.x + t2 * (p2.x - p1.x), y: p1.y + t2 * (p2.y - p1.y) };
+          sub.push({ p1: sub1, p2: sub2 });
+        }
+        return sub;
+      }
+
+      function getActiveBoundaryLoop() {
+        if (!currentBoundaryVertices || currentBoundaryVertices.length < 3) return [];
+
+        const solvedTilesList = state.solvedTiles || [];
+        const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+        // If solvedTiles is available, extract boundary of remaining unplaced solved tiles!
+        if (solvedTilesList.length > 0) {
+          const unplacedTiles = solvedTilesList.filter(sTile => {
+            return !state.tiles.some(uTile => dist(sTile, uTile) < 8.0);
+          });
+
+          if (unplacedTiles.length > 0 && unplacedTiles.length < solvedTilesList.length) {
+            const subEdges = [];
+            for (const tile of unplacedTiles) {
+              const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+              const nT = verts.length;
+              for (let i = 0; i < nT; i++) {
+                const p1 = verts[i];
+                const p2 = verts[(i + 1) % nT];
+                subEdges.push(...splitEdgeSubSegments(p1, p2));
+              }
+            }
+
+            const TOLERANCE = 1.5;
+            const matched = new Set();
+            for (let i = 0; i < subEdges.length; i++) {
+              if (matched.has(i)) continue;
+              for (let j = i + 1; j < subEdges.length; j++) {
+                if (matched.has(j)) continue;
+                const e1 = subEdges[i];
+                const e2 = subEdges[j];
+                if (dist(e1.p1, e2.p2) < TOLERANCE && dist(e1.p2, e2.p1) < TOLERANCE) {
+                  matched.add(i);
+                  matched.add(j);
+                  break;
+                }
+              }
+            }
+
+            const activeSub = subEdges.filter((_, idx) => !matched.has(idx));
+            if (activeSub.length >= 3) {
+              const chained = [activeSub[0].p1];
+              let currEdge = activeSub[0];
+              const visited = new Set([0]);
+
+              for (let step = 0; step < activeSub.length; step++) {
+                chained.push(currEdge.p2);
+                const targetPt = currEdge.p2;
+
+                let nextIdx = -1;
+                let minDist = Infinity;
+
+                for (let j = 0; j < activeSub.length; j++) {
+                  if (visited.has(j)) continue;
+                  const candidate = activeSub[j];
+                  const d = dist(targetPt, candidate.p1);
+                  if (d < TOLERANCE && d < minDist) {
+                    minDist = d;
+                    nextIdx = j;
+                  }
+                }
+
+                if (nextIdx !== -1) {
+                  visited.add(nextIdx);
+                  currEdge = activeSub[nextIdx];
+                } else {
+                  break;
+                }
+              }
+
+              if (chained.length >= 3) {
+                return ensureCCW(chained);
+              }
+            }
+          }
+        }
+
+        // Fallback: Frame edge cancellation
+        if (!state.tiles || state.tiles.length === 0) return currentBoundaryVertices;
+
+        const subEdges = [];
+        const nB = currentBoundaryVertices.length;
+        for (let i = 0; i < nB; i++) {
+          subEdges.push(...splitEdgeSubSegments(currentBoundaryVertices[i], currentBoundaryVertices[(i + 1) % nB]));
+        }
+
+        for (const tile of state.tiles) {
+          const verts = getTransformedVertices(tile.x, tile.y, tile.rotationDeg);
+          if (!isTileInsideBoundary(verts)) continue;
+          const nT = verts.length;
+          for (let i = 0; i < nT; i++) {
+            subEdges.push(...splitEdgeSubSegments(verts[(i + 1) % nT], verts[i])); // reversed
+          }
+        }
+
+        const TOL = 2.0;
+        const matched = new Set();
+        for (let i = 0; i < subEdges.length; i++) {
+          if (matched.has(i)) continue;
+          for (let j = i + 1; j < subEdges.length; j++) {
+            if (matched.has(j)) continue;
+            if (dist(subEdges[i].p1, subEdges[j].p2) < TOL && dist(subEdges[i].p2, subEdges[j].p1) < TOL) {
+              matched.add(i);
+              matched.add(j);
+              break;
+            }
+          }
+        }
+
+        const activeSub = subEdges.filter((_, idx) => !matched.has(idx));
+        if (activeSub.length < 3) return currentBoundaryVertices;
+
+        const chained = [activeSub[0].p1];
+        let currEdge = activeSub[0];
+        const visited = new Set([0]);
+
+        for (let step = 0; step < activeSub.length; step++) {
+          chained.push(currEdge.p2);
+          const targetPt = currEdge.p2;
+
+          let nextIdx = -1;
+          let minDist = Infinity;
+
+          for (let j = 0; j < activeSub.length; j++) {
+            if (visited.has(j)) continue;
+            const candidate = activeSub[j];
+            const d = dist(targetPt, candidate.p1);
+            if (d < TOL && d < minDist) {
+              minDist = d;
+              nextIdx = j;
+            }
+          }
+
+          if (nextIdx !== -1) {
+            visited.add(nextIdx);
+            currEdge = activeSub[nextIdx];
+          } else {
+            break;
+          }
+        }
+
+        if (chained.length < 3) return currentBoundaryVertices;
+
+        return ensureCCW(chained);
+      }
+
+            // 10. HIDDEN MODE VERTEX DEBUG HOVER TOOLTIP
+      function updateVertexDebugTooltip(clientX, clientY) {
+        const vertexDebugTooltip = document.getElementById('vertex-debug-tooltip');
+        const hudCoordsEl = document.getElementById('hud-coords');
+        const hudCoordsWrapper = document.getElementById('hud-coords-wrapper');
+        if (!vertexDebugTooltip) return;
+        if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length === 0) {
+          vertexDebugTooltip.style.display = 'none';
+          if (hudCoordsWrapper) hudCoordsWrapper.style.display = 'none';
+          return;
+        }
+
+        // Always show HUD coords in hidden mode
+        if (hudCoordsWrapper) hudCoordsWrapper.style.display = '';
+
+        // Compute world-space mouse position
+        const worldPos = screenToWorldPos(clientX, clientY);
+
+        const rect = workspaceSvg ? workspaceSvg.getBoundingClientRect() : { left: 0, top: 0 };
+        const poly = getActiveBoundaryLoop();
+        if (!poly || poly.length === 0) {
+          vertexDebugTooltip.style.display = 'none';
+          if (hudCoordsEl) hudCoordsEl.textContent = `(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`;
+          return;
+        }
+
+        const turns = calculateBoundaryTurns(poly);
+        let nearestIdx = -1;
+        let minPixelDist = Infinity;
+
+        // Calculate screen pixel distance to each active boundary vertex
+        for (let i = 0; i < poly.length; i++) {
+          const pt = poly[i];
+          const vScreenX = rect.left + state.view.x + pt.x * state.view.zoom;
+          const vScreenY = rect.top + state.view.y + pt.y * state.view.zoom;
+          const d = Math.hypot(clientX - vScreenX, clientY - vScreenY);
+
+          if (d < minPixelDist) {
+            minPixelDist = d;
+            nearestIdx = i;
+          }
+        }
+
+        // Screen-space proximity threshold of 18 pixels (tight, boundary-vertex-only)
+        if (nearestIdx !== -1 && minPixelDist <= 18.0) {
+          const pt = poly[nearestIdx];
+          const turnDeg = turns[nearestIdx] !== undefined ? turns[nearestIdx] : 0;
+          const rx = Math.round(pt.x);
+          const ry = Math.round(pt.y);
+          const fx = pt.x.toFixed(1);
+          const fy = pt.y.toFixed(1);
+
+          // Update HUD coords to snap to the boundary vertex
+          if (hudCoordsEl) {
+            hudCoordsEl.textContent = `(${rx}, ${ry})`;
+            hudCoordsEl.style.color = '#f0abfc';
+          }
+
+          let turnColor = "#38bdf8";
+          if (turnDeg === 60) turnColor = "#06b6d4";
+          else if (turnDeg === 90) turnColor = "#a855f7";
+          else if (turnDeg === -60) turnColor = "#f43f5e";
+          else if (turnDeg === 0) turnColor = "#f59e0b";
+
+          vertexDebugTooltip.innerHTML = `
+            <div style="font-weight: 700; color: #a5b4fc; margin-bottom: 0.2rem;">📍 Boundary Vertex #${nearestIdx}</div>
+            <div>Coords: <strong>(${rx}, ${ry})</strong> <span style="color: #94a3b8; font-size: 0.7rem;">(${fx}, ${fy})</span></div>
+            <div>Turn: <strong style="color: ${turnColor};">${turnDeg}°</strong></div>
+          `;
+
+          vertexDebugTooltip.style.display = 'block';
+          const tWidth = vertexDebugTooltip.offsetWidth || 160;
+          const tHeight = vertexDebugTooltip.offsetHeight || 75;
+
+          let posX = clientX + 15;
+          let posY = clientY + 15;
+
+          if (posX + tWidth > window.innerWidth - 10) posX = clientX - tWidth - 10;
+          if (posY + tHeight > window.innerHeight - 10) posY = clientY - tHeight - 10;
+
+          vertexDebugTooltip.style.left = `${posX}px`;
+          vertexDebugTooltip.style.top = `${posY}px`;
+        } else {
+          vertexDebugTooltip.style.display = 'none';
+          // Show raw world coordinates in HUD
+          if (hudCoordsEl) {
+            hudCoordsEl.textContent = `(${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`;
+            hudCoordsEl.style.color = '#a5b4fc';
+          }
+        }
+      }
+
+      // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
+      const LOCK_DEFINITIONS = [
+        { id: 1, name: "Low Lock", seq: [-60, 0, 60], color: "#f59e0b" },
+        { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
+        { id: 3, name: "Long Lock 1", seq: [0, -60, 90, 60], color: "#f43f5e" },
+        { id: 4, name: "Long Lock 2", seq: [60, 90, -60, 90], color: "#10b981" },
+        { id: 5, name: "Long Lock 3", seq: [90, -60, 90, 60], color: "#a855f7" },
+        { id: 6, name: "Delta Lock 1", seq: [-90, 60, -90, 60, 90, 60], color: "#3b82f6" },
+        { id: 7, name: "Delta Lock 2", seq: [-90, 60, -90, 60, 90, -60, 90], color: "#eab308" }
+      ];
+
+      state.hiddenMode = false;
+      state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
+      state.peelingLog = [];
+
+      const hiddenLockToggles = document.getElementById('hidden-lock-toggles');
+      const lockHighlightLayer = document.getElementById('lock-highlight-layer');
+
+      function calculateBoundaryTurns(poly) {
+        if (!poly || poly.length < 3) return [];
+        const n = poly.length;
+        const turns = [];
+        for (let i = 0; i < n; i++) {
+          const pPrev = poly[(i - 1 + n) % n];
+          const pCurr = poly[i];
+          const pNext = poly[(i + 1) % n];
+
+          const v1x = pCurr.x - pPrev.x;
+          const v1y = pCurr.y - pPrev.y;
+          const v2x = pNext.x - pCurr.x;
+          const v2y = pNext.y - pCurr.y;
+
+          const a1 = Math.atan2(v1y, v1x);
+          const a2 = Math.atan2(v2y, v2x);
+
+          let deg = Math.round((a2 - a1) * 180 / Math.PI / 30) * 30;
+          while (deg > 180) deg -= 360;
+          while (deg <= -180) deg += 360;
+          turns.push(deg);
+        }
+        return turns;
+      }
+
+      function renderLockHighlights() {
+        const lockHighlightLayer = document.getElementById('lock-highlight-layer');
+        if (!lockHighlightLayer) return;
+        
+        // Always force clear previous highlight paths
+        lockHighlightLayer.innerHTML = '';
+        if (!state.hiddenMode || !currentBoundaryVertices || currentBoundaryVertices.length < 3) return;
+
+        // Synchronize active state directly from DOM buttons to prevent state drift
+        document.querySelectorAll('.lock-btn').forEach(btn => {
+          const lockId = parseInt(btn.dataset.lock, 10);
+          if (lockId) {
+            state.activeLocks[lockId] = btn.classList.contains('active');
+          }
+        });
+
+        const poly = getActiveBoundaryLoop();
+        if (!poly || poly.length < 3) return;
+
+        const n = poly.length;
+        const turns = calculateBoundaryTurns(poly);
+        if (turns.length !== n) return;
+
+        LOCK_DEFINITIONS.forEach(lock => {
+          if (!state.activeLocks[lock.id]) return;
+
+          const k = lock.seq.length;
+          for (let i = 0; i < n; i++) {
+            // Strict forward CCW boundary turn sequence match
+            let match = true;
+            for (let j = 0; j < k; j++) {
+              if (turns[(i + j) % n] !== lock.seq[j]) {
+                match = false;
+                break;
+              }
+            }
+
+            if (match) {
+              drawLockHighlightPath(poly, i, k, lock.color);
+            }
+          }
+        });
+      }
+
+      function drawLockHighlightPath(poly, startIndex, len, color) {
+        const n = poly.length;
+        const pathPoints = [];
+        for (let j = -1; j <= len; j++) {
+          const idx = (startIndex + j + n) % n;
+          pathPoints.push(poly[idx]);
+        }
+
+        if (pathPoints.length < 2) return;
+        const pathD = "M " + pathPoints.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" L ");
+        const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathElem.setAttribute('d', pathD);
+        pathElem.setAttribute('fill', 'none');
+        pathElem.setAttribute('stroke', color);
+        pathElem.setAttribute('stroke-width', '5.5');
+        pathElem.setAttribute('stroke-linecap', 'round');
+        pathElem.setAttribute('stroke-linejoin', 'round');
+        pathElem.setAttribute('filter', `drop-shadow(0 0 8px ${color})`);
+        pathElem.setAttribute('class', 'lock-highlight');
+
+        lockHighlightLayer.appendChild(pathElem);
+      }
+
+      // Wire lock toggle buttons
+      document.querySelectorAll('.lock-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const lockId = parseInt(btn.dataset.lock, 10);
+          state.activeLocks[lockId] = !state.activeLocks[lockId];
+          btn.classList.toggle('active', state.activeLocks[lockId]);
+          renderLockHighlights();
+          const lockInfo = LOCK_DEFINITIONS.find(l => l.id === lockId);
+          if (lockInfo) {
+            showToast(`${state.activeLocks[lockId] ? '👁️ Highlighted' : '🙈 Hidden'} ${lockInfo.name} [${lockInfo.seq.join('°, ')}°]`);
+          }
+
+          // Record Lock Toggle Event inline in Peeling Log
+          if (state.hiddenMode) {
+            if (!state.peelingLog) state.peelingLog = [];
+            state.peelingLog.push({
+              step: state.peelingLog.length + 1,
+              timestamp: Date.now(),
+              eventType: "LOCK_TOGGLE",
+              lockId: lockId,
+              activeState: state.activeLocks[lockId],
+              activeLocks: { ...state.activeLocks }
+            });
+          }
+        });
+      });
+
+      // 8. RIGHT-CLICK CONTEXT MENU CONTROLLER
+      const contextMenu = document.getElementById('context-menu');
+      const ctxRotate = document.getElementById('ctx-rotate');
+      const ctxDelete = document.getElementById('ctx-delete');
+      const ctxColorPicker = document.getElementById('ctx-color-picker');
+      let activeContextMenuTileId = null;
+
+      function showContextMenu(clientX, clientY, tile) {
+        if (!contextMenu || !tile) return;
+        activeContextMenuTileId = tile.id;
+        state.selectedTileId = tile.id;
+
+        // Render Color Swatches
+        ctxColorPicker.innerHTML = '';
+        TILE_COLOR_OPTIONS.forEach(opt => {
+          const swatch = document.createElement('div');
+          swatch.className = `color-swatch ${tile.color === opt.fill ? 'active' : ''}`;
+          swatch.style.backgroundColor = opt.fill;
+          swatch.title = opt.name;
+
+          swatch.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tile.color = opt.fill;
+            renderPlacedTiles();
+            updateHUD();
+            showToast(`🎨 Tile color updated to ${opt.name}`);
+            hideContextMenu();
+          });
+
+          ctxColorPicker.appendChild(swatch);
+        });
+
+        // Position Context Menu within window bounds
+        contextMenu.style.display = 'block';
+        const menuRect = contextMenu.getBoundingClientRect();
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        let posX = clientX;
+        let posY = clientY;
+
+        if (posX + menuRect.width > winWidth - 10) {
+          posX = winWidth - menuRect.width - 10;
+        }
+        if (posY + menuRect.height > winHeight - 10) {
+          posY = winHeight - menuRect.height - 10;
+        }
+
+        contextMenu.style.left = `${posX}px`;
+        contextMenu.style.top = `${posY}px`;
+      }
+
+      function hideContextMenu() {
+        if (contextMenu) {
+          contextMenu.style.display = 'none';
+        }
+        activeContextMenuTileId = null;
+      }
+
+      if (ctxRotate) {
+        ctxRotate.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (activeContextMenuTileId !== null) {
+            const tile = state.tiles.find(t => t.id === activeContextMenuTileId);
+            if (tile) {
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
+            }
+          }
+          hideContextMenu();
+        });
+      }
+
+      if (ctxDelete) {
+        ctxDelete.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (activeContextMenuTileId !== null) {
+            state.tiles = state.tiles.filter(t => t.id !== activeContextMenuTileId);
+            if (state.selectedTileId === activeContextMenuTileId) state.selectedTileId = null;
+            renderPlacedTiles();
+            updateHUD();
+            showToast("🗑️ Removed tile from board");
+          }
+          hideContextMenu();
+        });
+      }
+
+      // Hide context menu on click or drag outside
+      window.addEventListener('click', hideContextMenu);
+      window.addEventListener('mousedown', (e) => {
+        if (contextMenu && !contextMenu.contains(e.target)) {
+          hideContextMenu();
+        }
+      });
+      window.addEventListener('wheel', hideContextMenu);
+
+      // 7. EVENT HANDLERS & INTERACTIONS
+      function handleMouseMove(e) {
+        if (state.dragMode === 'PAN') {
+          const dx = e.clientX - state.dragStartPos.x;
+          const dy = e.clientY - state.dragStartPos.y;
+          state.view.x += dx;
+          state.view.y += dy;
+          state.dragStartPos = { x: e.clientX, y: e.clientY };
+          updateViewportTransform();
+          return;
+        }
+
+        state.lastMouseScreenPos = { x: e.clientX, y: e.clientY };
+        updateVertexDebugTooltip(e.clientX, e.clientY);
+        if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
+          const worldPos = screenToWorldPos(e.clientX, e.clientY);
+          const targetX = worldPos.x - state.dragOffset.x;
+          const targetY = worldPos.y - state.dragOffset.y;
+          const color = state.dragMode === 'PALETTE' 
+            ? state.dragPaletteColor 
+            : state.tiles.find(t => t.id === state.draggedTileId)?.color;
+
+          updateGhostTile(targetX, targetY, state.dragRotationDeg, color);
+        }
+      }
+
+      function handleMouseUp(e) {
+        state.lastMouseScreenPos = { x: e.clientX, y: e.clientY };
+        updateVertexDebugTooltip(e.clientX, e.clientY);
+        if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
+          const worldPos = screenToWorldPos(e.clientX, e.clientY);
+          const rawX = worldPos.x - state.dragOffset.x;
+          const rawY = worldPos.y - state.dragOffset.y;
+
+          const snapResult = findSnapPosition(rawX, rawY, state.dragRotationDeg, state.draggedTileId);
+          const candidateVerts = getTransformedVertices(snapResult.x, snapResult.y, state.dragRotationDeg);
+
+          const valResult = validateTilePlacement(candidateVerts, state.draggedTileId);
+
+          if (!valResult.valid && valResult.reason === "OVERLAP") {
+            showToast("⚠️ Invalid Placement: Tile overlaps an existing placed tile!");
+          } else {
+            if (!valResult.valid && valResult.reason === "OUTSIDE_BOUNDARY") {
+              showToast("💡 Tile staged outside boundary frame! Press R, Scroll Wheel, or click 🔄 Rotate to spin it.");
+            }
+            if (state.dragMode === 'PALETTE') {
+              const newTile = {
+                id: state.nextTileId++,
+                x: snapResult.x,
+                y: snapResult.y,
+                rotationDeg: (state.dragRotationDeg % 360 + 360) % 360,
+                color: state.dragPaletteColor
+              };
+              state.tiles.push(newTile);
+              state.selectedTileId = newTile.id;
+            } else if (state.dragMode === 'PLACED') {
+              const tile = state.tiles.find(t => t.id === state.draggedTileId);
+              if (tile) {
+                tile.x = snapResult.x;
+                tile.y = snapResult.y;
+                tile.rotationDeg = (state.dragRotationDeg % 360 + 360) % 360;
+              }
+            }
+
+            // Record Tile Placement Event inline in Peeling Log
+            if (state.hiddenMode) {
+              if (!state.peelingLog) state.peelingLog = [];
+              const poly = getActiveBoundaryLoop();
+              const matchedVertices = [];
+              candidateVerts.forEach((cVert, cIdx) => {
+                poly.forEach((bVert, bIdx) => {
+                  if (Math.hypot(cVert.x - bVert.x, cVert.y - bVert.y) < 3.5) {
+                    matchedVertices.push({
+                      tileVertexIndex: cIdx,
+                      tileVertexCoords: { x: Math.round(cVert.x), y: Math.round(cVert.y) },
+                      boundaryVertexIndex: bIdx,
+                      boundaryVertexCoords: { x: Math.round(bVert.x), y: Math.round(bVert.y) }
+                    });
+                  }
+                });
+              });
+
+              const matchedEdges = [];
+              const nT = candidateVerts.length;
+              const nB = poly.length;
+              for (let i = 0; i < nT; i++) {
+                const tp1 = candidateVerts[i];
+                const tp2 = candidateVerts[(i + 1) % nT];
+                for (let j = 0; j < nB; j++) {
+                  const bp1 = poly[j];
+                  const bp2 = poly[(j + 1) % nB];
+                  if (Math.hypot(tp1.x - bp2.x, tp1.y - bp2.y) < 3.5 && Math.hypot(tp2.x - bp1.x, tp2.y - bp1.y) < 3.5) {
+                    matchedEdges.push({
+                      tileEdge: { p1: { x: Math.round(tp1.x), y: Math.round(tp1.y) }, p2: { x: Math.round(tp2.x), y: Math.round(tp2.y) } },
+                      boundaryEdge: { p1: { x: Math.round(bp1.x), y: Math.round(bp1.y) }, p2: { x: Math.round(bp2.x), y: Math.round(bp2.y) } }
+                    });
+                  }
+                }
+              }
+
+              const cw = (state.dragRotationDeg % 360 + 360) % 360;
+              const ccw = cw === 0 ? 0 : 360 - cw;
+              const rotDegCCW = ccw > 180 ? ccw - 360 : ccw;
+
+              const droppedTileId = state.draggedTileId || (state.nextTileId - 1);
+              state.peelingLog.push({
+                step: state.peelingLog.length + 1,
+                timestamp: Date.now(),
+                eventType: "TILE_PLACEMENT",
+                tileId: droppedTileId,
+                coords: { x: Math.round(snapResult.x), y: Math.round(snapResult.y) },
+                rotationDegCCW: rotDegCCW,
+                matchedVertices: matchedVertices,
+                matchedEdges: matchedEdges,
+                activeLocks: { ...state.activeLocks }
+              });
+            }
+          }
+
+          ghostTileGroup.innerHTML = '';
+          renderPlacedTiles();
+          updateHUD();
+        }
+
+        state.dragMode = null;
+        state.draggedTileId = null;
+      }
+
+      function handleWheel(e) {
+        const hoveredTileElement = e.target.closest ? e.target.closest('.tile-polygon') : null;
+        const hoveredTileId = hoveredTileElement ? parseInt(hoveredTileElement.dataset.id, 10) : null;
+
+        if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
+          e.preventDefault();
+          const step = e.deltaY < 0 ? 30 : -30;
+          state.dragRotationDeg = (state.dragRotationDeg + step) % 360;
+          const worldPos = screenToWorldPos(e.clientX, e.clientY);
+          const targetX = worldPos.x - state.dragOffset.x;
+          const targetY = worldPos.y - state.dragOffset.y;
+          const color = state.dragMode === 'PALETTE' 
+            ? state.dragPaletteColor 
+            : state.tiles.find(t => t.id === state.draggedTileId)?.color;
+
+          updateGhostTile(targetX, targetY, state.dragRotationDeg, color);
+          updateHUD();
+        } else if (hoveredTileId !== null) {
+          e.preventDefault();
+          const tile = state.tiles.find(t => t.id === hoveredTileId);
+          if (tile) {
+            const step = e.deltaY < 0 ? 30 : -30;
+            tile.rotationDeg = (tile.rotationDeg + step % 360 + 360) % 360;
+            state.dragRotationDeg = tile.rotationDeg;
+            renderPlacedTiles();
+            updateHUD();
+          }
+        } else {
+          e.preventDefault();
+          const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+          const mouseX = e.clientX;
+          const mouseY = e.clientY;
+
+          state.view.x = mouseX - (mouseX - state.view.x) * zoomFactor;
+          state.view.y = mouseY - (mouseY - state.view.y) * zoomFactor;
+          state.view.zoom *= zoomFactor;
+          updateViewportTransform();
+        }
+      }
+
+      function handleKeyDown(e) {
+        if ((e.ctrlKey || e.altKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+          e.preventDefault();
+          state.hiddenMode = !state.hiddenMode;
+          if (!state.hiddenMode) {
+            state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
+            document.querySelectorAll('.lock-btn').forEach(btn => btn.classList.remove('active'));
+            if (hiddenLockToggles) hiddenLockToggles.style.display = 'none';
+            renderLockHighlights();
+            if (vertexDebugTooltip) vertexDebugTooltip.style.display = "none";
+            const hudCoordsWrapper = document.getElementById('hud-coords-wrapper');
+            if (hudCoordsWrapper) hudCoordsWrapper.style.display = 'none';
+            showToast("🔒 Hidden Mode Deactivated.");
+          } else {
+            if (hiddenLockToggles) hiddenLockToggles.style.display = 'flex';
+            renderLockHighlights();
+            showToast("🔓 Hidden Mode Activated! Anchor Lock Toggles Exposed.");
+          }
+          return;
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          if (state.dragMode === 'PALETTE' || state.dragMode === 'PLACED') {
+            state.dragRotationDeg = (state.dragRotationDeg + 30) % 360;
+            if (state.lastMouseScreenPos) {
+              const worldPos = screenToWorldPos(state.lastMouseScreenPos.x, state.lastMouseScreenPos.y);
+              const targetX = worldPos.x - state.dragOffset.x;
+              const targetY = worldPos.y - state.dragOffset.y;
+              const color = state.dragMode === 'PALETTE' 
+                ? state.dragPaletteColor 
+                : state.tiles.find(t => t.id === state.draggedTileId)?.color;
+              updateGhostTile(targetX, targetY, state.dragRotationDeg, color);
+            }
+            updateHUD();
+          } else if (state.selectedTileId !== null) {
+            const tile = state.tiles.find(t => t.id === state.selectedTileId);
+            if (tile) {
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
+            }
+          }
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (state.selectedTileId !== null) {
+            state.tiles = state.tiles.filter(t => t.id !== state.selectedTileId);
+            state.selectedTileId = null;
+            renderPlacedTiles();
+            updateHUD();
+            showToast("🗑️ Removed tile from board");
+          }
+        }
+      }
+
+      // Canvas background panning
+      workspaceSvg.addEventListener('mousedown', (e) => {
+        if (e.target === workspaceSvg || e.target === bgRect) {
+          state.selectedTileId = null;
+          renderPlacedTiles();
+          state.dragMode = 'PAN';
+          state.dragStartPos = { x: e.clientX, y: e.clientY };
+        }
+      });
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      workspaceSvg.addEventListener('wheel', handleWheel, { passive: false });
+      window.addEventListener('keydown', handleKeyDown);
+
+      // GAME TOGGLE LISTENER (With In-Progress Board State Stashing)
+      btnGameToggle.addEventListener('click', () => {
+        if (!state.isGameActive) {
+          if (state.savedUserTiles.length > 0) {
+            state.tiles = JSON.parse(JSON.stringify(state.savedUserTiles));
+            state.savedUserTiles = [];
+            state.isGameActive = true;
+            btnGameToggle.textContent = '💡 Show Solution';
+            btnGameToggle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            showToast("🎮 Resumed in-progress game! Restored your placed tiles.");
+          } else {
+            state.tiles = [];
+            state.selectedTileId = null;
+            state.isGameActive = true;
+            btnGameToggle.textContent = '💡 Show Solution';
+            btnGameToggle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            showToast("🎮 Fresh Game Started! Drag tiles into the frame.");
+          }
+        } else {
+          state.savedUserTiles = JSON.parse(JSON.stringify(state.tiles));
+          state.tiles = JSON.parse(JSON.stringify(state.solvedTiles));
+          state.selectedTileId = null;
+          state.isGameActive = false;
+          btnGameToggle.textContent = '🙈 Hide Solution';
+          btnGameToggle.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+          showToast("💡 Solved layout displayed! Click Hide Solution to resume playing.");
+        }
+        renderPlacedTiles();
+      });
+
+      // UI Button Listeners
+      btnBoundary.addEventListener('click', () => {
+        state.boundaryVisible = !state.boundaryVisible;
+        btnBoundary.classList.toggle('active', state.boundaryVisible);
+        btnBoundary.textContent = `🖼️ Frame: ${state.boundaryVisible ? 'ON' : 'OFF'}`;
+        renderBoundaryFrame();
+      });
+
+      btnSnap.addEventListener('click', () => {
+        state.snappingEnabled = !state.snappingEnabled;
+        btnSnap.classList.toggle('active', state.snappingEnabled);
+        btnSnap.textContent = `⚡ Snap: ${state.snappingEnabled ? 'ON' : 'OFF'}`;
+        updateHUD();
+      });
+
+      btnGrid.addEventListener('click', () => {
+        state.gridVisible = !state.gridVisible;
+        btnGrid.classList.toggle('active', state.gridVisible);
+        btnGrid.textContent = `🌐 Grid: ${state.gridVisible ? 'ON' : 'OFF'}`;
+        bgRect.style.display = state.gridVisible ? 'block' : 'none';
+      });
+
+      btnReset.addEventListener('click', centerViewport);
+
+      btnClear.addEventListener('click', () => {
+        if (state.tiles.length === 0 || confirm("Clear all tiles from board?")) {
+          state.tiles = [];
+          state.savedUserTiles = [];
+          state.selectedTileId = null;
+          state.peelingLog = []; // Reset peeling log when board is cleared
+          if (!state.isGameActive) {
+            state.isGameActive = true;
+            btnGameToggle.textContent = '💡 Show Solution';
+            btnGameToggle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          }
+          renderPlacedTiles();
+          showToast("🗑️ Board and Peeling Log cleared!");
+        }
+      });
+
+            const btnRotate = document.getElementById('btn-rotate');
+      if (btnRotate) {
+        btnRotate.addEventListener('click', () => {
+          if (state.selectedTileId !== null) {
+            const tile = state.tiles.find(t => t.id === state.selectedTileId);
+            if (tile) {
+              tile.rotationDeg = (tile.rotationDeg + 30 % 360 + 360) % 360;
+              state.dragRotationDeg = tile.rotationDeg;
+              renderPlacedTiles();
+              updateHUD();
+              const cw = (tile.rotationDeg % 360 + 360) % 360;
+              const ccw = cw === 0 ? 0 : 360 - cw;
+              const disp = ccw > 180 ? ccw - 360 : ccw;
+              showToast(`Rotated tile to ${disp}°`);
+            }
+          } else {
+            showToast("💡 Select a tile on the board or staging area to rotate it!");
+          }
+        });
+      }
+      btnHelp.addEventListener('click', () => helpModal.classList.add('open'));
+      btnCloseModal.addEventListener('click', () => helpModal.classList.remove('open'));
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.remove('open');
+      });
+
+      // Export Session Log Modal Controllers
+      const btnExportLog = document.getElementById('btn-export-log');
+      const exportLogModal = document.getElementById('export-log-modal');
+      const exportLogTextarea = document.getElementById('export-log-textarea');
+      const btnCopyLog = document.getElementById('btn-copy-log');
+      const btnDownloadLog = document.getElementById('btn-download-log');
+      const btnCloseExportModal = document.getElementById('btn-close-export-modal');
+
+      if (btnExportLog && exportLogModal && exportLogTextarea) {
+        btnExportLog.addEventListener('click', () => {
+          exportLogTextarea.value = JSON.stringify(state.peelingLog || [], null, 2);
+          exportLogModal.classList.add('open');
+        });
+      }
+
+      if (btnCloseExportModal && exportLogModal) {
+        btnCloseExportModal.addEventListener('click', () => exportLogModal.classList.remove('open'));
+        exportLogModal.addEventListener('click', (e) => {
+          if (e.target === exportLogModal) exportLogModal.classList.remove('open');
+        });
+      }
+
+      if (btnCopyLog && exportLogTextarea) {
+        btnCopyLog.addEventListener('click', () => {
+          navigator.clipboard.writeText(exportLogTextarea.value);
+          showToast("📋 Peeling Log copied to clipboard!");
+        });
+      }
+
+      if (btnDownloadLog && exportLogTextarea) {
+        btnDownloadLog.addEventListener('click', () => {
+          const blob = new Blob([exportLogTextarea.value], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `peeling_session_log_${Date.now()}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("💾 Peeling Log downloaded!");
+        });
+      }
+
+      // STEP-BY-STEP PLAYBACK CONTROLLER
+      const RECORDED_PEEL_SEQUENCE = [
+        24, 21, 22, 23, 3, 4, 6, 5, 57, 58, 48, 49, 51, 50, 30, 31,
+        1, 2, 9, 8, 15, 69, 7, 55, 56, 46, 47, 54, 53, 60, 59, 63,
+        62, 64, 40, 52, 28, 29, 19, 20, 27, 26, 33, 32, 36, 35, 42,
+        41, 13, 25, 14, 70, 61, 39, 37, 38, 45, 44, 65, 71, 43, 10,
+        34, 12, 11, 18, 17, 66, 16, 68, 67
+      ];
+      let stepIndex = 0;
+
+      const btnStepPeel = document.getElementById('btn-step-peel');
+      const btnResetPeel = document.getElementById('btn-reset-peel');
+
+      if (btnResetPeel) {
+        btnResetPeel.addEventListener('click', () => {
+          stepIndex = 0;
+          state.tiles = [];
+          state.savedUserTiles = [];
+          state.selectedTileId = null;
+          if (!state.isGameActive) {
+            state.isGameActive = true;
+            btnGameToggle.textContent = '💡 Show Solution';
+            btnGameToggle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          }
+          renderPlacedTiles();
+          renderBoundaryFrame();
+          showToast("⏮️ Peeling playback reset to 0!");
+        });
+      }
+
+      if (btnStepPeel) {
+        btnStepPeel.addEventListener('click', () => {
+          if (stepIndex >= RECORDED_PEEL_SEQUENCE.length) {
+            showToast(`🏁 Reached end of recorded sequence (${RECORDED_PEEL_SEQUENCE.length} tiles).`);
+            return;
+          }
+          const nextId = RECORDED_PEEL_SEQUENCE[stepIndex];
+          const solved = (state.solvedTiles || []).find(t => t.id === nextId);
+          if (solved) {
+            if (!state.tiles.some(t => t.id === nextId)) {
+              state.tiles.push(JSON.parse(JSON.stringify(solved)));
+            }
+            stepIndex++;
+            renderPlacedTiles();
+            renderBoundaryFrame();
+            showToast(`⏩ Step ${stepIndex}/${RECORDED_PEEL_SEQUENCE.length}: Placed Tile ${nextId}`);
+          } else {
+            showToast(`⚠️ Could not find tile ${nextId} in solved tiles dataset.`);
+          }
+        });
+      }
+
+      // INITIALIZATION
+      function init() {
+        centerViewport();
+        renderBoundaryFrame();
+        renderPalette();
+
+        state.tiles = JSON.parse(JSON.stringify(state.solvedTiles));
+        state.isGameActive = false;
+        btnGameToggle.textContent = '🎮 Start Game';
+        btnGameToggle.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+
+        renderPlacedTiles();
+        updateHUD();
+      }
+
+      window.addEventListener('load', init);
+    })();
+  </script>
+    <!-- Hidden Mode Vertex Debug Tooltip -->
+  <div id="vertex-debug-tooltip" class="vertex-debug-tooltip"></div>
+  <!-- Custom Right-Click Context Menu -->
+  <div id="context-menu" class="context-menu">
+    <div class="menu-header">🧩 Spectre Monotile</div>
+    <div class="menu-item" id="ctx-rotate">
+      <span>🔄 Rotate 30°</span>
+      <span class="menu-shortcut">R</span>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-label">Change Color:</div>
+    <div id="ctx-color-picker" class="color-swatch-grid"></div>
+    <div class="menu-divider"></div>
+    <div class="menu-item danger" id="ctx-delete">
+      <span>🗑️ Remove Tile</span>
+      <span class="menu-shortcut">Del</span>
+    </div>
+  </div>
+
+</body>
+</html>
