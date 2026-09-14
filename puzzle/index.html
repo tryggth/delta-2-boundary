@@ -598,7 +598,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789354650759</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789407927225</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -741,7 +741,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1789354650759";
+      const APP_VERSION = "v1.0.1789407927225";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4760,8 +4760,8 @@
       function renderPlacedTiles() {
         placedTilesGroup.innerHTML = '';
         
-        // Draw IDs for unplaced tiles as hints
-        if (state.solvedTiles) {
+        // Draw IDs for unplaced tiles as hints (only in Hidden Mode)
+        if (state.hiddenMode && state.solvedTiles) {
           state.solvedTiles.forEach(sTile => {
             const isPlaced = state.tiles.some(t => Math.hypot(t.x - sTile.x, t.y - sTile.y) < 8.0);
             if (!isPlaced) {
@@ -5641,6 +5641,7 @@
             renderLockHighlights();
             showToast("🔓 Hidden Mode Activated! Anchor Lock Toggles Exposed.");
           }
+          renderPlacedTiles();
           return;
         }
         if (e.key === 'r' || e.key === 'R') {
