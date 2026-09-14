@@ -18,6 +18,21 @@ Watch the complete 70-step tile reduction and boundary peeling cascade animation
 
 *(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
 
+## 🧩 Interactive Spectre Metatile Jigsaw Puzzle PWA
+
+A full-featured Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spectre $\Delta_2$ patch and all 9 Tier-1 metatiles is included in this repository under [puzzle/](puzzle/) and hosted live on GitHub Pages:
+
+[![Play Live PWA](https://img.shields.io/badge/Play_Live-Spectre_Puzzle_PWA-6366f1?style=for-the-badge&logo=github&logoColor=white)](https://tryggth.github.io/delta-2-boundary/)
+👉 **[Launch Live Spectre Jigsaw Puzzle App](https://tryggth.github.io/delta-2-boundary/)**
+
+### Key Features:
+- **Interactive Drag & Snap Jigsaw Engine:** Drag, rotate, and snap Spectre monotile pieces onto the board with automatic geometric overlap and boundary validation.
+- **Dynamic Metatile Boundary Selector:** Switch seamlessly between the 70-tile Generation-2 $\Delta_2$ boundary frame and all 9 Tier-1 metatile boundary loops (**Gamma**, **Delta**, **Theta**, **Lambda**, **Xi**, **Pi**, **Sigma**, **Phi**, **Psi**).
+- **Interactive Solution & Play Modes:** Toggle between guided solution view and free-play puzzle mode for every metatile.
+- **Installable PWA Support:** One-click desktop and mobile installation via the native **Install App** button (`beforeinstallprompt`).
+- **Auto-Updating Service Worker:** Uses a Network-First strategy for HTML and background update checking (`controllerchange`) so web updates on GitHub Pages deploy instantly to users.
+- **Offline Capable:** Full offline support with Service Worker asset caching (`sw.js`).
+
 ## 🛠️ Spectre Tiling & Peeling Solver CLI
 
 The project includes an optimized modular Python solver suite located under [spectre_solver/](file:///home/tryggth2009/spectre-delta-boundary/spectre_solver) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](file:///home/tryggth2009/spectre-delta-boundary/spectre_patch_solver.py).

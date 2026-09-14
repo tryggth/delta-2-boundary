@@ -10,3 +10,11 @@ __pycache__/
 # Isolate local GitHub Wiki repository
 /wiki/
 geometry_checks_ref/
+
+# Laser cutting plans & 3D fabrication artifacts
+sheet_*
+*.blend
+*.glb
+*.x3d.txt
+puzzle_render.png
+spectre-monotile-pwa.zip
