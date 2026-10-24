@@ -1,10 +1,19 @@
-# Spectre Delta Boundary Verification
+# Spectre Delta Boundary Verification & Aperiodic Holography
 
-This repository contains the formal mathematical verification of the tiling uniqueness within the boundary and tile reduction cascade for a Generation-2 **Delta** metatile patch of Spectre aperiodic monotiles. The hierarchical metatiles (including the 9 Tier-1 metatiles Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi, and the Generation-2 Delta-2 metatile patch) verified in this project are defined in the landmark paper: **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)). 
+This repository contains the complete, axiom-pure formal mathematical verification in **Lean 4** of **Aperiodic Holography** for the **Spectre** chiral aperiodic monotile ($\text{Tile}(1,1)$), defined in the landmark paper **"A chiral aperiodic monotile"** ([arXiv:2305.17743](https://arxiv.org/abs/2305.17743)) by Smith, Myers, Kaplan, and Goodman-Strauss.
 
-For a detailed mathematical exposition of the proof and pipeline, read the accompanying paper: [paper/paper.pdf](paper/paper.pdf). For exhaustive documentation on the algebraic foundations, cyclotomic ring math, holographic lock registry, and type-theoretic state machines, visit the [Project Wiki](https://github.com/tryggth/delta-2-boundary/wiki).
+For a detailed mathematical exposition of the proof and pipeline, read the accompanying monograph paper: [paper/paper.pdf](paper/paper.pdf). For exhaustive documentation on the algebraic foundations, cyclotomic ring math, 3-anchor-lock registry, simple closed path uniqueness, and zero-phason theorems, visit the [Project Wiki](https://github.com/tryggth/delta-2-boundary/wiki).
 
-By unifying an optimized discrete combinatorial search pipeline written in Python with a rigorous, axiom-pure type-theoretic state machine written in **Lean 4**, this framework independently proves that local boundary turn constraints uniquely force a deterministic tiling cascade.
+By unifying an exact discrete combinatorial solver in Python with a verifiable, axiom-pure type-theoretic state machine in **Lean 4**, this project formally proves four core results with **zero `sorry`s and zero custom axioms**:
+
+1. **3-Anchor-Lock Uniqueness of $\Delta_2$ & All 9 Tier-1 Metatiles (`Theorem.lean`, `Tier1Theorems.lean`):**
+   A deterministic priority algorithm (`L2 > L1 > L4`) using strictly 3 boundary turn locks—**Lock #2** (`300049`, `[60°, 90°, 60°]`), **Lock #1** (`300033`, `[60°, 0°, -60°]`), and **Lock #4** (`400110`, `[90°, -60°, 90°, 60°]`)—uniquely forces all 71 interior tiles of the Generation-2 $\Delta_2$ boundary (`55` Lock #2, `10` Lock #1, `6` Lock #4) as well as all 9 Tier-1 metatiles ($\Gamma, \Delta, \Theta, \Lambda, \Xi, \Pi, \Sigma, \Phi, \Psi$).
+2. **Uniqueness of Interiors for Simple Closed Paths (`SimplePaths.lean`):**
+   Every simple closed path (a closed loop visiting each node/vertex at most once) constructed from edges of the unique interior tiling of $\Delta_2$ has a unique interior sub-patch forced by the 71-step acyclic 3-lock elimination order.
+3. **Interactive Spectre $\Delta_2$ Jigsaw Puzzle PWA (`puzzle/`, `docs/`):**
+   An offline-capable Progressive Web App synchronized with the exact CCW orientations, `[0°, 330°]` angles, 3-anchor-lock (`L2`, `L1`, `L4`) highlights, and 71-step priority peeling sequence of the Lean 4 proof.
+4. **Absence of Phasons in Full Spectre Tilings (`AlgebraicBoundary.lean`):**
+   Combining Combinatorial Gauss-Bonnet ($12$ step-units $= 360^\circ$), the verified 4-batch transfer-matrix curvature bound ($\le 2$ step-units $= 60^\circ$ for lock-free cycles), and 3-anchor-lock pocket forcing proves that no minimal phason and no finite phason flip can exist in any full aperiodic tiling by the $\text{Tile}(1,1)$ Spectre monotile.
 
 ![Spectre Delta-2 Metatile Patch Boundary](./delta.svg)
 
@@ -12,181 +21,148 @@ By unifying an optimized discrete combinatorial search pipeline written in Pytho
 
 ## 🎬 Peeling Cascade Animation
 
-Watch the complete 70-step tile reduction and boundary peeling cascade animation:
+Watch the complete tile reduction and boundary peeling cascade animation:
 
 [![Spectre Delta-2 Peeling Cascade Animation](https://img.shields.io/badge/Watch-Peeling%20Animation-ff007f?style=for-the-badge&logo=play)](./media/peeling_animation.mp4)
 
-*(The full animation is generated using Manim. It fades the interior tiles and highlights the unique lock turn sequence, the peeled tile, and the resulting new boundary loop at each step, showcasing the deterministic reduction cascade verified in Lean.)*
+*(The animation highlights the active boundary lock turn sequence, the uniquely forced tile, and the resulting new boundary loop at each step of the deterministic reduction cascade verified in Lean 4.)*
 
 ## 🧩 Interactive Spectre Metatile Jigsaw Puzzle PWA
 
-A full-featured Progressive Web App (PWA) jigsaw puzzle for the Generation-2 Spectre $\Delta_2$ patch and all 9 Tier-1 metatiles is included in this repository under [puzzle/](puzzle/) and hosted live on GitHub Pages:
+A full-featured Progressive Web App (PWA) jigsaw puzzle for the 71-tile Generation-2 Spectre $\Delta_2$ patch and Tier-1 metatiles is included in this repository under [puzzle/](puzzle/) (mirrored to [docs/](docs/)) and hosted live on GitHub Pages:
 
 [![Play Live PWA](https://img.shields.io/badge/Play_Live-Spectre_Puzzle_PWA-6366f1?style=for-the-badge&logo=github&logoColor=white)](https://tryggth.github.io/delta-2-boundary/)
 👉 **[Launch Live Spectre Jigsaw Puzzle App](https://tryggth.github.io/delta-2-boundary/)**
 
 ### Key Features:
-- **Interactive Drag & Snap Jigsaw Engine:** Drag, rotate, and snap Spectre monotile pieces onto the board with automatic geometric overlap and boundary validation.
-- **Dynamic Metatile Boundary Selector:** Switch seamlessly between the 70-tile Generation-2 $\Delta_2$ boundary frame and all 9 Tier-1 metatile boundary loops (**Gamma**, **Delta**, **Theta**, **Lambda**, **Xi**, **Pi**, **Sigma**, **Phi**, **Psi**).
-- **Interactive Solution & Play Modes:** Toggle between guided solution view and free-play puzzle mode for every metatile.
-- **Installable PWA Support:** One-click desktop and mobile installation via the native **Install App** button (`beforeinstallprompt`).
-- **Auto-Updating Service Worker:** Uses a Network-First strategy for HTML and background update checking (`controllerchange`) so web updates on GitHub Pages deploy instantly to users.
-- **Offline Capable:** Full offline support with Service Worker asset caching (`sw.js`).
+- **Interactive Drag & Snap Jigsaw Engine:** Drag, rotate (`0°–330°` CCW, matching Lean's `ori ∈ {0..11}`), and snap Spectre monotile pieces onto the board with automatic geometric overlap and boundary validation.
+- **Dynamic Metatile Boundary Selector:** Switch between the 71-tile Generation-2 $\Delta_2$ boundary frame, the 9-tile Tier-1 $\Delta$ cluster, and the 8-tile $\Gamma$ metatile.
+- **Formal 3-Anchor-LockPlayback (`⏩ Step Next`):** Step one-by-one through the exact 71-step 3-Anchor-Lock (`L2 > L1 > L4`) sequence proven in `CertificateData.lean`, displaying the forcing lock (`L2`, `L1`, or `L4`) at each step.
+- **Hidden Mode (`Ctrl+Shift+L` / `Alt+Shift+L`):** Exposes tile IDs, live boundary vertex turn tooltips, session log export, and interactive highlight toggles for the 3 Anchor Locks in priority order:
+  - **`L2` (`#300049`, Priority 1):** High Lock `[60°, 90°, 60°]`
+  - **`L1` (`#300033`, Priority 2):** Low Lock `[60°, 0°, -60°]`
+  - **`L4` (`#400110`, Priority 3):** Long Lock `[90°, -60°, 90°, 60°]`
+- **Installable & Offline-Capable PWA:** One-click desktop and mobile installation with an auto-updating Network-First Service Worker (`sw.js`).
+
+---
 
 ## 🛠️ Spectre Tiling & Peeling Solver CLI
 
-The project includes an optimized modular Python solver suite located under [spectre_solver/](file:///home/tryggth2009/spectre-delta-boundary/spectre_solver) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](file:///home/tryggth2009/spectre-delta-boundary/spectre_patch_solver.py).
-
-> [!IMPORTANT]
-> **Generation Limitation:** The solver suite only supports **Generation 1 and Generation 2** metatiles. Generations 3 and above are currently unsupported due to the alternating reflection parities and shifting boundary offsets of asymmetric metatiles. The CLI will validate the generation input and reject values greater than 2.
+The project includes a modular Python solver suite located under [spectre_solver/](spectre_solver/) and exposed via the root-level CLI wrapper [spectre_patch_solver.py](spectre_patch_solver.py).
 
 ### Core Features:
-1. **Dynamic Inflation Generator:** Generates correct hierarchical metatile patches dynamically (Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Phi, Psi) up to Generation 2.
-2. **Inward Backtracking Solver:** Reconstructs the internal tiling configuration from a given boundary loop. Supports fast centroid-distance bounding box optimization (`--optimize`) and guided search prioritization (`--guide`).
-3. **External Peeling Cascade:** Implements a state-machine that progressively peels away boundary tiles. It uses:
-   - *Topological Preservation:* Prioritizes lock sequences whose removal preserves the single-loop connectivity of the remaining patch boundary.
-   - *Compactness & Roundness:* Maximizes shared boundary edges to peel from deep corners/pocket indentations first, naturally keeping the remaining patch compact.
-4. **Lean Certificate Serialization:** Directly outputs compiling Lean 4 data structures for formal kernel verification (`--cert`).
+1. **Dynamic Inflation Generator:** Generates exact hierarchical metatile patches over the cyclotomic lattice $\mathbb{Z}[\zeta_{12}]$ for all 9 supertile types up to Generation 2.
+2. **3-Anchor-Lock (`L2 > L1 > L4`) Priority Peeling Engine:** Executes the deterministic priority algorithm:
+   - While the interior is not complete:
+     - If a Lock #2 (`300049`, `[60°, 90°, 60°]`) sequence exists on the CCW boundary, peel that anchored tile;
+     - Else if a Lock #1 (`300033`, `[60°, 0°, -60°]`) sequence exists on the boundary, peel that anchored tile;
+     - Else if a Lock #4 (`400110`, `[90°, -60°, 90°, 60°]`) sequence exists on the boundary, peel that anchored tile.
+3. **Lean 4 Certificate Serialization:** Directly outputs compiling Lean 4 certificate payloads (`CertificateData.lean` and `Tier1Certificates.lean`) for kernel verification (`--cert`).
 
 ### Quick CLI Reference:
-* **Solve a Gen-2 Delta patch layout:**
+* **Run the 3-Anchor-Lock peeling cascade and regenerate the Lean 4 $\Delta_2$ certificate:**
+  ```bash
+  python3 spectre_patch_solver.py -t Delta -g 2 --cert --lean-out ./SpectreDeltaBoundary/CertificateData.lean
+  ```
+* **Solve a Gen-2 Delta patch layout via inward backtracking:**
   ```bash
   python3 spectre_patch_solver.py -t Delta -g 2 --solve --optimize --guide
-  ```
-* **Run peeling cascade and generate Lean certificate:**
-  ```bash
-  python3 spectre_patch_solver.py -t Delta -g 2 --cert --locks-csv ./spectre_optimized_sieve_N8.csv --lean-out ./SpectreDeltaBoundary/CertificateData.lean
   ```
 
 ---
 
 ## 📐 Project Architecture & Pipeline
 
-The verification framework is engineered as a multi-stage verification pipeline:
-
 ```
-[generate-n8-sieve.py]       --> Generates the foundational aperiodic lock database (CSV)
+[spectre_solver/peeling.py]  --> Simulates the 71-step 3-Anchor-Lock (L2 > L1 > L4) cascade
          │
-[generate-lean-data.py]      --> Simulates the 70-step tile cascade & serializes 4D coordinates
+[Locks.lean]                 --> Proves 14-edge alignment uniqueness for Locks #2, #1, #4
          │
-[Locks.lean]                 --> Proves the 5 core computational lock lemmas (Axiom-Free)
+[Certificate.lean]           --> Validates L2 > L1 > L4 priority & edge-ledger annihilation
          │
-[Certificate.lean]           --> Executes the edge-ledger symmetric difference state machine
+[Theorem.lean / Tier1Theorems.lean] --> Kernel verification via 'decide' (= some [])
          │
-[Theorem.lean]               --> Triggers the Lean Kernel VM via 'decide' for the final QED
+[SimplePaths.lean]           --> Proves unique interiors for all simple closed tile paths
+         │
+[AlgebraicBoundary.lean]     --> Proves the Global Zero-Phason Theorem (no phason flips)
 ```
-
-*   **The Explorer (Python):** Handles the intensive geometric search loops, tracking explicit vertex coordinates across the 4D cyclotomic integer ring $\mathbb{Z}[\zeta_{12}]$ and caching the aperiodic lock sieve.
-*   **The Judge (Lean 4):** Re-calculates and type-checks every edge transition, local neighborhood collision, and turning constraint completely independently of the Python generation logic, discharging the final proof within the core kernel.
 
 ---
 
 ## 🗂️ File Directory Structure
 
 ```text
-├── generate-n8-sieve.py          # Stateful Frontier Optimization engine for database generation
-├── generate-lean-data.py         # Cascading geometric simulation & Lean serialization script
+├── spectre_patch_solver.py       # Root CLI entry point for tiling & certificate generation
+├── spectre_solver/               # Modular Python cyclotomic geometry & 3-lock peeling package
+├── puzzle/ & docs/               # Interactive Spectre Δ₂ Jigsaw Puzzle PWA (GitHub Pages)
+├── paper/paper.tex               # LaTeX monograph source documenting the formal proof
+├── wiki/                         # Technical Wiki documentation pages
 ├── lakefile.lean                 # Lean 4 project configuration file
-├── lean-toolchain                # Specifies the target Lean 4 compiler version
+├── lean-toolchain                # Target Lean 4 compiler version (v4.31.0)
 └── SpectreDeltaBoundary
-    ├── Bedrock.lean              # 4D lattice algebra and rigid transformation matrix structures
-    ├── Paths.lean                # Discrete direction step grammar and boundary lookback functions
-    ├── Monotile.lean             # Rigidly aligned Spectre monotile vertex extraction engines
-    ├── Locks.lean                # 5 standalone computational holographic lock lemmas
-    ├── Certificate.lean          # Topological edge-annihilation state machine validator
-    ├── CertificateData.lean      # Auto-generated 70-step explicit coordinate data payload
-    ├── Theorem.lean              # Main tiling uniqueness theorem and kernel entry point
-    ├── Tier1Certificates.lean    # Auto-generated certificates for Tier 1 metatiles
-    ├── Tier1Theorems.lean        # Formal tiling uniqueness verification for Tier 1 metatiles
+    ├── Bedrock.lean              # 4D cyclotomic lattice Z[ζ₁₂] & exact 30° rotation algebra
+    ├── Paths.lean                # Discrete direction step grammar & exact Z[√3] segment sensors
+    ├── Monotile.lean             # Canonical CCW Spectre monotile turns, vertices & edge alignment
+    ├── Locks.lean                # 3-Anchor-Lock (300049, 300033, 400110) 14-edge uniqueness engine
+    ├── Certificate.lean          # Priority lock selector (L2 > L1 > L4) & edge-ledger state machine
+    ├── CertificateData.lean      # 71-step 3-Anchor-Lock certificate payload for Δ₂
+    ├── Theorem.lean              # Main Δ₂ tiling uniqueness & 3-lock invariant theorems
+    ├── SimplePaths.lean          # Uniqueness of interiors for all simple closed paths in Δ₂
+    ├── Tier1Certificates.lean    # 3-Anchor-Lock certificates for all 9 Tier-1 metatiles (Γ..Ψ)
+    ├── Tier1Theorems.lean        # Formal uniqueness theorems for all 9 Tier-1 metatiles
+    ├── AlgebraicBoundary.lean    # Gauss-Bonnet, Transfer-Matrix bound & Global Zero-Phason Theorem
     └── Geometry
-        └── TransferMatrixBatches.lean # Geometric transfer matrix computation batches
+        ├── Topology.lean             # Combinatorial Gauss-Bonnet & interior angle invariants
+        └── TransferMatrixBatches.lean # 4-batch punctured-state DFS curvature verification (≤ 60°)
 ```
 
 ---
 
 ## 🚀 Step-by-Step Replication Guide
 
-Follow these instructions to clone the repository, recreate the localized database dependencies, and execute the formal kernel compilation.
-
 ### 1. Environment Setup
-
-Ensure you have Python 3.x and the Lean 4 deployment tool (`elan`) fully configured on your local machine.
-
+Ensure you have Python 3.x and the Lean 4 toolchain manager (`elan`) installed:
 ```bash
-# Verify Lean 4 interactive environment toolchain
 lake --version
 python3 --version
 ```
 
 ### 2. Clone the Repository
-
-Clone this workspace to your local system and navigate to the project directory:
-
 ```bash
 git clone https://github.com/tryggth/delta-2-boundary.git
 cd delta-2-boundary
 ```
 
-### 3. Generate the Foundational Lock Database
-
-Execute the optimization sieve script to construct the lookup database containing verified turn sequences and localized spatial profiles. This tool populates the CSV file that drives the cascade simulation.
-
+### 3. Run the Python Solver Integration Tests
 ```bash
-python3 generate-n8-sieve.py
+python3 test_solver_integration.py
 ```
 
-### 4. Run the Cascading Simulation & Serialize Coordinates
-
-Execute the modular tiling solver and peeling certificate generator. This engine runs the 84-step tile removal sequence using connected/topological preservation and compactness heuristics, tracks the shifting boundaries, and exports the explicit coordinate arrays into a compile-ready Lean 4 anonymous constructor payload module.
-
-```bash
-# Run the peeling cascade solver to regenerate the Lean 4 certificate
-python3 spectre_patch_solver.py -t Delta -g 2 --cert
-
-# (Optional) Verify the complete 71-tile patch is internally tileable via backtracking
-python3 spectre_patch_solver.py -t Delta -g 2 --solve --optimize --guide
-```
-
-### 5. Generate Premium Metatile Vector SVGs
-
-You can regenerate the entire high-resolution premium vector SVG suite (9 metatiles x 2 generations) into the `assets/` directory:
-
-```bash
-python3 build_assets.py
-```
-
-### 6. Execute the Formal Lean 4 Kernel Verification
-
-Trigger the Lean 4 build engine. This step compiles the whole library and invokes the `decide` tactic on the top-level uniqueness theorem, forcing Lean's virtual machine to compute the entire reduction chain and verify its total logical purity.
-
+### 4. Execute the Formal Lean 4 Kernel Verification
+Compile the entire formal library and verify all theorems across Phases 1–4:
 ```bash
 lake build
 ```
-
-A successful compilation output with zero errors or warnings confirms that the Lean kernel has formally evaluated and certified the complete boundary reduction proof.
+A clean compilation (`Build completed successfully (777 jobs)`) with zero warnings and zero errors confirms that the Lean 4 kernel has verified the entire proof tree.
 
 ---
 
 ## 🛡️ Axiom Purity & Audit
 
-The proof stack is engineered to avoid any unproven shortcuts, translation assumptions, or custom extensions. You can verify the foundational logical dependencies of the terminal proof by inspecting the environment axioms directly:
+Every module in `SpectreDeltaBoundary` is engineered with **zero `sorry`s (`sorryAx`) and zero custom axioms**. You can inspect the logical foundations of the main theorems directly in Lean 4:
 
 ```lean
 #print axioms verify_delta2_uniqueness
+#print axioms delta2_lock_elimination_sequence_valid
+#print axioms simple_closed_path_unique_interior
+#print axioms no_phason_in_full_tiling
+#print axioms spectre_hierarchy_zero_phasons
 ```
 
-The mathematical reduction depends solely on standard core foundations:
-*   `propext` (Propositional Extensionality) — The standard identity axiom of Lean core logic.
-*   `sorryAx` — **Completely Absent** from the entire dependency tree, guaranteeing a closed, verified proof.
+All computational reflection theorems depend solely on `propext`, and the classical contradiction theorems in `AlgebraicBoundary.lean` depend solely on Lean's standard core logical axioms (`[propext, Classical.choice, Quot.sound]`).
 
 ---
 
 ## 🚀 Continuous Integration (CI/CD)
 
-This repository features an automated GitHub Actions pipeline (`.github/workflows/compile-paper.yml`) that validates the entire verification pipeline on every push or pull request touching Lean source files or the LaTeX document source.
-
-The pipeline ensures:
-1.  **Lean Proof Purity:** Automatically fetches dependencies, compiles the proof library via `lake build`, and checks for axiom purity.
-2.  **LaTeX Syntax Linting:** Runs a `chktex` validation pass on the expository paper source (`paper/paper.tex`) to maintain clean markup.
-3.  **Automated PDF Compilation:** Compiles the paper to a PDF using `latexmk` and uploads the compiled paper as a workflow artifact, keeping the expository narrative rigidly synchronized with the verified codebase.
-
+This repository includes an automated GitHub Actions workflow (`.github/workflows/compile-paper.yml`) that validates the Lean 4 proof library (`lake build`), lints `paper/paper.tex` via `chktex`, and compiles `paper/paper.pdf` via `latexmk` on every push.

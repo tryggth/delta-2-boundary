@@ -61,11 +61,11 @@ theorem verify_tier1_psi_uniqueness :
   executeCertificate initialMetatileBoundary_Psi certificate_Psi = some [] := by
   decide
 
-/-- Helper predicate verifying that every step in a certificate uses strictly one of the 3 anchor locks. -/
+/-- Helper predicate verifying that every step in a certificate uses one of the 3 anchor locks. -/
 def usesOnlyThreeAnchorLocks (cert : PeelingCertificate) : Bool :=
   cert.steps.all (fun s => s.lockId == 300049 || s.lockId == 300033 || s.lockId == 400110)
 
-/-- Theorem confirming all 9 Tier-1 supertile certificates use exclusively the 3 anchor locks (`L2`, `L1`, `L4`). -/
+/-- Theorem confirming all 9 Tier-1 supertile certificates use only the 3 anchor locks. -/
 theorem tier1_three_anchor_lock_invariants :
     usesOnlyThreeAnchorLocks certificate_Gamma = true ∧
     usesOnlyThreeAnchorLocks certificate_Delta = true ∧

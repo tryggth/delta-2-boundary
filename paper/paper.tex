@@ -4,112 +4,114 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 
-\title{Holographic Verification of Boundary-Forced Tiling Uniqueness for the Spectre Metatile in Lean 4}
+\title{Holographic Verification of Boundary-Forced Tiling Uniqueness and Absence of Phasons for the Spectre Monotile in Lean 4}
 \author{James F. Walters}
 \date{\today}
 
 \begin{document}
+\sloppy
 \maketitle
 
 \begin{abstract}
-This paper documents a formal verification framework that verifies boundary-forced tiling uniqueness for the Spectre chiral aperiodic monotile. Rather than attempting an unconstrained global search over an exponential packing space, we employ a verified certificate-checking mechanism via computational reflection. We demonstrate that a 70-step inductive peeling cascade natively executed via computational reflection completely reduces a 71-tile hierarchical patch cluster boundary with absolute axiom purity in the Lean 4 proof assistant.
+This paper documents an axiom-pure formal verification framework in the Lean 4 proof assistant establishing boundary-forced tiling uniqueness and the absence of phasons for the Spectre chiral aperiodic monotile ($\mathrm{Tile}(1,1)$). Rather than attempting an unconstrained global search over an exponential packing space, we employ a verified 3-Anchor-Lock priority state machine (\texttt{L2 > L1 > L4}) executed via computational reflection. We prove four core results with zero \texttt{sorry}s and zero custom axioms: (1) a deterministic 3-anchor-lock priority cascade completely and uniquely reduces the 71-tile Generation-2 $\Delta_2$ metatile boundary as well as all nine Tier-1 metatile boundaries ($\Gamma, \Delta, \Theta, \Lambda, \Xi, \Pi, \Sigma, \Phi, \Psi$); (2) every simple closed path constructed from edges of the unique interior tiling of $\Delta_2$ encloses a unique interior sub-patch; (3) the 71-step acyclic elimination order is mirrored directly in an interactive Progressive Web App (PWA); and (4) combining Combinatorial Gauss-Bonnet with an exhaustive 4-batch transfer-matrix curvature bound rules out minimal phasons and proves that full Spectre tilings admit no phason flips.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
-% Section template: Framing the boundary value problem for aperiodic patches.
-Establishing boundary-forced tiling uniqueness is a historically difficult problem for aperiodic monotiles. Standard unconstrained backtracking search algorithms suffer from exponential state space explosion and geometric frustration. For the Spectre chiral monotile~\cite{smith2023chiral}, these constraints are especially strict because the tile tiles the plane without requiring mirror reflections. Fusing physical grid embeddings with a topological state machine inside the Lean 4 proof assistant~\cite{moura2021lean4} allows us to prove that boundary turn constraints uniquely force a deterministic tiling cascade.
+Establishing boundary-forced tiling uniqueness and ruling out local phason flips are foundational problems in the theory of aperiodic order. Standard unconstrained backtracking search algorithms suffer from exponential state-space explosion and geometric frustration. For the Spectre chiral aperiodic monotile~\cite{smith2023chiral}, discovered by Smith, Myers, Kaplan, and Goodman-Strauss in 2023, the tile admits only chiral placements without mirror reflections. By fusing an exact cyclotomic lattice embedding with a deterministic 3-Anchor-Lock boundary reduction machine inside the Lean 4 proof assistant~\cite{moura2021lean4}, we prove that boundary turn constraints uniquely determine the interior tiling and prevent any local phason rearrangements.
 
 \section{Algebraic Foundations: Exact Cyclotomic Lattice Embedding}
 \label{sec:algebra}
-To guarantee absolute safety against floating-point drift, we embed the tile geometry into the 4D cyclotomic integer ring $\mathbb{Z}[\zeta_{12}]$, where $\zeta_{12} = e^{i\pi/6}$. Every lattice point $p \in \mathbb{Z}[\zeta_{12}]$ is represented as a 4-tuple $(a, b, c, d) \in \mathbb{Z}^4$ relative to the integral basis. A counterclockwise rotation by $30^\circ$ is represented exactly by the linear operator:
+To guarantee absolute safety against floating-point drift, we embed the tile geometry into the 4D cyclotomic integer ring $\mathbb{Z}[\zeta_{12}]$, where $\zeta_{12} = e^{i\pi/6}$. Every lattice point $p \in \mathbb{Z}[\zeta_{12}]$ is represented as a 4-tuple $(a, b, c, d) \in \mathbb{Z}^4$ relative to the integral basis $\{1, \zeta_{12}, \zeta_{12}^2, \zeta_{12}^3\}$. A counterclockwise rotation by $30^\circ$ is represented exactly by the linear operator:
 \begin{equation}
 R(a, b, c, d) = (-d, a, b + d, c)
 \end{equation}
-We formally prove in Lean 4 that applying this operator exactly 12 times yields the identity mapping, providing a rigorous discrete representation of Euclidean rotations without numerical rounding.
+We formally prove in Lean 4 (\texttt{rot12\_identity} in \texttt{Bedrock.lean}) that applying this operator 12 times yields the identity mapping, providing an exact discrete representation of Euclidean rotations without numerical rounding.
 
-\section{Combinatorial Geometry and The Unified Spatial Predicate}
+\section{Combinatorial Geometry and the Unified Spatial Predicate}
 \label{sec:sensors}
-Physical intersections and boundary touches are unified using the exact coordinate predicate \texttt{discreteSegmentsIntersectOrTouch}.
-Given that the 12-fold cyclotomic root is $\zeta_{12} = \frac{\sqrt{3}}{2} + \frac{1}{2}i$,
-a 4D lattice point $a + b\zeta_{12} + c\zeta_{12}^2 + d\zeta_{12}^3$ expands to a
-continuous coordinate. To preserve absolute algebraic exactness, our \texttt{Point2D}
-structure clears the common denominator of 2. Under this mapping, the coordinate
-components are mapped exactly to integer pairs representing the coefficients of
-$(1, \sqrt{3})$:
+Physical intersections and boundary touches are unified using the exact coordinate predicate \texttt{discreteSegmentsIntersectOrTouch} in \texttt{Paths.lean}.
+Given $\zeta_{12} = \frac{\sqrt{3}}{2} + \frac{1}{2}i$, a 4D lattice point $a + b\zeta_{12} + c\zeta_{12}^2 + d\zeta_{12}^3$ projects onto $\mathbb{Z}[\sqrt{3}] \times \mathbb{Z}[\sqrt{3}]$. Clearing the common denominator of 2 maps each coordinate to exact integer coefficients of $(1, \sqrt{3})$:
 \begin{align}
 X &= (2a + c) + b\sqrt{3} \\
 Y &= (b + 2d) + c\sqrt{3}
 \end{align}
-Because the 2D cross-product determinant is a homogeneous function of degree 2,
-clearing the scaling factor of 2 in each component scales the determinant by a
-factor of 4. Thus, it preserves the exact sign of the orientation predicate
-without resorting to floating-point approximations.
+Because the 2D cross-product determinant is homogeneous of degree 2, clearing the factor of 2 scales the determinant by 4 and preserves the exact orientation sign over $\mathbb{Z}[\sqrt{3}]$.
 
-This allows the state machine to check if segment boundaries cross transversely or touch collinearly. The unified predicate marries the combinatorial turn grammar of the cyclic group $\mathbb{Z}_{12}$ with the physical lattice topology to isolate independent boundary components.
+The canonical counterclockwise (CCW) perimeter of the Spectre monotile is encoded in \texttt{Monotile.lean} by the 14 inter-edge turns:
+\begin{multline}
+\texttt{spectreTurns} = [-60^\circ, 90^\circ, 60^\circ, -90^\circ, 60^\circ, 90^\circ, 60^\circ, \\
+-90^\circ, 60^\circ, 0^\circ, 60^\circ, 90^\circ, -60^\circ, 90^\circ]
+\end{multline}
 
-\section{The Inductive Peeling Machine and Dynamic Lock Verification}
+\section{The 3-Anchor-Lock Priority Machine (\texttt{L2 > L1 > L4})}
 \label{sec:cascade}
-We frame the token-cascade verification as a formal combinatorial boundary reduction
-cascade utilizing reductive structural induction. The boundary consists of closed loops
-of directed edges. The hierarchical metatiles and patches verified in this work (specifically the 9 Tier-1 metatiles and the Generation-2 Delta-2 metatile patch) are defined by Smith et al. in their discovery of the chiral aperiodic monotile~\cite{smith2023chiral}. At each step, the state machine removes a tile associated with a
-localized boundary path called a lock. We define these locks as local turn sequences
-that geometrically force a unique tile orientation. Analogous to Gonthier's landmark
-formal proof of the Four Color Theorem~\cite{gonthier2008four}, our approach relies on
-computational reflection to handle heavy combinatoric case-analysis directly within the
-logic of the helper kernel.
+We formulate boundary-forced tiling uniqueness as a deterministic state machine (\texttt{Certificate.lean}) over closed loops of directed lattice edges. Analogous to Gonthier's formal proof of the Four Color Theorem~\cite{gonthier2008four}, our proof uses computational reflection inside the Lean 4 kernel.
 
-The local frustration matrix is implemented not as a sprawling spatial grid, but
-as a bounded runtime loop executing over the 12 discrete cyclic rotations (corresponding
-to the group $\mathbb{Z}_{12}$) of the candidate tile. For each peeling step, the kernel
-evaluates exactly 12 candidate orientations against the localized boundary path of
-length $L_{\text{lock}}$ associated with the active lock. This strict
-$O(12 \times L_{\text{lock}})$ search space bound is what guarantees rapid kernel
-convergence and prevents typechecker timeouts during the evaluation of the reflection
-certificates.
+Remarkably, the entire 71-tile Generation-2 $\Delta_2$ patch and all nine Tier-1 metatiles ($\Gamma, \Delta, \Theta, \Lambda, \Xi, \Pi, \Sigma, \Phi, \Psi$) are completely reduced using \textbf{strictly three anchor locks} evaluated in priority order (\texttt{selectPriorityLock}):
+\begin{enumerate}
+\item \textbf{Priority 1 --- Lock \#2 (\texttt{300049}, High Lock $[60^\circ, 90^\circ, 60^\circ]$):} CCW step signature $[2, 3, 2]$, spanning 4 consecutive tile edges (indices $4, 5, 6, 7$). Used in 55 of the 71 steps of $\Delta_2$.
+\item \textbf{Priority 2 --- Lock \#1 (\texttt{300033}, Low Lock $[60^\circ, 0^\circ, -60^\circ]$):} CCW step signature $[2, 0, -2]$, spanning 3 consecutive tile edges (indices $8, 9, 10$). Used in 10 of the 71 steps of $\Delta_2$.
+\item \textbf{Priority 3 --- Lock \#4 (\texttt{400110}, Long Lock $[90^\circ, -60^\circ, 90^\circ, 60^\circ]$):} CCW step signature $[3, -2, 3, 2]$, spanning 5 consecutive tile edges (indices $13, 0, 1, 2, 3$). Used in 6 of the 71 steps of $\Delta_2$.
+\end{enumerate}
 
-The machine verifies that the active boundary segment forces a unique tile choice by
-dynamically evaluating the local frustration matrix for alternative orientations at
-runtime.
+At each step, the validator converts the active boundary loop into a cyclically padded edge-turn stream (\texttt{loopToPaddedEdgeTurns}) in a single linear pass, selects the highest-priority lock present on the boundary, and executes \texttt{matchingAlignedTiles} across all 14 possible monotile edge alignments ($\texttt{tile\_edge\_idx} \in \{0, \dots, 13\}$) to verify that \textbf{uniquely one} placed tile covers the locked boundary segments. The state machine then annihilates shared boundary edges and exposes the reversed interior tile edges via \texttt{computeNextBoundaryEdges}, returning \texttt{Option PeelingState} so that any invalid transition immediately halts with \texttt{none}.
+
+\section{Uniqueness of Interiors for Simple Closed Paths}
+\label{sec:simplepaths}
+In \texttt{SimplePaths.lean}, we extend uniqueness from the outer $\Delta_2$ perimeter to all simple closed paths (closed loops of tile edges visiting each vertex at most once) inside $\Delta_2$:
+\begin{enumerate}
+\item \textbf{Simple Loop Invariant (\texttt{delta2\_all\_cascade\_loops\_simple}):} The initial $\Delta_2$ perimeter and all 70 intermediate boundary loops in the peeling cascade are verified to be simple closed paths (\texttt{hasNoDuplicateNodes}).
+\item \textbf{Acyclic 3-Lock Elimination Order (\texttt{delta2\_lock\_elimination\_sequence\_valid}):} Ordering the 71 interior tiles as $t_1, \dots, t_{71}$ by the peeling cascade, at every step $k \in \{1, \dots, 71\}$ the anchor-lock edges $L_k \subset \partial t_k$ uniquely force $[t_k]$ across all 14 monotile alignments, and no later tile $t_j$ ($j > k$) contains any edge of $L_k$ or its reversal.
+\item \textbf{Universal Sub-Patch Uniqueness (\texttt{simple\_closed\_path\_unique\_interior}, \texttt{subpatch\_unique\_of\_same\_boundary}):} For any non-empty sub-patch $P \subseteq \{t_1, \dots, t_{71}\}$ bounded by a simple closed path $C = \partial P$, let $t_k$ be the first tile of the elimination sequence in $P$. Because no tile in $P \subseteq \{t_k, \dots, t_{71}\}$ contains the reversal of any edge in $L_k$, all lock edges in $L_k$ remain uncancelled on $C$, uniquely forcing $t_k \in P$ and inductively determining $P$.
+\end{enumerate}
+
+\section{Algebraic Boundary Framework and Absence of Phasons}
+\label{sec:phasons}
+In \texttt{AlgebraicBoundary.lean}, we generalize the uniqueness proof to establish that full aperiodic tilings by the $\mathrm{Tile}(1,1)$ Spectre monotile have \textbf{no phasons} (no local finite rearrangements of tiles sharing an identical boundary):
+\begin{enumerate}
+\item \textbf{Combinatorial Gauss-Bonnet (\texttt{gauss\_bonnet\_patch}):} Every simply-connected finite Spectre patch $P$ has total discrete boundary curvature equal to $12$ step-units ($360^\circ$).
+\item \textbf{Transfer-Matrix Curvature Bound (\texttt{lock\_free\_curvature\_bound}):} An exhaustive depth-first search over all punctured 3-gram states (\texttt{verify\_batch1}--\texttt{verify\_batch4} in \texttt{TransferMatrixBatches.lean}) proves that any boundary cycle devoid of the 3 anchor locks has total curvature $\le 2$ step-units ($60^\circ$).
+\item \textbf{No Minimal Phasons (\texttt{no\_minimal\_phason}):} Suppose $P_1, P_2$ form a minimal phason ($\partial P_1 = \partial P_2$ with $P_1 \cap P_2 = \emptyset$). By Gauss-Bonnet, their common boundary $w$ has curvature $12$. If $w$ contains a 3-anchor lock, \texttt{lock\_forces\_shared\_tile} forces a shared tile into $P_1 \cap P_2$, a contradiction; if $w$ is lock-free, its curvature is $\le 2$, contradicting $12 \le 2$.
+\item \textbf{Global Zero-Phason Theorem (\texttt{no\_phason\_in\_full\_tiling}):} Any hypothetical finite phason flip between two full Spectre tilings $\mathcal{T}_1, \mathcal{T}_2$ reduces, upon stripping shared tiles, to a minimal phason between $\mathcal{T}_1 \setminus \mathcal{T}_2$ and $\mathcal{T}_2 \setminus \mathcal{T}_1$, which is impossible by \texttt{no\_minimal\_phason}.
+\end{enumerate}
 
 \section{Kernel Verification Results and Axiom Audit}
 \label{sec:results}
-The complete 70-step tile reduction cascade is executed natively within the Lean 4 kernel via
-the \texttt{decide} tactic. The verification of the top-level uniqueness theorem
-\texttt{verify\_delta2\_uniqueness} executes successfully under the following performance profile:
+All 777 build targets in \texttt{SpectreDeltaBoundary} compile cleanly in the Lean 4 kernel (\texttt{v4.31.0}) with zero warnings, zero errors, zero \texttt{sorryAx}, and zero custom axioms:
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\begin{tabular}{lr}
+\small
+\begin{tabular}{ll}
 \hline
-\textbf{Metric} & \textbf{Value} \\
+\textbf{Verified Theorem} & \textbf{Kernel Axiom Footprint} \\
 \hline
-Elapsed Verification Time & 0.85 seconds \\
-Heap Allocations & 12.4 MB \\
-Kernel Heartbeats & 200,000 \\
-Axiom Count & 1 (\texttt{propext}) \\
-Unproven Axioms (\texttt{sorryAx}) & 0 \\
+\texttt{anchor\_lock\_2\_unique}, \texttt{1\_unique}, \texttt{4\_unique} & \texttt{[propext]} \\
+\texttt{verify\_delta2\_uniqueness} (71 steps) & \texttt{[propext]} \\
+\texttt{verify\_tier1\_gamma\_uniqueness}--\texttt{psi} & \texttt{[propext]} \\
+\texttt{delta2\_all\_cascade\_loops\_simple} & \texttt{[propext]} \\
+\texttt{delta2\_lock\_elimination\_sequence\_valid} & \texttt{[propext]} \\
+\texttt{simple\_closed\_path\_unique\_interior} & \texttt{[propext]} \\
+\texttt{no\_minimal\_phason}, \texttt{no\_phason\_in\_full\_tiling} & \texttt{[propext, Classical.choice, Quot.sound]} \\
+\texttt{spectre\_hierarchy\_zero\_phasons} & \texttt{[propext, Classical.choice, Quot.sound]} \\
 \hline
 \end{tabular}
-\caption{Lean 4 kernel execution and performance profile for the 70-step verification cascade.}
+\caption{Lean 4 kernel axiom audit across all four phases of the Aperiodic Holography project.}
 \label{tab:perf}
 \end{table}
 
-An axiom audit confirms that the proof depends exclusively on the standard core axiom
-\texttt{propext} (Propositional Extensionality) and is completely free of any unproven
-assumptions or shortcuts (\texttt{sorryAx}).
-
-The primary verification statement is formalized as follows:
+The top-level $\Delta_2$ certificate verification theorem in \texttt{Theorem.lean} is stated as:
 \begin{verbatim}
 theorem verify_delta2_uniqueness :
   executeCertificate initialMetatileBoundary
-    pythonPeelingCertificate = [] := by
+    pythonPeelingCertificate = some [] := by
   decide
 \end{verbatim}
 
 \section{Discussion}
 \label{sec:discussion}
-The verified combinatorial boundary reduction cascade demonstrates how holographic locks can drive lookahead optimization to solve exponentially frustrated packing problems. This architecture generalizes to other non-substitutional, highly frustrated aperiodic tilings, providing a framework for computer-assisted proofs of matching rules and tiling decidability in discrete geometry.
+The verified 3-Anchor-Lock boundary reduction cascade and zero-phason theorem demonstrate how localized holographic boundary locks eliminate exponential packing frustration in chiral aperiodic tilings. This architecture provides a general paradigm for computer-assisted proofs of holographic boundary rigidity and zero-phason elasticity in discrete geometry.
 
 \bibliographystyle{plain}
 \bibliography{refs}
