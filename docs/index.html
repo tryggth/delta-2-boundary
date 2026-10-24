@@ -598,7 +598,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789507575554</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789508000000</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -741,7 +741,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1789507575554";
+      const APP_VERSION = "v1.0.1789508000000";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -4867,8 +4867,7 @@
       function updateHUD() {
         const cwDeg = (state.dragRotationDeg % 360 + 360) % 360;
         const ccwDeg = cwDeg === 0 ? 0 : 360 - cwDeg;
-        const displayDeg = ccwDeg > 180 ? ccwDeg - 360 : ccwDeg;
-        hudAngle.textContent = `${displayDeg}°`;
+        hudAngle.textContent = `${ccwDeg}°`;
         if (hudSnapStatus) {
           hudSnapStatus.textContent = state.snappingEnabled ? 'Enabled' : 'Disabled';
           hudSnapStatus.style.color = state.snappingEnabled ? '#10b981' : '#ef4444';
@@ -4959,7 +4958,8 @@
         for (let i = 0; i < n; i++) {
           const p1 = cleanPoly[i];
           const p2 = cleanPoly[(i + 1) % n];
-          area += (p1.x * p2.y - p2.x * p1.y);
+          // Negate y to compute signed area in standard mathematical (+y up) coordinates
+          area += (p1.x * (-p2.y) - p2.x * (-p1.y));
         }
         if (area < 0) {
           return cleanPoly.slice().reverse();
@@ -5060,7 +5060,7 @@
         }
 
         // Fallback: Frame edge cancellation
-        if (!state.tiles || state.tiles.length === 0) return currentBoundaryVertices;
+        if (!state.tiles || state.tiles.length === 0) return ensureCCW(currentBoundaryVertices);
 
         const subEdges = [];
         const nB = currentBoundaryVertices.length;
@@ -5092,7 +5092,7 @@
         }
 
         const activeSub = subEdges.filter((_, idx) => !matched.has(idx));
-        if (activeSub.length < 3) return currentBoundaryVertices;
+        if (activeSub.length < 3) return ensureCCW(currentBoundaryVertices);
 
         const chained = [activeSub[0].p1];
         let currEdge = activeSub[0];
@@ -5123,7 +5123,7 @@
           }
         }
 
-        if (chained.length < 3) return currentBoundaryVertices;
+        if (chained.length < 3) return ensureCCW(currentBoundaryVertices);
 
         return ensureCCW(chained);
       }
@@ -5222,13 +5222,13 @@
 
       // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
       const LOCK_DEFINITIONS = [
-        { id: 1, name: "Low Lock", seq: [-60, 0, 60], color: "#f59e0b" },
+        { id: 1, name: "Low Lock", seq: [60, 0, -60], color: "#f59e0b" },
         { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
-        { id: 3, name: "Long Lock 1", seq: [0, -60, 90, 60], color: "#f43f5e" },
-        { id: 4, name: "Long Lock 2", seq: [60, 90, -60, 90], color: "#10b981" },
-        { id: 5, name: "Long Lock 3", seq: [90, -60, 90, 60], color: "#a855f7" },
-        { id: 6, name: "Delta Lock 1", seq: [-90, 60, -90, 60, 90, 60], color: "#3b82f6" },
-        { id: 7, name: "Delta Lock 2", seq: [-90, 60, -90, 60, 90, -60, 90], color: "#eab308" }
+        { id: 3, name: "Long Lock 1", seq: [60, 90, -60, 0], color: "#f43f5e" },
+        { id: 4, name: "Long Lock 2", seq: [90, -60, 90, 60], color: "#10b981" },
+        { id: 5, name: "Long Lock 3", seq: [60, 90, -60, 90], color: "#a855f7" },
+        { id: 6, name: "Delta Lock 1", seq: [60, 90, 60, -90, 60, -90], color: "#3b82f6" },
+        { id: 7, name: "Delta Lock 2", seq: [90, -60, 90, 60, -90, 60, -90], color: "#eab308" }
       ];
 
       state.hiddenMode = false;
@@ -5249,9 +5249,9 @@
           const pNext = poly[(i + 1) % n];
 
           const v1x = pCurr.x - pPrev.x;
-          const v1y = pCurr.y - pPrev.y;
+          const v1y = -(pCurr.y - pPrev.y);
           const v2x = pNext.x - pCurr.x;
-          const v2y = pNext.y - pCurr.y;
+          const v2y = -(pNext.y - pCurr.y);
 
           const a1 = Math.atan2(v1y, v1x);
           const a2 = Math.atan2(v2y, v2x);
@@ -5341,8 +5341,7 @@
           renderLockHighlights();
           const lockInfo = LOCK_DEFINITIONS.find(l => l.id === lockId);
           if (lockInfo) {
-            const displaySeq = [...lockInfo.seq].reverse();
-            showToast(`${state.activeLocks[lockId] ? '👁️ Highlighted' : '🙈 Hidden'} ${lockInfo.name} [${displaySeq.join('°, ')}°]`);
+            showToast(`${state.activeLocks[lockId] ? '👁️ Highlighted' : '🙈 Hidden'} ${lockInfo.name} [${lockInfo.seq.join('°, ')}°]`);
           }
 
           // Record Lock Toggle Event inline in Peeling Log
@@ -5559,8 +5558,7 @@
               }
 
               const cw = (state.dragRotationDeg % 360 + 360) % 360;
-              const ccw = cw === 0 ? 0 : 360 - cw;
-              const rotDegCCW = ccw > 180 ? ccw - 360 : ccw;
+              const rotDegCCW = cw === 0 ? 0 : 360 - cw;
 
               const droppedTileId = state.draggedTileId || (state.nextTileId - 1);
               state.peelingLog.push({
@@ -5781,8 +5779,7 @@
               updateHUD();
               const cw = (tile.rotationDeg % 360 + 360) % 360;
               const ccw = cw === 0 ? 0 : 360 - cw;
-              const disp = ccw > 180 ? ccw - 360 : ccw;
-              showToast(`Rotated tile to ${disp}°`);
+              showToast(`Rotated tile to ${ccw}° (ori ${ccw / 30})`);
             }
           } else {
             showToast("💡 Select a tile on the board or staging area to rotate it!");
@@ -5839,13 +5836,26 @@
         });
       }
 
-      // STEP-BY-STEP PLAYBACK CONTROLLER
+      // STEP-BY-STEP PLAYBACK CONTROLLER (Formal 3-Anchor-Lock L2 > L1 > L4 Priority Sequence)
       const RECORDED_PEEL_SEQUENCE = [
-        24, 21, 22, 23, 3, 4, 6, 5, 57, 58, 48, 49, 51, 50, 30, 31,
-        1, 2, 9, 8, 15, 69, 7, 55, 56, 46, 47, 54, 53, 60, 59, 63,
-        62, 64, 40, 52, 28, 29, 19, 20, 27, 26, 33, 32, 36, 35, 42,
-        41, 13, 25, 14, 70, 61, 39, 37, 38, 45, 44, 65, 71, 43, 10,
-        34, 12, 11, 18, 17, 66, 16, 68, 67
+        { id: 57, lock: "L2" }, { id: 3, lock: "L2" }, { id: 4, lock: "L2" }, { id: 6, lock: "L2" },
+        { id: 5, lock: "L2" }, { id: 58, lock: "L2" }, { id: 48, lock: "L2" }, { id: 49, lock: "L2" },
+        { id: 51, lock: "L2" }, { id: 50, lock: "L2" }, { id: 30, lock: "L2" }, { id: 31, lock: "L2" },
+        { id: 21, lock: "L2" }, { id: 22, lock: "L2" }, { id: 24, lock: "L2" }, { id: 23, lock: "L2" },
+        { id: 1, lock: "L1" }, { id: 2, lock: "L2" }, { id: 9, lock: "L2" }, { id: 8, lock: "L2" },
+        { id: 15, lock: "L2" }, { id: 69, lock: "L1" }, { id: 7, lock: "L2" }, { id: 13, lock: "L1" },
+        { id: 14, lock: "L2" }, { id: 25, lock: "L2" }, { id: 55, lock: "L1" }, { id: 56, lock: "L2" },
+        { id: 46, lock: "L1" }, { id: 47, lock: "L2" }, { id: 54, lock: "L2" }, { id: 53, lock: "L2" },
+        { id: 60, lock: "L2" }, { id: 59, lock: "L2" }, { id: 63, lock: "L2" }, { id: 62, lock: "L2" },
+        { id: 64, lock: "L2" }, { id: 40, lock: "L1" }, { id: 52, lock: "L2" }, { id: 28, lock: "L1" },
+        { id: 29, lock: "L2" }, { id: 19, lock: "L1" }, { id: 20, lock: "L2" }, { id: 27, lock: "L2" },
+        { id: 26, lock: "L2" }, { id: 33, lock: "L2" }, { id: 32, lock: "L2" }, { id: 36, lock: "L2" },
+        { id: 35, lock: "L2" }, { id: 42, lock: "L2" }, { id: 41, lock: "L2" }, { id: 34, lock: "L4" },
+        { id: 12, lock: "L2" }, { id: 10, lock: "L1" }, { id: 11, lock: "L2" }, { id: 18, lock: "L2" },
+        { id: 17, lock: "L2" }, { id: 43, lock: "L2" }, { id: 70, lock: "L4" }, { id: 61, lock: "L4" },
+        { id: 39, lock: "L2" }, { id: 37, lock: "L1" }, { id: 38, lock: "L2" }, { id: 45, lock: "L2" },
+        { id: 44, lock: "L2" }, { id: 65, lock: "L2" }, { id: 66, lock: "L2" }, { id: 71, lock: "L4" },
+        { id: 67, lock: "L4" }, { id: 16, lock: "L4" }, { id: 68, lock: "L2" }
       ];
       let stepIndex = 0;
 
@@ -5876,7 +5886,9 @@
             showToast(`🏁 Reached end of recorded sequence (${RECORDED_PEEL_SEQUENCE.length} tiles).`);
             return;
           }
-          const nextId = RECORDED_PEEL_SEQUENCE[stepIndex];
+          const stepEntry = RECORDED_PEEL_SEQUENCE[stepIndex];
+          const nextId = typeof stepEntry === 'object' ? stepEntry.id : stepEntry;
+          const lockLabel = typeof stepEntry === 'object' && stepEntry.lock ? ` (${stepEntry.lock})` : '';
           const solved = (state.solvedTiles || []).find(t => t.id === nextId);
           if (solved) {
             if (!state.tiles.some(t => t.id === nextId)) {
@@ -5886,7 +5898,7 @@
             renderPlacedTiles();
             renderBoundaryFrame();
             updateHUD();
-            showToast(`⏩ Step ${stepIndex}/${RECORDED_PEEL_SEQUENCE.length}: Placed Tile ${nextId}`);
+            showToast(`⏩ Step ${stepIndex}/${RECORDED_PEEL_SEQUENCE.length}: Placed Tile ${nextId}${lockLabel}`);
           } else {
             showToast(`⚠️ Could not find tile ${nextId} in solved tiles dataset.`);
           }
