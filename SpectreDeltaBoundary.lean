@@ -11,6 +11,7 @@ import SpectreDeltaBoundary.Locks
 import SpectreDeltaBoundary.Certificate
 import SpectreDeltaBoundary.CertificateData
 import SpectreDeltaBoundary.Theorem
+import SpectreDeltaBoundary.SimplePaths
 import SpectreDeltaBoundary.Tier1Certificates
 import SpectreDeltaBoundary.Tier1Theorems
 import SpectreDeltaBoundary.Geometry.TransferMatrixBatches
