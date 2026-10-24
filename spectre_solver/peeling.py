@@ -230,6 +230,54 @@ def load_locks_database(csv_path: str) -> dict:
 
 from spectre_solver.locks_data import LOCKS
 
+THREE_ANCHOR_LOCK_SPEC = [
+    (300049, (2, 3, 2), 4),
+    (300033, (2, 0, -2), 8),
+    (400110, (3, -2, 3, 2), 13),
+]
+
+def _align_to_path_edge(p_v1, p_v2, p_dir, tile_edge_idx):
+    ref_0 = PlacedTile(LatticePoint(0, 0, 0, 0), 0)
+    ref_dir = ref_0.edges[tile_edge_idx][2]
+    ori = (p_dir + 12 - ref_dir) % 12
+    ref_ori = PlacedTile(LatticePoint(0, 0, 0, 0), ori)
+    ref_v1 = LatticePoint(*ref_ori.edges[tile_edge_idx][0])
+    origin = p_v1.sub(ref_v1)
+    return PlacedTile(origin, ori)
+
+def _extract_path_turns(verts):
+    if len(verts) < 3:
+        return []
+    dirs = [vec_to_dir(verts[i + 1].sub(verts[i])) for i in range(len(verts) - 1)]
+    turns = []
+    for i in range(len(dirs) - 1):
+        diff = (dirs[i + 1] - dirs[i]) % 12
+        if diff > 6:
+            diff -= 12
+        turns.append(diff)
+    return turns
+
+def _find_first_lock_on_loop_lean(lid, seq, edge_idx, loop_verts):
+    if len(loop_verts) < 4:
+        return None
+    padded = loop_verts + loop_verts[:5]
+    total_edges = len(seq) + 1
+    req_len = total_edges + 1
+    for i in range(len(padded)):
+        prefix_verts = padded[i : i + req_len]
+        if len(prefix_verts) == req_len and tuple(_extract_path_turns(prefix_verts)) == seq:
+            v0, v1 = prefix_verts[0], prefix_verts[1]
+            d0 = vec_to_dir(v1.sub(v0))
+            return _align_to_path_edge(v0, v1, d0, edge_idx)
+    return None
+
+def select_priority_lock_lean(loop_verts):
+    for lid, seq, edge_idx in THREE_ANCHOR_LOCK_SPEC:
+        t = _find_first_lock_on_loop_lean(lid, seq, edge_idx, loop_verts)
+        if t is not None:
+            return (lid, t)
+    return None
+
 def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_type: str, generation: int, lean_output_path: str, report_path: str = None):
     if locks_csv_path:
         print(f"Loading locks database from {locks_csv_path}...")
@@ -271,20 +319,16 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
     aligned_loop_edges_rot = aligned_loop_edges[k:] + aligned_loop_edges[:k]
     assert aligned_loop_edges_rot[0][0].to_tuple() == (0, 0, 0, 0)
 
-    print("Running connected locked cascade peeling solver with roundness and topological heuristics...")
+    print("Running 3-Anchor-Lock (L2 > L1 > L4) priority peeling solver...")
     current_patch = list(aligned_patch)
+    curr_edges = list(aligned_loop_edges_rot)
+    curr_verts = [e[0] for e in curr_edges]
     peel_steps = []
     report_data = []
 
     step_num = 0
-    while len(current_patch) > 1:
-        b_poly, b_edges = extract_boundary_loop(current_patch)
-        n_loop = len(b_edges)
-        turns_curr = get_turns(b_edges)
-        extended_turns = turns_curr + turns_curr
-
-        # Collect boundary analytics for the report
-        boundary_info = analyze_boundary(b_edges, all_locks)
+    while len(current_patch) > 0:
+        boundary_info = analyze_boundary(curr_edges, all_locks)
         cycles = count_boundary_cycles(current_patch)
         report_entry = {
             "step": step_num,
@@ -294,109 +338,76 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
             "lock_used": None,
             "tile_peeled": None,
         }
-        
-        # 1. Gather all candidate locks
-        candidates = []
-        for length in range(3, 9):
-            for i in range(n_loop):
-                subpath = tuple(extended_turns[i : i + length])
-                if subpath in all_locks:
-                    candidates.append((i, length, subpath))
-                    
-        if not candidates:
-            raise ValueError(f"No locks found at step {step_num}!")
-            
-        # Helper to find tile covering edge
-        def find_tile_covering_edge(patch_list, s, d):
-            s_tup, d_tup = s.to_tuple(), d.to_tuple()
-            for t in patch_list:
-                for t_src, t_dst, _ in t.edges:
-                    if (t_src == s_tup and t_dst == d_tup) or (t_dst == s_tup and t_src == d_tup):
-                        return t
-            return None
 
-        # 2. Score each candidate to pick the mathematically best one
-        scored_candidates = []
-        for start_idx, length, subpath in candidates:
-            src, dst = b_edges[start_idx]
-            tile = find_tile_covering_edge(current_patch, src, dst)
-            if tile and is_boundary_contiguous(tile, b_edges):
-                # Analyze topological split
-                current_patch_temp = [t for t in current_patch if t != tile]
-                remaining_loops = extract_boundary_loops_multi(current_patch_temp)
-                is_split = len(remaining_loops) > 1
-                
-                # Analyze roundness (shared boundary edge count)
-                tile_edges_set = set()
-                for t_src, t_dst, _ in tile.edges:
-                    tile_edges_set.add((t_src, t_dst))
-                    tile_edges_set.add((t_dst, t_src))
-                shared_boundary_count = 0
-                for edge in b_edges:
-                    if (edge[0].to_tuple(), edge[1].to_tuple()) in tile_edges_set:
-                        shared_boundary_count += 1
-                
-                # Priority 1: No split (0 < 1)
-                # Priority 2: Higher shared count (maximize -shared_boundary_count)
-                # Priority 3: Shorter length
-                score = (1 if is_split else 0, -shared_boundary_count, length)
-                scored_candidates.append((start_idx, length, subpath, tile, score, len(remaining_loops)))
+        res = select_priority_lock_lean(curr_verts)
+        if res is None:
+            raise ValueError(f"No 3-anchor lock found at step {step_num}!")
+        nat_lock_id, forced_tile = res
+        matching = [
+            t for t in current_patch
+            if t.origin.to_tuple() == forced_tile.origin.to_tuple()
+            and t.orientation == forced_tile.orientation
+        ]
+        if len(matching) != 1:
+            raise ValueError(f"Forced tile at step {step_num} did not match remaining patch!")
+        target = matching[0]
 
-        if not scored_candidates:
-            # Fallback to absolute first lock in list if no contiguous matches exist
-            start_idx, length, subpath = candidates[0]
-            src, dst = b_edges[start_idx]
-            tile = find_tile_covering_edge(current_patch, src, dst)
-            score = (1, 0, length)
-            scored_candidates.append((start_idx, length, subpath, tile, score, 2))
-
-        # Sort candidates: lowest score is best
-        scored_candidates.sort(key=lambda x: x[4])
-        chosen_idx, chosen_len, chosen_subpath, target, best_score, loops_count = scored_candidates[0]
-
-        # Log splits if occurred
-        if best_score[0] == 1:
-            print(f"  Warning: Topological change/split detected at step {step_num}! (Remaining loops: {loops_count})", flush=True)
-
-        path_id_str = all_locks[chosen_subpath]
-        nat_lock_id = parse_lock_id_to_nat(path_id_str)
-        
-        # Track tile data before removal
         a, b, c, d_coord = target.origin.to_tuple()
         ori = target.orientation
 
-        # Update report entry with lock and tile info
         report_entry["lock_used"] = nat_lock_id
         report_entry["tile_peeled"] = {"origin": (a, b, c, d_coord), "ori": ori}
         report_data.append(report_entry)
-        
+
         current_patch.remove(target)
-        next_b_poly, next_b_edges = extract_boundary_loop(current_patch)
-        
+        if not current_patch:
+            peel_steps.append({
+                "lock_id": nat_lock_id,
+                "a": a, "b": b, "c": c, "d": d_coord,
+                "ori": ori,
+                "next_state_serialized": "[]"
+            })
+            curr_edges = []
+            curr_verts = []
+            step_num += 1
+            break
+
+        loops = extract_boundary_loops_multi(current_patch)
+        assert len(loops) == 1
+        base_edges = loops[0]
+        base_verts = [e[0] for e in base_edges]
+        found_rot_edges = None
+        for r in range(len(base_verts)):
+            rot_verts = base_verts[r:] + base_verts[:r]
+            rot_edges = base_edges[r:] + base_edges[:r]
+            nxt_res = select_priority_lock_lean(rot_verts)
+            if nxt_res is not None:
+                _, nxt_tile = nxt_res
+                nxt_match = [
+                    t for t in current_patch
+                    if t.origin.to_tuple() == nxt_tile.origin.to_tuple()
+                    and t.orientation == nxt_tile.orientation
+                ]
+                if len(nxt_match) == 1:
+                    rem2 = [t for t in current_patch if t != nxt_match[0]]
+                    if len(extract_boundary_loops_multi(rem2)) <= 1:
+                        found_rot_edges = rot_edges
+                        curr_verts = rot_verts
+                        curr_edges = rot_edges
+                        break
+        if found_rot_edges is None:
+            raise ValueError(f"Could not find valid cyclic rotation after step {step_num}!")
+
         peel_steps.append({
             "lock_id": nat_lock_id,
             "a": a, "b": b, "c": c, "d": d_coord,
             "ori": ori,
-            "next_state_serialized": serialize_lean_state(next_b_edges)
+            "next_state_serialized": serialize_lean_state(found_rot_edges)
         })
-        
+
         step_num += 1
 
-    last_tile = current_patch[0]
-    print(f"Cascade complete. Final remaining tile is at {last_tile.origin.to_tuple()}")
-
-    # Record final single-tile boundary for the report
-    final_b_poly, final_b_edges = extract_boundary_loop(current_patch)
-    final_info = analyze_boundary(final_b_edges, all_locks)
-    final_cycles = count_boundary_cycles(current_patch)
-    report_data.append({
-        "step": step_num,
-        "tiles_remaining": 1,
-        "boundary_info": final_info,
-        "cycles": final_cycles,
-        "lock_used": None,
-        "tile_peeled": None,
-    })
+    print(f"Cascade complete. Peeled all {step_num} tiles to empty boundary [].")
 
     # Generate boundary report
     generate_boundary_report(report_data, supertile_type, generation, report_path)
@@ -417,18 +428,21 @@ def run_peeling_cascade(patch: list[PlacedTile], locks_csv_path: str, supertile_
         "import SpectreDeltaBoundary.Certificate",
         "",
         "/-!",
-        f"# Peeling cascade certificate data for {supertile_type}_{generation}",
+        f"# Peeling cascade certificate data for {supertile_type}_{generation} (3-Anchor-Lock Priority Proof)",
         "-/",
         "",
         "set_option linter.style.longLine false",
         "set_option linter.style.header false",
+        "set_option linter.style.setOption false",
+        "set_option maxRecDepth 200000",
+        "set_option maxHeartbeats 2000000",
         "",
         "open LatticePoint",
         "",
         f"/-- Initial boundary of the aligned {supertile_type}_{generation} patch -/",
         f"def initialMetatileBoundary : PeelingState := {serialize_lean_state(aligned_loop_edges_rot)}",
         "",
-        f"/-- Peeling certificate payload for {supertile_type}_{generation} -/",
+        f"/-- {len(peel_steps)}-step 3-Anchor-Lock (L2 > L1 > L4) peeling certificate payload for {supertile_type}_{generation} -/",
         "def pythonPeelingCertificate : PeelingCertificate := ⟨[",
     ]
 

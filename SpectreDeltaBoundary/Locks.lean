@@ -14,6 +14,9 @@ Provides computable predicates to exhaustively prove that a given boundary turn
 sequence physically forces a unique tile orientation via local geometric exclusion.
 -/
 
+set_option linter.style.longLine false
+set_option linter.style.emptyLine false
+
 
 /-- Helper to extract segment pairs from a list of vertices. -/
 def verticesToSegments (verts : List LatticePoint) : List (LatticePoint × LatticePoint) :=
@@ -77,6 +80,84 @@ def extractPathTurns (path : List LatticePoint) : List Int :=
     let diff := ((d2 - d1) % 12 + 12) % 12
     let turn := if diff > 6 then diff - 12 else diff
     turn :: extractPathTurns (v2 :: v3 :: vs)
+
+/-- Checks if a placed tile's precomputed edges contain all directed segments in `reqEdges`. -/
+def tileEdgesCoverSegments (tEdges : List DirectedEdge) :
+    List (LatticePoint × LatticePoint) → Bool
+  | [] => true
+  | (e1, e2) :: rest =>
+    if tEdges.any (fun te => te.v1 == e1 && te.v2 == e2) then
+      tileEdgesCoverSegments tEdges rest
+    else
+      false
+
+/-- Checks if a placed tile contains all directed segments in `reqEdges` along its perimeter. -/
+def tileCoversSegments (tile : PlacedTile) (reqEdges : List (LatticePoint × LatticePoint)) : Bool :=
+  tileEdgesCoverSegments (tileEdges tile) reqEdges
+
+/-- Exhaustively evaluates all 14 possible edge alignments (`tile_edge_idx` 0..13) of a Spectre
+    monotile against the starting directed edge `(v0, v1)` and filters for tiles covering `reqEdges`. -/
+def matchingAlignedTiles (v0 v1 : LatticePoint)
+    (reqEdges : List (LatticePoint × LatticePoint)) : List PlacedTile :=
+  let d0 := vec_to_dir (v1.sub v0)
+  let rec loop (idx : Nat) (acc : List PlacedTile) : List PlacedTile :=
+    match idx with
+    | 0 => acc
+    | i + 1 =>
+      let cand := alignToPathEdge v0 v1 d0 i
+      if tileCoversSegments cand reqEdges then
+        loop i (cand :: acc)
+      else
+        loop i acc
+  loop 14 []
+
+/-- Specification for the 3 Anchor Locks used in the priority algorithm (`L2 > L1 > L4`):
+    - `300049` (Lock #2, UI `[60°, 90°, 60°]`): CCW turns `[2, 3, 2]`, 4 tile edges covered.
+    - `300033` (Lock #1, UI `[-60°, 0°, 60°]`): CCW turns `[2, 0, -2]`, 3 tile edges covered.
+    - `400110` (Lock #4, UI `[60°, 90°, -60°, 90°]`): CCW turns `[3, -2, 3, 2]`, 5 tile edges covered.
+    Any other lock ID is rejected (`none`). -/
+def getAnchorLockSpec (lockId : Nat) : Option (List Int × Nat) :=
+  match lockId with
+  | 300049 => some ([2, 3, 2], 4)
+  | 300033 => some ([2, 0, -2], 3)
+  | 400110 => some ([3, -2, 3, 2], 5)
+  | _      => none
+
+/-- Computes the signed 30°-step turn (-3, -2, 0, 2, 3) between two consecutive edge directions. -/
+def turnBetweenDirs (d1 d2 : Nat) : Int :=
+  let diff := (((d2 : Int) - (d1 : Int)) % 12 + 12) % 12
+  if diff > 6 then diff - 12 else diff
+
+/-- Given one of the 3 anchor lock IDs (`300049`, `300033`, `400110`) and a boundary vertex
+    subpath starting at the lock, verifies that:
+    1. The subpath starts with the exact required turn sequence for `lockId`.
+    2. Exhaustive alignment across all 14 tile edges (`0..13`) yields **uniquely one** (`length == 1`)
+       valid `PlacedTile` covering the required boundary edges.
+    Returns `some uniqueTile` if and only if both conditions hold. -/
+def findUniqueForcedTileAtSubpath (lockId : Nat) (subpath : List LatticePoint) : Option PlacedTile :=
+  match getAnchorLockSpec lockId with
+  | none => none
+  | some (expectedTurns, numTileEdges) =>
+    let totalEdges := expectedTurns.length + 1
+    let prefixVerts := subpath.take (totalEdges + 1)
+    if prefixVerts.length == totalEdges + 1 && extractPathTurns prefixVerts == expectedTurns then
+      match prefixVerts with
+      | v0 :: v1 :: _ =>
+        let reqEdges := verticesToSegments (subpath.take (numTileEdges + 1))
+        match matchingAlignedTiles v0 v1 reqEdges with
+        | [uniqueTile] => some uniqueTile
+        | _ => none
+      | _ => none
+    else
+      none
+
+/-- Computable predicate verifying that `subpath` triggers anchor lock `lockId` and
+    uniquely forces `expectedTile` (both origin and orientation) across all 14 edge alignments. -/
+def proveAnchorLockUniqueness (lockId : Nat) (subpath : List LatticePoint)
+    (expectedTile : PlacedTile) : Bool :=
+  findUniqueForcedTileAtSubpath lockId subpath == some expectedTile
+
+#print axioms proveAnchorLockUniqueness
 
 /-- Standalone Lemma for Lock N8_3_00049 (Turn Sequence: [2, 3, 2]).
     Proves that encountering this sequence forces a unique tile orientation. -/

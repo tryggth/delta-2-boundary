@@ -16,48 +16,48 @@ import SpectreDeltaBoundary.Tier1Certificates
 set_option linter.style.header false
 set_option maxRecDepth 200000
 
-/-- Decidability proof validating that Tier-1 Gamma uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Gamma uniquely reduces to `some []` -/
 theorem verify_tier1_gamma_uniqueness :
-  executeCertificate initialMetatileBoundary_Gamma certificate_Gamma = [] := by
+  executeCertificate initialMetatileBoundary_Gamma certificate_Gamma = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Delta uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Delta uniquely reduces to `some []` -/
 theorem verify_tier1_delta_uniqueness :
-  executeCertificate initialMetatileBoundary_Delta certificate_Delta = [] := by
+  executeCertificate initialMetatileBoundary_Delta certificate_Delta = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Theta uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Theta uniquely reduces to `some []` -/
 theorem verify_tier1_theta_uniqueness :
-  executeCertificate initialMetatileBoundary_Theta certificate_Theta = [] := by
+  executeCertificate initialMetatileBoundary_Theta certificate_Theta = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Lambda uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Lambda uniquely reduces to `some []` -/
 theorem verify_tier1_lambda_uniqueness :
-  executeCertificate initialMetatileBoundary_Lambda certificate_Lambda = [] := by
+  executeCertificate initialMetatileBoundary_Lambda certificate_Lambda = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Xi uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Xi uniquely reduces to `some []` -/
 theorem verify_tier1_xi_uniqueness :
-  executeCertificate initialMetatileBoundary_Xi certificate_Xi = [] := by
+  executeCertificate initialMetatileBoundary_Xi certificate_Xi = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Pi uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Pi uniquely reduces to `some []` -/
 theorem verify_tier1_pi_uniqueness :
-  executeCertificate initialMetatileBoundary_Pi certificate_Pi = [] := by
+  executeCertificate initialMetatileBoundary_Pi certificate_Pi = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Sigma uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Sigma uniquely reduces to `some []` -/
 theorem verify_tier1_sigma_uniqueness :
-  executeCertificate initialMetatileBoundary_Sigma certificate_Sigma = [] := by
+  executeCertificate initialMetatileBoundary_Sigma certificate_Sigma = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Phi uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Phi uniquely reduces to `some []` -/
 theorem verify_tier1_phi_uniqueness :
-  executeCertificate initialMetatileBoundary_Phi certificate_Phi = [] := by
+  executeCertificate initialMetatileBoundary_Phi certificate_Phi = some [] := by
   decide
 
-/-- Decidability proof validating that Tier-1 Psi uniquely reduces to 1 tile -/
+/-- Decidability proof validating that Tier-1 Psi uniquely reduces to `some []` -/
 theorem verify_tier1_psi_uniqueness :
-  executeCertificate initialMetatileBoundary_Psi certificate_Psi = [] := by
+  executeCertificate initialMetatileBoundary_Psi certificate_Psi = some [] := by
   decide
 

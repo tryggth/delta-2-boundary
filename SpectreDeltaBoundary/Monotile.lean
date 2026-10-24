@@ -14,12 +14,11 @@ set_option linter.style.header false
 
 /-- The rigid, immutable 14-turn cyclic path sequence
     that defines the Spectre monotile.
-    Maps perfectly to SPECTRE_TURNS =
-    [90, -60, 90, 60, 0, 60, -90, 60,
-     90, 60, -90, 60, 90, -60] -/
+    Maps to the 14 inter-edge turns of SPECTRE_TURNS:
+    [-60, 90, 60, -90, 60, 90, 60, -90, 60, 0, 60, 90, -60, 90] -/
 def spectreTurns : List AllowedStep :=
-  [.p90, .m60, .p90, .p60, .z0, .p60, .m90, .p60,
-   .p90, .p60, .m90, .p60, .p90, .m60]
+  [.m60, .p90, .p60, .m90, .p60, .p90, .p60, .m90,
+   .p60, .z0, .p60, .p90, .m60, .p90]
 
 /-- Represents a single Spectre monotile rigidly
     positioned on the Diophantine grid. -/
