@@ -112,9 +112,9 @@ def matchingAlignedTiles (v0 v1 : LatticePoint)
   loop 14 []
 
 /-- Specification for the 3 Anchor Locks used in the priority algorithm (`L2 > L1 > L4`):
-    - `300049` (Lock #2, UI `[60°, 90°, 60°]`): CCW turns `[2, 3, 2]`, 4 tile edges covered.
-    - `300033` (Lock #1, UI `[-60°, 0°, 60°]`): CCW turns `[2, 0, -2]`, 3 tile edges covered.
-    - `400110` (Lock #4, UI `[60°, 90°, -60°, 90°]`): CCW turns `[3, -2, 3, 2]`, 5 tile edges covered.
+    - `300049` (Priority 1 — Lock #2, High Lock `[60°, 90°, 60°]`): CCW turns `[2, 3, 2]`, 4 tile edges covered.
+    - `300033` (Priority 2 — Lock #1, Low Lock `[60°, 0°, -60°]`): CCW turns `[2, 0, -2]`, 3 tile edges covered.
+    - `400110` (Priority 3 — Lock #4, Long Lock `[90°, -60°, 90°, 60°]`): CCW turns `[3, -2, 3, 2]`, 5 tile edges covered.
     Any other lock ID is rejected (`none`). -/
 def getAnchorLockSpec (lockId : Nat) : Option (List Int × Nat) :=
   match lockId with
@@ -159,39 +159,41 @@ def proveAnchorLockUniqueness (lockId : Nat) (subpath : List LatticePoint)
 
 #print axioms proveAnchorLockUniqueness
 
-/-- Standalone Lemma for Lock N8_3_00049 (Turn Sequence: [2, 3, 2]).
-    Proves that encountering this sequence forces a unique tile orientation. -/
-def lemma_lock_3_00049 (path : List LatticePoint)
-    (_h_turns : extractPathTurns path = [2, 3, 2]) : Bool :=
-  proveLockUniqueness path 2
+/-- Canonical reference subpath for Priority 1 Lock #2 (`300049`, `[60°, 90°, 60°]`, edges 4..7 of ref tile 0). -/
+def canonicalSubpathLock2 : List LatticePoint :=
+  ((tileVertices (PlacedTile.mk LatticePoint.zero 0)).drop 4).take 5
 
-/-- Standalone Lemma for Lock N8_3_00033 (Turn Sequence: [0, 2, 0]).
-    Proves that encountering this sequence forces a unique tile orientation. -/
-def lemma_lock_3_00033 (path : List LatticePoint)
-    (_h_turns : extractPathTurns path = [0, 2, 0]) : Bool :=
-  proveLockUniqueness path 0
+/-- Canonical reference subpath for Priority 2 Lock #1 (`300033`, `[60°, 0°, -60°]`, edges 8..10 of ref tile 0
+    followed by an adjacent boundary edge turning `-60°` in direction 4). -/
+def canonicalSubpathLock1 : List LatticePoint :=
+  let v8_to_11 := ((tileVertices (PlacedTile.mk LatticePoint.zero 0)).drop 8).take 4
+  let v11 := v8_to_11.getLastD LatticePoint.zero
+  v8_to_11 ++ [v11.add (dir_to_vec 4)]
 
-/-- Standalone Lemma for Lock N8_4_00074 (Turn Sequence: [0, -2, 3, 2]).
-    Proves that encountering this sequence forces a unique tile orientation. -/
-def lemma_lock_4_00074 (path : List LatticePoint)
-    (_h_turns : extractPathTurns path = [0, -2, 3, 2]) : Bool :=
-  proveLockUniqueness path 3
+/-- Canonical reference subpath for Priority 3 Lock #4 (`400110`, `[90°, -60°, 90°, 60°]`, edges 13, 0..3 of ref tile 0). -/
+def canonicalSubpathLock4 : List LatticePoint :=
+  let v := tileVertices (PlacedTile.mk LatticePoint.zero 0)
+  (v.drop 13).take 1 ++ v.take 5
 
-#print axioms lemma_lock_3_00049
-#print axioms lemma_lock_4_00074
+/-- Verified uniqueness theorem for Anchor Lock #2 (`300049`, `[2, 3, 2]`):
+    exhaustively testing all 14 tile edge alignments forces uniquely `PlacedTile.mk 0 0`. -/
+theorem anchor_lock_2_unique :
+    proveAnchorLockUniqueness 300049 canonicalSubpathLock2 (PlacedTile.mk LatticePoint.zero 0) = true := by
+  decide
 
-/-- Standalone Lemma for Lock N8_4_00110 (Turn Sequence: [2, 3, -2, 3]).
-    Proves that encountering this sequence forces a unique tile orientation. -/
-def lemma_lock_4_00110 (path : List LatticePoint)
-    (_h_turns : extractPathTurns path = [2, 3, -2, 3]) : Bool :=
-  proveLockUniqueness path 0
+/-- Verified uniqueness theorem for Anchor Lock #1 (`300033`, `[2, 0, -2]`):
+    exhaustively testing all 14 tile edge alignments forces uniquely `PlacedTile.mk 0 0`. -/
+theorem anchor_lock_1_unique :
+    proveAnchorLockUniqueness 300033 canonicalSubpathLock1 (PlacedTile.mk LatticePoint.zero 0) = true := by
+  decide
 
-/-- Standalone Lemma for Lock N8_4_00129 (Turn Sequence: [3, -2, 3, 2]).
-    Proves that encountering this sequence forces a unique tile orientation. -/
-def lemma_lock_4_00129 (path : List LatticePoint)
-    (_h_turns : extractPathTurns path = [3, -2, 3, 2]) : Bool :=
-  proveLockUniqueness path 8
+/-- Verified uniqueness theorem for Anchor Lock #4 (`400110`, `[3, -2, 3, 2]`):
+    exhaustively testing all 14 tile edge alignments forces uniquely `PlacedTile.mk 0 0`. -/
+theorem anchor_lock_4_unique :
+    proveAnchorLockUniqueness 400110 canonicalSubpathLock4 (PlacedTile.mk LatticePoint.zero 0) = true := by
+  decide
 
-#print axioms lemma_lock_4_00110
-#print axioms lemma_lock_4_00129
+#print axioms anchor_lock_2_unique
+#print axioms anchor_lock_1_unique
+#print axioms anchor_lock_4_unique
 

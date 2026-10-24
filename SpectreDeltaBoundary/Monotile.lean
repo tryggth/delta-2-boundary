@@ -89,6 +89,10 @@ def tileEdges (tile : PlacedTile) :
   loop (tileVertices tile)
     (tileDirections tile.orientation) []
 
+/-- Precomputed 14 directed edges of the canonical reference Spectre tile at `(0, 0)`. -/
+def refTile0Edges : List DirectedEdge :=
+  tileEdges (PlacedTile.mk LatticePoint.zero 0)
+
 /-- Positionally aligns a tile such that its specified
     edge index rests flush against a target path edge.
     Verbatim translation of Python's
@@ -96,13 +100,11 @@ def tileEdges (tile : PlacedTile) :
 def alignToPathEdge
     (p_v1 _p_v2 : LatticePoint) (p_dir : Nat)
     (tile_edge_idx : Nat) : PlacedTile :=
-  let ref_tile_0 := PlacedTile.mk LatticePoint.zero 0
-  let ref_edges_0 := tileEdges ref_tile_0
   let dummy_edge :=
     DirectedEdge.mk LatticePoint.zero
       LatticePoint.zero 0
   let ref_edge :=
-    ref_edges_0.getD tile_edge_idx dummy_edge
+    refTile0Edges.getD tile_edge_idx dummy_edge
   let ref_dir := ref_edge.dir
   let orientation := (p_dir + 12 - ref_dir) % 12
   let oriented_ref :=

@@ -285,13 +285,9 @@
     .lock-btn:hover {
       transform: scale(1.08);
     }
-    .lock-btn[data-lock="1"].active { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
     .lock-btn[data-lock="2"].active { background: rgba(6, 182, 212, 0.25); color: #06b6d4; border-color: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
-    .lock-btn[data-lock="3"].active { background: rgba(244, 63, 94, 0.25); color: #f43f5e; border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+    .lock-btn[data-lock="1"].active { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
     .lock-btn[data-lock="4"].active { background: rgba(16, 185, 129, 0.25); color: #10b981; border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-    .lock-btn[data-lock="5"].active { background: rgba(168, 85, 247, 0.25); color: #a855f7; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
-    .lock-btn[data-lock="6"].active { background: rgba(59, 130, 246, 0.25); color: #3b82f6; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-    .lock-btn[data-lock="7"].active { background: rgba(234, 179, 8, 0.25); color: #eab308; border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
 
         /* Hidden Mode Vertex Debug Tooltip */
     .vertex-debug-tooltip {
@@ -598,7 +594,7 @@
   <div id="sidebar">
     <div class="header-box">
       <div class="header-title">🧩 Spectre Monotile</div>
-      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789508000000</span></div>
+      <div class="subtitle">&Delta;<sub>2</sub> Jigsaw Puzzle <span id="app-version" class="version-badge">v1.0.1789508500000</span></div>
     </div>
 
     <!-- Game Flow Primary Toggle Button -->
@@ -622,13 +618,9 @@
     <div class="palette-wrapper">
       <div id="tile-palette" style="flex: 1;"></div>
       <div id="hidden-lock-toggles" class="hidden-lock-toggles">
-        <button class="lock-btn" data-lock="1" title="Toggle Lock 1: Low Lock [60°, 0°, -60°]">L1</button>
-        <button class="lock-btn" data-lock="2" title="Toggle Lock 2: High Lock [60°, 90°, 60°]">L2</button>
-        <button class="lock-btn" data-lock="3" title="Toggle Lock 3: Long Lock 1 [60°, 90°, -60°, 0°]">L3</button>
-        <button class="lock-btn" data-lock="4" title="Toggle Lock 4: Long Lock 2 [90°, -60°, 90°, 60°]">L4</button>
-        <button class="lock-btn" data-lock="5" title="Toggle Lock 5: Long Lock 3 [60°, 90°, -60°, 90°]">L5</button>
-        <button class="lock-btn" data-lock="6" title="Toggle Lock 6: Delta Lock 1 [60°, 90°, 60°, -90°, 60°, -90°]">L6</button>
-        <button class="lock-btn" data-lock="7" title="Toggle Lock 7: Delta Lock 2 [90°, -60°, 90°, 60°, -90°, 60°, -90°]">L7</button>
+        <button class="lock-btn" data-lock="2" title="Priority 1 — Lock #2 (Lean #300049): High Lock [60°, 90°, 60°]">L2</button>
+        <button class="lock-btn" data-lock="1" title="Priority 2 — Lock #1 (Lean #300033): Low Lock [60°, 0°, -60°]">L1</button>
+        <button class="lock-btn" data-lock="4" title="Priority 3 — Lock #4 (Lean #400110): Long Lock [90°, -60°, 90°, 60°]">L4</button>
         <button id="btn-export-log" class="lock-btn" style="width: 100%; height: 24px; font-size: 0.6rem; margin-top: 0.3rem; background: rgba(99, 102, 241, 0.25); color: #818cf8; border-color: #6366f1;" title="View & Export Peeling Session Log">📋 Log</button>
       </div>
     </div>
@@ -741,7 +733,7 @@
   <script>
     (function() {
       "use strict";
-      const APP_VERSION = "v1.0.1789508000000";
+      const APP_VERSION = "v1.0.1789508500000";
 
       // Offline Service Worker & Auto-Invalidation Handler
       if ('serviceWorker' in navigator) {
@@ -5220,19 +5212,15 @@
         }
       }
 
-      // 9. HIDDEN MODE & ANCHOR LOCK HIGHLIGHT ENGINE
+      // 9. HIDDEN MODE & 3-ANCHOR-LOCK (L2 > L1 > L4) HIGHLIGHT ENGINE
       const LOCK_DEFINITIONS = [
-        { id: 1, name: "Low Lock", seq: [60, 0, -60], color: "#f59e0b" },
-        { id: 2, name: "High Lock", seq: [60, 90, 60], color: "#06b6d4" },
-        { id: 3, name: "Long Lock 1", seq: [60, 90, -60, 0], color: "#f43f5e" },
-        { id: 4, name: "Long Lock 2", seq: [90, -60, 90, 60], color: "#10b981" },
-        { id: 5, name: "Long Lock 3", seq: [60, 90, -60, 90], color: "#a855f7" },
-        { id: 6, name: "Delta Lock 1", seq: [60, 90, 60, -90, 60, -90], color: "#3b82f6" },
-        { id: 7, name: "Delta Lock 2", seq: [90, -60, 90, 60, -90, 60, -90], color: "#eab308" }
+        { id: 2, leanId: 300049, priority: 1, name: "Lock #2 (High Lock #300049)", seq: [60, 90, 60], color: "#06b6d4" },
+        { id: 1, leanId: 300033, priority: 2, name: "Lock #1 (Low Lock #300033)", seq: [60, 0, -60], color: "#f59e0b" },
+        { id: 4, leanId: 400110, priority: 3, name: "Lock #4 (Long Lock #400110)", seq: [90, -60, 90, 60], color: "#10b981" }
       ];
 
       state.hiddenMode = false;
-      state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
+      state.activeLocks = { 2: false, 1: false, 4: false };
       state.peelingLog = [];
 
       const hiddenLockToggles = document.getElementById('hidden-lock-toggles');
@@ -5631,7 +5619,7 @@
           e.preventDefault();
           state.hiddenMode = !state.hiddenMode;
           if (!state.hiddenMode) {
-            state.activeLocks = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false };
+            state.activeLocks = { 2: false, 1: false, 4: false };
             document.querySelectorAll('.lock-btn').forEach(btn => btn.classList.remove('active'));
             if (hiddenLockToggles) hiddenLockToggles.style.display = 'none';
             renderLockHighlights();
