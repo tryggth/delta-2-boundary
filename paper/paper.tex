@@ -63,13 +63,14 @@ In \texttt{SimplePaths.lean}, we extend uniqueness from the outer $\Delta_2$ per
 \begin{enumerate}
 \item \textbf{Simple Loop Invariant (\texttt{delta2\_all\_cascade\_loops\_simple}):} The initial $\Delta_2$ perimeter and all 70 intermediate boundary loops in the peeling cascade are verified to be simple closed paths (\texttt{hasNoDuplicateNodes}).
 \item \textbf{Acyclic 3-Lock Elimination Order (\texttt{delta2\_lock\_elimination\_sequence\_valid}):} Ordering the 71 interior tiles as $t_1, \dots, t_{71}$ by the peeling cascade, at every step $k \in \{1, \dots, 71\}$ the anchor-lock edges $L_k \subset \partial t_k$ uniquely force $[t_k]$ across all 14 monotile alignments, and no later tile $t_j$ ($j > k$) contains any edge of $L_k$ or its reversal.
-\item \textbf{Universal Sub-Patch Uniqueness (\texttt{simple\_closed\_path\_unique\_interior}, \texttt{subpatch\_unique\_of\_same\_boundary}):} For any non-empty sub-patch $P \subseteq \{t_1, \dots, t_{71}\}$ bounded by a simple closed path $C = \partial P$, let $t_k$ be the first tile of the elimination sequence in $P$. Because no tile in $P \subseteq \{t_k, \dots, t_{71}\}$ contains the reversal of any edge in $L_k$, all lock edges in $L_k$ remain uncancelled on $C$, uniquely forcing $t_k \in P$ and inductively determining $P$.
+\item \textbf{Universal Sub-Patch Uniqueness (\texttt{simple\_closed\_path\_unique\_interior}, \texttt{no\_disjoint\_subpatches\_with\_same\_boundary}, \texttt{delta2\_no\_minimal\_phason\_subpatches}):} For any non-empty sub-patch $P \subseteq \{t_1, \dots, t_{71}\}$ bounded by a simple closed path $C = \partial P$, let $t_k$ be the first tile of the elimination sequence in $P$. Because no tile in $P \subseteq \{t_k, \dots, t_{71}\}$ contains the reversal of any edge in $L_k$, all lock edges in $L_k$ remain uncancelled on $C$ (\texttt{step\_lock\_edge\_indicator}), uniquely forcing $t_k \in P$ and inductively proving (with zero bundled reconstruction hypotheses) that any two disjoint sub-patches inside $\Delta_2$---even if spanning multiple Tier-1 supertiles---sharing the same boundary edges must both be empty (\texttt{[]}).
 \end{enumerate}
 
 \section{Algebraic Boundary Framework and Absence of Phasons}
 \label{sec:phasons}
 In \texttt{AlgebraicBoundary.lean}, we generalize the uniqueness proof to establish that full aperiodic tilings by the $\mathrm{Tile}(1,1)$ Spectre monotile have \textbf{no phasons} (no local finite rearrangements of tiles sharing an identical boundary):
 \begin{enumerate}
+\item \textbf{Unbundled Curvature \& Lock-Exclusion Bridges (\texttt{walk\_curvature\_boundaryToWalk}, \texttt{not\_isLockFreePunctured\_of\_lock2\_in\_walk}, \texttt{lock4\_transition\_invalid}):} We prove constructively that the degree-valued 3-gram walk curvature equals $30 \times \texttt{wordCurvature}$, so $360^\circ \leftrightarrow 12$ step-units and $\le 60^\circ \leftrightarrow \le 2$ step-units, and that Priority-1 Lock \#2 (\texttt{300049}) and Priority-3 Lock \#4 (\texttt{400110}) are directly rejected by \texttt{isPuncturedState} and \texttt{isValidTransition}.
 \item \textbf{Combinatorial Gauss-Bonnet (\texttt{gauss\_bonnet\_patch}):} Every simply-connected finite Spectre patch $P$ has total discrete boundary curvature equal to $12$ step-units ($360^\circ$).
 \item \textbf{Transfer-Matrix Curvature Bound (\texttt{lock\_free\_curvature\_bound}):} An exhaustive depth-first search over all punctured 3-gram states (\texttt{verify\_batch1}--\texttt{verify\_batch4} in \texttt{TransferMatrixBatches.lean}) proves that any boundary cycle devoid of the 3 anchor locks has total curvature $\le 2$ step-units ($60^\circ$).
 \item \textbf{No Minimal Phasons (\texttt{no\_minimal\_phason}):} Suppose $P_1, P_2$ form a minimal phason ($\partial P_1 = \partial P_2$ with $P_1 \cap P_2 = \emptyset$). By Gauss-Bonnet, their common boundary $w$ has curvature $12$. If $w$ contains a 3-anchor lock, \texttt{lock\_forces\_shared\_tile} forces a shared tile into $P_1 \cap P_2$, a contradiction; if $w$ is lock-free, its curvature is $\le 2$, contradicting $12 \le 2$.
@@ -93,6 +94,7 @@ All 777 build targets in \texttt{SpectreDeltaBoundary} compile cleanly in the Le
 \texttt{delta2\_all\_cascade\_loops\_simple} & \texttt{[propext]} \\
 \texttt{delta2\_lock\_elimination\_sequence\_valid} & \texttt{[propext]} \\
 \texttt{simple\_closed\_path\_unique\_interior} & \texttt{[propext]} \\
+\texttt{delta2\_no\_minimal\_phason\_subpatches} & \texttt{[propext, Quot.sound]} \\
 \texttt{no\_minimal\_phason}, \texttt{no\_phason\_in\_full\_tiling} & \texttt{[propext, Classical.choice, Quot.sound]} \\
 \texttt{spectre\_hierarchy\_zero\_phasons} & \texttt{[propext, Classical.choice, Quot.sound]} \\
 \hline

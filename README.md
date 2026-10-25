@@ -8,12 +8,12 @@ By unifying an exact discrete combinatorial solver in Python with a verifiable, 
 
 1. **3-Anchor-Lock Uniqueness of $\Delta_2$ & All 9 Tier-1 Metatiles (`Theorem.lean`, `Tier1Theorems.lean`):**
    A deterministic priority algorithm (`L2 > L1 > L4`) using strictly 3 boundary turn locks—**Lock #2** (`300049`, `[60°, 90°, 60°]`), **Lock #1** (`300033`, `[60°, 0°, -60°]`), and **Lock #4** (`400110`, `[90°, -60°, 90°, 60°]`)—uniquely forces all 71 interior tiles of the Generation-2 $\Delta_2$ boundary (`55` Lock #2, `10` Lock #1, `6` Lock #4) as well as all 9 Tier-1 metatiles ($\Gamma, \Delta, \Theta, \Lambda, \Xi, \Pi, \Sigma, \Phi, \Psi$).
-2. **Uniqueness of Interiors for Simple Closed Paths (`SimplePaths.lean`):**
-   Every simple closed path (a closed loop visiting each node/vertex at most once) constructed from edges of the unique interior tiling of $\Delta_2$ has a unique interior sub-patch forced by the 71-step acyclic 3-lock elimination order.
+2. **Uniqueness of Interiors for Simple Closed Paths & Multi-Supertile Sub-Patches (`SimplePaths.lean`):**
+   Every simple closed path (a closed loop visiting each node/vertex at most once) constructed from edges of the unique interior tiling of $\Delta_2$ has a unique interior sub-patch forced by the 71-step acyclic 3-lock elimination order. Constructive structural induction across the 71-step sequence (`no_disjoint_subpatches_with_same_boundary`, `delta2_no_minimal_phason_subpatches`) proves with zero bundled hypotheses that any two disjoint sub-patches inside $\Delta_2$—including those spanning multiple Tier-1 supertiles—sharing the same boundary edges must both be empty (`[]`).
 3. **Interactive Spectre $\Delta_2$ Jigsaw Puzzle PWA (`puzzle/`, `docs/`):**
    An offline-capable Progressive Web App synchronized with the exact CCW orientations, `[0°, 330°]` angles, 3-anchor-lock (`L2`, `L1`, `L4`) highlights, and 71-step priority peeling sequence of the Lean 4 proof.
 4. **Absence of Phasons in Full Spectre Tilings (`AlgebraicBoundary.lean`):**
-   Combining Combinatorial Gauss-Bonnet ($12$ step-units $= 360^\circ$), the verified 4-batch transfer-matrix curvature bound ($\le 2$ step-units $= 60^\circ$ for lock-free cycles), and 3-anchor-lock pocket forcing proves that no minimal phason and no finite phason flip can exist in any full aperiodic tiling by the $\text{Tile}(1,1)$ Spectre monotile.
+   Combining Combinatorial Gauss-Bonnet ($12$ step-units $= 360^\circ$), the verified 4-batch transfer-matrix curvature bound ($\le 2$ step-units $= 60^\circ$ for lock-free cycles), unbundled curvature/lock-exclusion bridges (`walk_curvature_boundaryToWalk`, `not_isLockFreePunctured_of_lock2_in_walk`, `lock4_transition_invalid`), and 3-anchor-lock pocket forcing proves that no minimal phason and no finite phason flip can exist in any full aperiodic tiling by the $\text{Tile}(1,1)$ Spectre monotile.
 
 ![Spectre Delta-2 Metatile Patch Boundary](./delta.svg)
 
@@ -155,6 +155,7 @@ Every module in `SpectreDeltaBoundary` is engineered with **zero `sorry`s (`sorr
 #print axioms verify_delta2_uniqueness
 #print axioms delta2_lock_elimination_sequence_valid
 #print axioms simple_closed_path_unique_interior
+#print axioms delta2_no_minimal_phason_subpatches
 #print axioms no_phason_in_full_tiling
 #print axioms spectre_hierarchy_zero_phasons
 ```
