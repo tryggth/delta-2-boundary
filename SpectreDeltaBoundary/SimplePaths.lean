@@ -324,8 +324,217 @@ theorem delta2_outer_simple_path_reconstructs_all_71_tiles :
     reconstructSimplePathInterior (initialMetatileBoundary.headD []) = some delta2Tiles := by
   decide
 
+/-! ## Constructive Unbundled Zero-Phason Proof for Sub-Patches -/
+
+/-- Checks whether two boolean sub-patch masks are disjoint (share no common `true` tile). -/
+def disjointMasks : List Bool → List Bool → Bool
+  | [], _ => true
+  | _, [] => true
+  | b1 :: ms1, b2 :: ms2 => !(b1 && b2) && disjointMasks ms1 ms2
+
+/-- Distributes `edgeListContains` over list append `l1 ++ l2`. -/
+theorem edgeListContains_append (u v : LatticePoint)
+    (l1 l2 : List (LatticePoint × LatticePoint)) :
+    edgeListContains u v (l1 ++ l2) = (edgeListContains u v l1 || edgeListContains u v l2) := by
+  induction l1 with
+  | nil => rfl
+  | cons hd tl ih =>
+    rcases hd with ⟨a, b⟩
+    simp only [List.cons_append, edgeListContains]
+    by_cases hab : (a == u && b == v) = true
+    · simp [hab]
+    · simp [hab, ih]
+
+/-- Distributes `edgeListContains` over `List.filter`. -/
+theorem edgeListContains_filter (u v : LatticePoint)
+    (p : LatticePoint × LatticePoint → Bool) (l : List (LatticePoint × LatticePoint)) :
+    edgeListContains u v (l.filter p) = (edgeListContains u v l && p (u, v)) := by
+  induction l with
+  | nil => rfl
+  | cons hd tl ih =>
+    rcases hd with ⟨a, b⟩
+    simp only [List.filter, edgeListContains]
+    by_cases hab : (a == u && b == v) = true
+    · rw [Bool.and_eq_true] at hab
+      have ha : a = u := beq_iff_eq.mp hab.1
+      have hb : b = v := beq_iff_eq.mp hab.2
+      subst ha hb
+      have h_refl : (a == a && b == b) = true := by simp
+      rw [if_pos h_refl, Bool.true_and]
+      cases hp : p (a, b)
+      · simp [ih, hp]
+      · simp [edgeListContains]
+    · rw [if_neg hab]
+      cases hp : p (a, b)
+      · simp [ih]
+      · simp [edgeListContains, hab, ih]
+
+/-- Characterizes membership in `subpatchBoundaryEdges` via `edgeListContains`. -/
+theorem edgeListContains_subpatchBoundaryEdges (u v : LatticePoint) (tiles : List PlacedTile) :
+    edgeListContains u v (subpatchBoundaryEdges tiles) =
+    (edgeListContains u v (collectAllTileEdges tiles) &&
+     !edgeListContains v u (collectAllTileEdges tiles)) := by
+  unfold subpatchBoundaryEdges
+  exact edgeListContains_filter u v (fun (x, y) => !edgeListContains y x (collectAllTileEdges tiles))
+    (collectAllTileEdges tiles)
+
+/-- If a directed edge `(u, v)` does not appear in any tile of `steps`, it cannot appear in
+    `selectSubpatch steps mask` for any boolean mask `mask`. -/
+theorem not_edge_in_selectSubpatch_of_not_in_steps
+    (u v : LatticePoint) (steps : List PeelingStep) (mask : List Bool)
+    (h_none : edgeListContains u v (collectAllTileEdges (steps.map PeelingStep.tile)) = false) :
+    edgeListContains u v (collectAllTileEdges (selectSubpatch steps mask)) = false := by
+  induction steps generalizing mask with
+  | nil =>
+    simp [selectSubpatch, collectAllTileEdges, edgeListContains]
+  | cons s ss ih =>
+    simp only [List.map_cons, collectAllTileEdges, edgeListContains_append,
+               Bool.or_eq_false_iff] at h_none
+    cases mask with
+    | nil =>
+      simp [selectSubpatch, collectAllTileEdges, edgeListContains]
+    | cons b ms =>
+      cases b
+      · simp only [selectSubpatch]
+        exact ih ms h_none.2
+      · simp only [selectSubpatch, collectAllTileEdges, edgeListContains_append,
+                   Bool.or_eq_false_iff]
+        exact ⟨h_none.1, ih ms h_none.2⟩
+
+/-- At any valid elimination step `s :: ss`, there exists a lock edge `(u0, v0)` of `s.tile`
+    whose presence on `subpatchBoundaryEdges (selectSubpatch (s :: ss) (b :: ms))` equals `b`. -/
+theorem step_lock_edge_indicator {s : PeelingStep} {ss : List PeelingStep}
+    (h_step : isStepLockEliminationValid s ss = true) :
+    ∃ u0 v0 : LatticePoint, ∀ (b : Bool) (ms : List Bool),
+      edgeListContains u0 v0 (subpatchBoundaryEdges (selectSubpatch (s :: ss) (b :: ms))) = b := by
+  unfold isStepLockEliminationValid at h_step
+  cases h_lock : getTileLockEdges s.lockId s.tile with
+  | nil =>
+    rw [h_lock] at h_step
+    contradiction
+  | cons head rest =>
+    rcases head with ⟨u0, v0⟩
+    rw [h_lock] at h_step
+    simp only [Bool.and_eq_true] at h_step
+    rcases h_step with ⟨⟨⟨h_self, _⟩, h_norev_self⟩, h_nopool⟩
+    have h_u0_self : edgeListContains u0 v0 (tileDirectedPairs s.tile) = true := by
+      unfold allDirectedEdgesPresent at h_self
+      split at h_self
+      · rename_i h_in
+        exact h_in
+      · contradiction
+    have h_v0_self : edgeListContains v0 u0 (tileDirectedPairs s.tile) = false := by
+      unfold noReversalInSelf at h_norev_self
+      split at h_norev_self
+      · contradiction
+      · rename_i h_not
+        exact Bool.eq_false_iff.mpr h_not
+    have h_pool : edgeListContains u0 v0 (collectAllTileEdges (ss.map PeelingStep.tile)) = false ∧
+                  edgeListContains v0 u0 (collectAllTileEdges (ss.map PeelingStep.tile)) = false := by
+      unfold noLockEdgeOrReversalInPool at h_nopool
+      split at h_nopool
+      · contradiction
+      · rename_i h_not_or
+        rw [Bool.not_eq_true, Bool.or_eq_false_iff] at h_not_or
+        exact h_not_or
+    refine ⟨u0, v0, ?_⟩
+    intro b ms
+    rw [edgeListContains_subpatchBoundaryEdges]
+    have h_u0_ss := not_edge_in_selectSubpatch_of_not_in_steps u0 v0 ss ms h_pool.1
+    have h_v0_ss := not_edge_in_selectSubpatch_of_not_in_steps v0 u0 ss ms h_pool.2
+    cases b
+    · simp [selectSubpatch, h_u0_ss]
+    · simp [selectSubpatch, collectAllTileEdges, edgeListContains_append,
+            h_u0_self, h_v0_self, h_u0_ss, h_v0_ss]
+
+/-- If `selectSubpatch (s :: ss) m` and `selectSubpatch (s :: ss) []` have identical boundary edges,
+    then for any mask `m`, `selectSubpatch (s :: ss) m = []`. -/
+theorem selectSubpatch_eq_nil_of_boundary_eq_nil
+    {steps : List PeelingStep}
+    (h_elim : verifyLockEliminationSequence steps = true)
+    (m : List Bool)
+    (h_bdry : subpatchBoundaryEdges (selectSubpatch steps m) = []) :
+    selectSubpatch steps m = [] := by
+  induction steps generalizing m with
+  | nil =>
+    simp [selectSubpatch]
+  | cons s ss ih =>
+    unfold verifyLockEliminationSequence at h_elim
+    split at h_elim
+    · rename_i h_step
+      cases m with
+      | nil =>
+        simp [selectSubpatch]
+      | cons b ms =>
+        obtain ⟨u0, v0, h_ind⟩ := step_lock_edge_indicator h_step
+        have h_b := h_ind b ms
+        rw [h_bdry] at h_b
+        simp only [edgeListContains] at h_b
+        subst h_b
+        simp only [selectSubpatch] at h_bdry ⊢
+        exact ih h_elim ms h_bdry
+    · contradiction
+
+/-- **Constructive Unbundled Minimal-Phason Theorem for Sub-Patches (`no_disjoint_subpatches_with_same_boundary`):**
+    For ANY elimination sequence `steps` with `verifyLockEliminationSequence steps = true` and ANY
+    two disjoint boolean masks `m1, m2` (`disjointMasks m1 m2 = true`), if `selectSubpatch steps m1`
+    and `selectSubpatch steps m2` have the same boundary edges, then both sub-patches are empty
+    (`selectSubpatch steps m1 = [] ∧ selectSubpatch steps m2 = []`). -/
+theorem no_disjoint_subpatches_with_same_boundary
+    {steps : List PeelingStep}
+    (h_elim : verifyLockEliminationSequence steps = true)
+    (m1 m2 : List Bool)
+    (h_disj : disjointMasks m1 m2 = true)
+    (h_bdry : subpatchBoundaryEdges (selectSubpatch steps m1) =
+              subpatchBoundaryEdges (selectSubpatch steps m2)) :
+    selectSubpatch steps m1 = [] ∧ selectSubpatch steps m2 = [] := by
+  induction steps generalizing m1 m2 with
+  | nil =>
+    simp [selectSubpatch]
+  | cons s ss ih =>
+    unfold verifyLockEliminationSequence at h_elim
+    split at h_elim
+    · rename_i h_step
+      cases m1 with
+      | nil =>
+        simp only [selectSubpatch, subpatchBoundaryEdges, collectAllTileEdges, List.filter] at h_bdry
+        exact ⟨rfl, selectSubpatch_eq_nil_of_boundary_eq_nil (by simp [verifyLockEliminationSequence, h_step, h_elim]) m2 h_bdry.symm⟩
+      | cons b1 ms1 =>
+        cases m2 with
+        | nil =>
+          simp only [selectSubpatch, subpatchBoundaryEdges, collectAllTileEdges, List.filter] at h_bdry
+          exact ⟨selectSubpatch_eq_nil_of_boundary_eq_nil (by simp [verifyLockEliminationSequence, h_step, h_elim]) (b1 :: ms1) h_bdry, rfl⟩
+        | cons b2 ms2 =>
+          obtain ⟨u0, v0, h_ind⟩ := step_lock_edge_indicator h_step
+          have h_b1 := h_ind b1 ms1
+          have h_b2 := h_ind b2 ms2
+          rw [h_bdry] at h_b1
+          have h_eq_b : b1 = b2 := h_b1.symm.trans h_b2
+          subst h_eq_b
+          unfold disjointMasks at h_disj
+          rw [Bool.and_eq_true] at h_disj
+          cases b1
+          · simp only [selectSubpatch] at h_bdry ⊢
+            exact ih h_elim ms1 ms2 h_disj.2 h_bdry
+          · simp at h_disj
+    · contradiction
+
+/-- **Concrete Unbundled $\Delta_2$ Zero-Phason Theorem (`delta2_no_minimal_phason_subpatches`):**
+    Across all 71 tiles of $\Delta_2$ (spanning 8 adjacent Tier-1 supertiles), no two non-empty
+    disjoint sub-patches can share the same boundary edges. Proved directly from
+    `delta2_lock_elimination_sequence_valid` with zero bundled hypotheses. -/
+theorem delta2_no_minimal_phason_subpatches (m1 m2 : List Bool)
+    (h_disj : disjointMasks m1 m2 = true)
+    (h_bdry : subpatchBoundaryEdges (selectSubpatch pythonPeelingCertificate.steps m1) =
+              subpatchBoundaryEdges (selectSubpatch pythonPeelingCertificate.steps m2)) :
+    selectSubpatch pythonPeelingCertificate.steps m1 = [] ∧
+    selectSubpatch pythonPeelingCertificate.steps m2 = [] :=
+  no_disjoint_subpatches_with_same_boundary delta2_lock_elimination_sequence_valid m1 m2 h_disj h_bdry
+
 #print axioms delta2_all_cascade_loops_simple
 #print axioms delta2_lock_elimination_sequence_valid
 #print axioms simple_closed_path_unique_interior
 #print axioms subpatch_unique_of_same_boundary
 #print axioms delta2_outer_simple_path_reconstructs_all_71_tiles
+#print axioms no_disjoint_subpatches_with_same_boundary
+#print axioms delta2_no_minimal_phason_subpatches

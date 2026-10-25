@@ -71,6 +71,100 @@ def boundaryToWalk : BoundaryWord → Walk
 def isLockFreePunctured (w : BoundaryWord) : Bool :=
   (boundaryToWalk w).all isPuncturedState
 
+/-! ## Unbundled Curvature & Punctured-State Bridges -/
+
+/-- Each `AllowedStep` degree turn in `TransferMatrixBatches.lean` equals `30 * s.toStep`. -/
+theorem stepToDegrees_eq_mul_toStep (s : AllowedStep) :
+    stepToDegrees s = 30 * s.toStep := by
+  cases s <;> rfl
+
+/-- Total 30°-step curvature of a 3-gram `Walk`. -/
+def walkStepCurvature : Walk → Int
+  | [] => 0
+  | [_] => 0
+  | _ :: v :: w' => v.2.2.toStep + walkStepCurvature (v :: w')
+
+/-- The degree-valued `Walk.curvature` equals `30` times `walkStepCurvature`. -/
+theorem walk_curvature_eq_thirty_mul_step_curvature (w : Walk) :
+    w.curvature = 30 * walkStepCurvature w := by
+  induction w with
+  | nil => rfl
+  | cons u tl ih =>
+    cases tl with
+    | nil => rfl
+    | cons v w' =>
+      simp only [Walk.curvature, walkStepCurvature, stepToDegrees_eq_mul_toStep, ih]
+      omega
+
+/-- Helper for accumulator shift in `wordCurvature`. -/
+theorem wordCurvature_foldl_init (w : BoundaryWord) (init : Int) :
+    w.foldl (fun acc s => acc + s.toStep) init = init + wordCurvature w := by
+  induction w generalizing init with
+  | nil =>
+    simp [wordCurvature]
+  | cons hd tl ih =>
+    simp only [List.foldl_cons, wordCurvature]
+    rw [ih (init + hd.toStep), ih (0 + hd.toStep)]
+    omega
+
+/-- Cons expansion for `wordCurvature`. -/
+theorem wordCurvature_cons (s : AllowedStep) (w : BoundaryWord) :
+    wordCurvature (s :: w) = s.toStep + wordCurvature w := by
+  unfold wordCurvature
+  simp only [List.foldl_cons, Int.zero_add]
+  exact wordCurvature_foldl_init w s.toStep
+
+/-- The 30°-step curvature of `boundaryToWalk (a :: b :: c :: w)` equals `wordCurvature w`. -/
+theorem walkStepCurvature_boundaryToWalk (a b c : AllowedStep) (w : BoundaryWord) :
+    walkStepCurvature (boundaryToWalk (a :: b :: c :: w)) = wordCurvature w := by
+  induction w generalizing a b c with
+  | nil =>
+    rfl
+  | cons d tl ih =>
+    have h_step : walkStepCurvature (boundaryToWalk (a :: b :: c :: d :: tl)) =
+        d.toStep + walkStepCurvature (boundaryToWalk (b :: c :: d :: tl)) := rfl
+    rw [h_step, ih b c d, wordCurvature_cons]
+
+/-- Unbundled bridge between `Walk.curvature` (in degrees) and `wordCurvature` (in 30° steps). -/
+theorem walk_curvature_boundaryToWalk (a b c : AllowedStep) (w : BoundaryWord) :
+    (boundaryToWalk (a :: b :: c :: w)).curvature = 30 * wordCurvature w := by
+  rw [walk_curvature_eq_thirty_mul_step_curvature, walkStepCurvature_boundaryToWalk]
+
+/-- A closed boundary walk has `360°` degree curvature iff `wordCurvature w = 12`. -/
+theorem walk_curvature_eq_360_iff_wordCurvature_eq_12 (a b c : AllowedStep) (w : BoundaryWord) :
+    (boundaryToWalk (a :: b :: c :: w)).curvature = 360 ↔ wordCurvature w = 12 := by
+  have h := walk_curvature_boundaryToWalk a b c w
+  omega
+
+/-- A boundary walk has degree curvature `≤ 60°` iff `wordCurvature w ≤ 2`. -/
+theorem walk_curvature_le_60_iff_wordCurvature_le_2 (a b c : AllowedStep) (w : BoundaryWord) :
+    (boundaryToWalk (a :: b :: c :: w)).curvature ≤ 60 ↔ wordCurvature w ≤ 2 := by
+  have h := walk_curvature_boundaryToWalk a b c w
+  omega
+
+/-- Priority-1 Anchor Lock #2 (`300049`, `[.p60, .p90, .p60]`) is flagged as a locked 3-gram
+    and excluded from the punctured transfer-matrix state space. -/
+theorem lock2_is_locked_state : isLockedState (.p60, .p90, .p60) = true := rfl
+theorem lock2_not_punctured : isPuncturedState (.p60, .p90, .p60) = false := rfl
+
+/-- Any boundary word whose 3-gram walk visits Anchor Lock #2 (`(.p60, .p90, .p60)`) is
+    automatically rejected by `isLockFreePunctured`. -/
+theorem not_isLockFreePunctured_of_lock2_in_walk (w : BoundaryWord)
+    (h : (.p60, .p90, .p60) ∈ boundaryToWalk w) :
+    isLockFreePunctured w = false := by
+  unfold isLockFreePunctured
+  rw [Bool.eq_false_iff]
+  intro hall
+  have hp := List.all_eq_true.mp hall (.p60, .p90, .p60) h
+  exact Bool.noConfusion (hp.symm.trans lock2_not_punctured)
+
+/-- Priority-3 Anchor Lock #4 (`400110`, `[.p90, .m60, .p90, .p60]`) triggers `completesLongLock`
+    and is rejected as a 4-gram transition by `isValidTransition`. -/
+theorem lock4_completes_long_lock :
+    completesLongLock .p90 .m60 .p90 .p60 = true := rfl
+theorem lock4_transition_invalid :
+    isValidTransition (.p90, .m60, .p90) (.m60, .p90, .p60) = false := rfl
+
 /-- Maps an algebraic boundary word to a geometric path on the lattice. -/
 def wordToPath (w : BoundaryWord) : List LatticePoint := tracePathVertices w
 
@@ -290,7 +384,13 @@ theorem spectre_hierarchy_zero_phasons :
      usesOnlyThreeAnchorLocks certificate_Psi = true) ∧
     (verifyAllCascadeLoopsSimple = true ∧
      verifyLockEliminationSequence pythonPeelingCertificate.steps = true ∧
-     reconstructSimplePathInterior (initialMetatileBoundary.headD []) = some delta2Tiles) ∧
+     reconstructSimplePathInterior (initialMetatileBoundary.headD []) = some delta2Tiles ∧
+     ∀ (m1 m2 : List Bool),
+       disjointMasks m1 m2 = true →
+       subpatchBoundaryEdges (selectSubpatch pythonPeelingCertificate.steps m1) =
+         subpatchBoundaryEdges (selectSubpatch pythonPeelingCertificate.steps m2) →
+       selectSubpatch pythonPeelingCertificate.steps m1 = [] ∧
+         selectSubpatch pythonPeelingCertificate.steps m2 = []) ∧
     (∀ T1 T2 : FullSpectreTiling, ¬ Nonempty (PhasonFlipBetween T1 T2)) := by
   refine ⟨⟨anchor_lock_2_unique, anchor_lock_1_unique, anchor_lock_4_unique⟩, ?_, ?_, no_phason_in_full_tiling⟩
   · refine ⟨verify_delta2_uniqueness, delta2_three_anchor_lock_invariants.2, ?_⟩
@@ -299,7 +399,8 @@ theorem spectre_hierarchy_zero_phasons :
            tier1_three_anchor_lock_invariants.2.2.2.2.2.2.2.2⟩
   · exact ⟨delta2_all_cascade_loops_simple,
            delta2_lock_elimination_sequence_valid,
-           delta2_outer_simple_path_reconstructs_all_71_tiles⟩
+           delta2_outer_simple_path_reconstructs_all_71_tiles,
+           delta2_no_minimal_phason_subpatches⟩
 
 /-! ## Axiom Audit (Zero Custom Axioms) -/
 
